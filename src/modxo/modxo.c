@@ -39,6 +39,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "superio/LPC47M152.h"
 #include "superio/UART_16550.h"
 #include "superio/WS2812.h"
+#include "hardware/watchdog.h"
 
 static MODXO_TD_DRIVER_T *td_driver = NULL;
 
@@ -79,11 +80,17 @@ void modxo_lpc_reset()
     lpc_interface_start_sm();
 }
 
+void software_reset()
+{
+    //*((volatile uint32_t*)(PPB_BASE + 0x0ED0C)) = 0x5FA0004;
+    watchdog_enable(1, 1);
+    while(1);
+}
+
 void modxo_low_power_mode()
 {
     // Modxo reset
-    flashrom_set_mmc(MODXO_BANK_BOOTLOADER);
-    ws2812_set_color(LedColorOff);
+    software_reset();
 
     // Modxo sleep
 }
