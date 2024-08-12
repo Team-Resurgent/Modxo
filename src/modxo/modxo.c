@@ -27,7 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <stdio.h>
-#include <pico/platform.h>
+#include <pico.h>
 #include <hardware/sync.h>
 
 #include "modxo.h"

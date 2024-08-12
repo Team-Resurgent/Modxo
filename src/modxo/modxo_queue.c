@@ -26,7 +26,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include <string.h>
-#include <pico/platform.h>
+#include <pico.h>
 #include "modxo_queue.h"
 
 static inline void *item_address(MODXO_QUEUE_T *queue, uint32_t item_n)
