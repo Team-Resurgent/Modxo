@@ -1,5 +1,11 @@
 ![Modchip + Axolotl = Modxo](images/logo.png) <img src="images/Shalx-TR.png" height="176">
+
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://github.com/Team-Resurgent/Repackinator/blob/main/LICENSE.md)
+[![.NET](https://github.com/Team-Resurgent/Modxo/actions/workflows/BundleModxo.yml/badge.svg)](https://github.com/Team-Resurgent/Modxo/actions/workflows/BundleModxo.yml)
+[![Discord](https://img.shields.io/badge/chat-on%20discord-7289da.svg?logo=discord)](https://discord.gg/VcdSfajQGK)
+
 #
+
 Modxo (pronnounced as "Modsho") is a Xbox LPC Port firmware that converts the Raspberry Pi Pico
 into an Original Xbox Modchip that allows running a bios.
 
@@ -43,7 +49,9 @@ into an Original Xbox Modchip that allows running a bios.
 
 #### Windows
 1.- Download and Install [Visual Studio Code](https://code.visualstudio.com/download)
+
 2.- Install extension: "Raspberry Pi Pico"
+
 3.- After SDK is installed, git submodules must be updated from command line by running:
 ```
 cd %HOMEPATH%\.pico-sdk\sdk\1.5.1
