@@ -55,6 +55,8 @@ into an Original Xbox Modchip that allows running a bios.
 
 2.- Install extension: "Raspberry Pi Pico"
 
+![Pico Extension](images/extension.png)
+
 3.- Ensure SDK 1.5.1 selected as below...
 
 ![SDK 1.5.1](images/sdk.png)
