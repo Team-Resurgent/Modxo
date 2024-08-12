@@ -20,17 +20,20 @@ into an Original Xbox Modchip that allows running a bios.
 #### LPC Header
 ![LPC Header wiring diagram](images/lpc_header_wiring.png)
 
-* Note: D0 is only needed by versions different to 1.6
+* Note: D0 is required for versions 1.0 - 1.5 unless it is grounded.
 * Note: LFrame and LPC 3.3 connections are required by version 1.6 or when connecting the Pico to USB port.
 
 #### Official pico
 
 ![LPC Header wiring diagram](images/official_pinout.png)
 
+* Note: Please add the diode if connecting the Pico to USB. This avoid powering the LPC 5v Pin from the USB cable.
+
 #### YD2040
 
 ![LPC Header wiring diagram](images/YDRP2040_pinout.png)
 
+* Note: Dont forget to add solder to jumper R68 if using the onboard RGB Led
 
 ### 3. Flashing firmware
 
