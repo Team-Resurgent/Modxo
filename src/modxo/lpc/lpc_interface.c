@@ -28,6 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdio.h>
 #include "pico/stdlib.h"
+#include "hardware/pio.h"
 #include "hardware/dma.h"
 #include "hardware/irq.h"
 #include "pico/multicore.h"
@@ -131,7 +132,6 @@ static void gpio_set_max_drivestrength(io_rw_32 gpio, uint32_t strength)
 
 static void pio_custom_init(PIO pio, uint sm, uint offset, bool lframe_cancel)
 {
-    valid_params_if(PIO, offset < PIO_INSTRUCTION_COUNT);
     lpc_read_request_init(pio, sm, offset, lpc_handlers[sm].address_len, lframe_cancel);
 
     pio->txf[sm] = lpc_handlers[sm].cyctype_dir;
