@@ -22,6 +22,7 @@ into an Original Xbox Modchip that allows running a bios.
 
 * Note: D0 is required for versions 1.0 - 1.5 unless it is grounded.
 * Note: LFrame and LPC 3.3V connections are required by version 1.6 or when connecting the Pico to USB port.
+* Note: LFrame is not required for USB debug.
 * Note: LPC Rebuild is required for version 1.6
 
 #### Official pico
