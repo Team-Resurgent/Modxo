@@ -55,18 +55,22 @@ into an Original Xbox Modchip that allows running a bios.
 
 2.- Install extension: "Raspberry Pi Pico"
 
-3.- After SDK is installed, git submodules must be updated from command line by running:
+3.- Ensure SDK 1.5.1 selected as below...
+
+![SDK 1.5.1](images/sdk.png)
+
+4.- After SDK is installed, git submodules must be updated from command line by running:
 ```
 cd %HOMEPATH%\.pico-sdk\sdk\1.5.1
 git submodule update --init --recursive
 ```
-4.- Go to Raspberry Pi Pico Tab and click "Configure CMake"
+5.- Go to Raspberry Pi Pico Tab and click "Configure CMake"
 
-5.- Go to Run and Debug Tab and select Build for your board
+6.- Go to Run and Debug Tab and select Build for your board
 
-6.- Click "Start Debugging" (Green arrow)
+7.- Click "Start Debugging" (Green arrow)
 
-7.- UF2 File will be generated on Build folder
+8.- UF2 File will be generated on Build folder
 
 
 #### Linux
