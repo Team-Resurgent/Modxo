@@ -28,6 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdio.h>
 #include "pico/stdlib.h"
+#include "hardware/pio.h"
 #include "hardware/dma.h"
 #include "hardware/irq.h"
 #include "pico/multicore.h"
