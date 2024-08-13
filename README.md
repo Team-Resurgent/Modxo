@@ -85,3 +85,6 @@ git submodule update --init --recursive
 
 # Known bugs
  * Windbg get stuck sometimes when connected to Modxo SuperIO's serial port
+
+# NOTES
+Currently, Modxo uses the ID 0xAF. Any derivative hardware with significant changes should ideally use a different ID. This is so that software like PrometheOS can base features available from that returned ID.
