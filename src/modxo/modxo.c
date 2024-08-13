@@ -42,6 +42,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "hardware/watchdog.h"
 
 static MODXO_TD_DRIVER_T *td_driver = NULL;
+extern uint8_t current_led_color;
 
 static void modxo_lpcmem_init()
 {
@@ -74,10 +75,19 @@ void modxo_poll_core0()
     ws2812_poll();
 }
 
-void modxo_lpc_reset()
+void modxo_lpc_reset_off()
 {
+    LedColorEnum color = current_led_color;
+    ws2812_set_color(LedColorOff);
+    current_led_color = color;
+
     // Reset State Machines
     lpc_interface_start_sm();
+}
+
+void modxo_lpc_reset_on()
+{
+    ws2812_set_color(current_led_color);
 }
 
 void software_reset()

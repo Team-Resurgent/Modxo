@@ -64,7 +64,12 @@ void core0_main()
 
 void reset_pin_falling()
 {
-    modxo_lpc_reset();
+    modxo_lpc_reset_off();
+}
+
+void reset_pin_rising()
+{
+    modxo_lpc_reset_on();
 }
 
 void pin_3_3v_falling()
@@ -79,6 +84,11 @@ void core0_irq_handler(uint gpio, uint32_t event)
         reset_pin_falling();
     }
 
+    if (gpio == LPC_RESET && (event & GPIO_IRQ_EDGE_RISE) != 0)
+    {
+        reset_pin_rising();
+    }
+
     if (gpio == LPC_ON && (event & GPIO_IRQ_EDGE_FALL) != 0)
     {
         pin_3_3v_falling();
@@ -90,18 +100,18 @@ void xbox_shutdown()
     multicore_reset_core1();
 }
 
-void modxo_init_pin_irq_fall(uint pin)
+void modxo_init_pin_irq(uint pin, uint32_t event)
 {
     gpio_init(pin);
     gpio_set_dir(pin, GPIO_IN);
     gpio_pull_up(pin);
-    gpio_set_irq_enabled(pin, GPIO_IRQ_EDGE_FALL, true);
+    gpio_set_irq_enabled(pin, event, true);
 }
 
 void modxo_init_interrupts()
 {
-    modxo_init_pin_irq_fall(LPC_RESET);
-    modxo_init_pin_irq_fall(LPC_ON);
+    modxo_init_pin_irq(LPC_RESET, GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE);
+    modxo_init_pin_irq(LPC_ON, GPIO_IRQ_EDGE_FALL);
 
     gpio_set_irq_callback(core0_irq_handler);
     irq_set_enabled(IO_IRQ_BANK0, true);

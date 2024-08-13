@@ -110,6 +110,7 @@ Effect_t pixel_effect_value;
 REGEffect_t pixel_effect_reg;
 
 uint8_t current_cmd;
+uint8_t current_led_color = LedColorOff;
 
 LED_STRIP strips[MAX_STRIPS] = {
     {
@@ -496,6 +497,8 @@ void ws2812_poll()
 }
 
 void ws2812_set_color(uint8_t color) {
+    current_led_color = color;
+
     select_command(CMD_SELECT_STRIP);
     send_data(0);
 
@@ -544,5 +547,4 @@ void ws2812_init()
     lpc_interface_add_io_handler(WS2812_PORT_BASE, WS2812_ADDRESS_MASK, lpc_port_read, lpc_port_write);
 
     update_pixels();
-    ws2812_set_color(LedColorOff);
 }
