@@ -40,7 +40,7 @@ into an Original Xbox Modchip that allows running a bios.
 ### 3. Flashing firmware
 
 #### Packing Bios
-1. Go to [https://shalxmva.github.io/modxo/](https://team-resurgent.github.io/Modxo/)
+1. Go to [https://team-resurgent.github.io/modxo/](https://team-resurgent.github.io/Modxo/)
 2. Drag and Drop your bios file
 3. UF2 File with bios image will be downloaded
 
