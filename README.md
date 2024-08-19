@@ -40,7 +40,7 @@ into an Original Xbox Modchip that allows running a bios.
 ### 3. Flashing firmware
 
 #### Packing Bios
-1. Go to https://shalxmva.github.io/modxo/
+1. Go to [https://team-resurgent.github.io/modxo/](https://team-resurgent.github.io/Modxo/)
 2. Drag and Drop your bios file
 3. UF2 File with bios image will be downloaded
 
@@ -88,3 +88,27 @@ git submodule update --init --recursive
 
 # Notes
  * Currently, Modxo uses the ID 0xAF. Any derivative hardware with significant changes should ideally use a different ID. This is so that software like PrometheOS can base features available from that returned ID.
+ 
+
+# Attribution Requirement
+
+     a) **Attribution:**  
+       If you distribute or modify this work, you must provide proper 
+       attribution to the original authors. This includes:
+       - Mentioning the original project name: `Modxo`.
+       - Listing the original authors: `Shalx / Team Resurgent`.
+       - Including a link to the original project repository: 
+           `https://github.com/Team-Resurgent/Modxo`.
+       - Clearly stating any modifications made.
+
+    b) **Logo and Branding:**  
+       Any derivative work or distribution must include the logos provided by
+       the original authors in accordance with the branding guidelines. The 
+       logos must be displayed prominently in any interface or documentation 
+       where the original project is referenced or attributed.
+
+    c) **Branding Guidelines:**  
+       You can find the logos and detailed branding guidelines in the 
+       `BRANDING.md` file provided with this project. The logos must not be 
+       altered in any way that would distort or misrepresent the original 
+       branding.
