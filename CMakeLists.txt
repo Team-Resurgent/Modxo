@@ -16,7 +16,9 @@ cmake_minimum_required(VERSION 3.19)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_BUILD_TYPE Debug)
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Debug)
+endif()
 
 # Initialise pico_sdk from installed location
 # (note this can come from environment, CMake cache etc)
@@ -57,7 +59,7 @@ pico_generate_pio_header(${PROJECT_NAME} "temp/lpc_comm.pio")
 pico_generate_pio_header(${PROJECT_NAME} ${CMAKE_CURRENT_LIST_DIR}/src/modxo/superio/WS2812.pio)
 
 #Source files
-target_sources(${PROJECT_NAME} PRIVATE 
+target_sources(${PROJECT_NAME} PRIVATE
     src/modxo/modxo.c
     src/modxo/modxo_queue.c
     src/modxo/modxo_ports.c
@@ -72,7 +74,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     src/modxo/superio/WS2812.c
     src/modxo/superio/SPI_PORT.c
     src/modxo/text_display/hd44780.c
-    src/main.c 
+    src/main.c
 )
 
 # Link to pico_stdlib (gpio, time, etc. functions)
