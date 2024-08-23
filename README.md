@@ -77,11 +77,43 @@ git submodule update --init --recursive
 8.- UF2 File will be generated on Build folder
 
 
-#### Linux
-  -Todo
+# Docker
+#### Setup
+Build your base docker image with
+```
+docker build -t modxo-builder .
+```
 
-#### Mac
-  -Todo
+#
+#### Firmware Build
+```
+docker compose run --rm builder
+```
+
+Output will be `out/modxo_[pinout].uf2`
+
+There are also some extra parameters that can be passed to the build script:
+
+- MODXO_PINOUT=`official_pico` | `yd_rp2040` | `rp2040_zero` - Default is `official_pico`.
+
+- CLEAN=`y`: triggers a clean build. Default is disabled.
+
+- BUILD_TYPE=`Release` | `Debug` - Default is `Debug`.
+
+
+_Examples:_
+```
+MODXO_PINOUT=rp2040_zero BUILD_TYPE=Release docker compose run --rm builder
+```
+```
+CLEAN MODXO_PINOUT=yd_rp2040 docker compose run --rm builder
+```
+
+#### Packing Bios locally
+Place your bios file named `bios.bin` in this directory or place any bios files (regardless of their name) in the bios directory
+```
+docker compose run --rm bios2uf2
+```
 
 # Known bugs
  * Windbg get stuck sometimes when connected to Modxo SuperIO's serial port

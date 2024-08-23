@@ -12,7 +12,6 @@ services:
       - MODXO_PINOUT
       - CLEAN
       - BUILD_TYPE
-      - BIOS2UF2
     command: [ "/home/dev/tools/dockerbuild.sh" ]
   bios2uf2:
     profiles: [ "bios2uf2" ]
