@@ -53,3 +53,7 @@ dkms.conf
 
 # Build folder
 build
+.vscode
+build_docker
+out
+bios
