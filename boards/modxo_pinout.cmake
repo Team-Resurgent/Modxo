@@ -14,15 +14,14 @@ set(LED_STRIP4 31) #Not Used
 
 #pinout selector
 if(${MODXO_PINOUT} MATCHES "official_pico")
-    message(STATUS "NOTE: Building for official_pico.")
     include(boards/official_pico.cmake)
 elseif(${MODXO_PINOUT} MATCHES "yd_rp2040")
-    message(STATUS "NOTE: Building for yd_rp2040.")
     include(boards/yd_rp2040.cmake)
 elseif(${MODXO_PINOUT} MATCHES "rp2040_zero")
-    message(STATUS "NOTE: Building for rp2040_zero.")
     include(boards/rp2040_zero.cmake)
 else()
-    message(STATUS "NOTE: Modxo pinout not defined, using official_pico.")
+    set(MODXO_PINOUT "official_pico")
+    message(STATUS "NOTE: Modxo pinout not defined.")
     include(boards/official_pico.cmake)
 endif()
+message(STATUS "Building for ${MODXO_PINOUT}.")
