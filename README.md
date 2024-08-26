@@ -37,6 +37,12 @@ into an Original Xbox Modchip that allows running a bios.
 
 * Note: Dont forget to add solder to jumper R68 if using the onboard RGB Led
 
+#### RP2040 Zero
+
+![LPC Header wiring diagram](images/RP2040_Zero_pinout.png)
+
+* Note: USB Port doesn't have a diode, so it is not recommended to connect usb cable while connected to the XBOX
+
 ### 3. Flashing firmware
 
 #### Packing Bios
