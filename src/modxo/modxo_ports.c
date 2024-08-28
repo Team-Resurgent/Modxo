@@ -38,7 +38,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "modxo_ports.h"
 #include "flashrom/flashrom.h" // Delete
 #include "pico/multicore.h"
-#include "superio/SPI_PORT.h"
 
 #define STORAGE_CMD_TOTAL_BYTES 64
 
@@ -57,7 +56,7 @@ uint8_t flash_size = 0;
 char password_sequence[] = "DIE";
 
 static uint8_t cmd_byte_idx; // Index Byte Read
-MODXO_TD_CMD command_buffer;
+MODXO_LCD_CMD command_buffer;
 
 static void write_handler(uint16_t address, uint8_t *data)
 {

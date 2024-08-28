@@ -45,7 +45,7 @@ void legacy_display_poll()
     {
         if (_item.iscmd)
         {
-            MODXO_TD_CMD rx_cmd;
+            MODXO_LCD_CMD rx_cmd;
             rx_cmd.raw = _item.cmd;
 
             switch (rx_cmd.cmd)

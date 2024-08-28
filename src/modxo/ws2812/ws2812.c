@@ -32,8 +32,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "pico/stdlib.h"
 #include "hardware/pio.h"
 #include "hardware/clocks.h"
-#include "WS2812.pio.h"
-#include "WS2812.h"
+#include "ws2812.pio.h"
+#include "ws2812.h"
 
 #include "../lpc/lpc_interface.h"
 #include "../lpc/lpc_regs.h"

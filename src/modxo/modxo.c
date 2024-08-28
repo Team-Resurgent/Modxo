@@ -35,10 +35,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "lpc/lpc_interface.h"
 #include "lpc/lpc_log.h"
 #include "flashrom/flashrom.h"
-#include "superio/DATA_STORE.h"
+#include "data_store/data_store.h"
 #include "superio/LPC47M152.h"
-#include "superio/UART_16550.h"
-#include "superio/WS2812.h"
+#include "superio/uart_16550.h"
+#include "ws2812/ws2812.h"
 #include "legacy_display/legacy_display.h"
 #include "hardware/watchdog.h"
 
