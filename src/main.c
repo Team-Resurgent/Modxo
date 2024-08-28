@@ -36,12 +36,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "tusb.h"
 
 #include "modxo/modxo.h"
-#include "modxo/text_display/hd44780.h"
 #include "modxo_pinout.h"
 
 #define SYS_FREQ_IN_KHZ (264 * 1000)
 
-MODXO_TD_DRIVER_T text_display_driver;
 bool reset_pin = false;
 
 void core1_main()
@@ -129,9 +127,8 @@ int main(void)
     gpio_set_dir(LED_STATUS_PIN, GPIO_OUT);
     gpio_put(LED_STATUS_PIN, 1);
 
-    hd44780_i2c_init(&text_display_driver, 0x27, HD44780_LCDTYPE_20X4); // Set your LCD Type, TODO: NVM parameter config
     modxo_init_interrupts();
-    modxo_init(&text_display_driver);
+    modxo_init();
 
     multicore_reset_core1();
     multicore_launch_core1(core1_main);
