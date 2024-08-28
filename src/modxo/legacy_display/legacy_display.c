@@ -6,11 +6,14 @@
 #include <pico.h>
 #include <pico/stdlib.h>
 #include "pico/multicore.h"
+#include "pico/binary_info.h"
 
 #include <modxo_pinout.h>
 
 #define LCD_QUEUE_BUFFER_LEN 1024
 #define LCD_TIMEOUT_US 100
+
+static uint8_t statusled = 1;
 
 static struct
 {
@@ -64,7 +67,9 @@ void legacy_display_poll()
         {
             if (private_data.is_spi)
             {
+                gpio_put(LCD_PORT_SPI_CSN, 0);
                 spi_write_blocking(LCD_PORT_SPI_INST, &_item.data, 1);
+                gpio_put(LCD_PORT_SPI_CSN, 1);
                 return;
             }
             i2c_write_timeout_us(LCD_PORT_I2C_INST, private_data.i2c_address, &_item.data, 1, false, LCD_TIMEOUT_US);
@@ -75,12 +80,13 @@ void legacy_display_poll()
 void legacy_display_set_spi()
 {
     private_data.is_spi = true;
-    spi_init(LCD_PORT_SPI_INST, 400 * 1000);
-    spi_set_slave(LCD_PORT_SPI_INST, false);
+    spi_init(LCD_PORT_SPI_INST, 1 * 1000000);
     gpio_set_function(LCD_PORT_SPI_CLK, GPIO_FUNC_SPI);
     gpio_set_function(LCD_PORT_SPI_MOSI, GPIO_FUNC_SPI);
-    gpio_set_function(LCD_PORT_SPI_CSN, GPIO_FUNC_SPI);
-    spi_set_format(LCD_PORT_SPI_INST, 8, SPI_CPOL_1, SPI_CPHA_1, SPI_MSB_FIRST);
+
+    gpio_init(LCD_PORT_SPI_CSN);
+    gpio_put(LCD_PORT_SPI_CSN, 0);
+    gpio_set_dir(LCD_PORT_SPI_CSN, GPIO_OUT);
 }
 
 void legacy_display_set_i2c(uint8_t i2c_address)
