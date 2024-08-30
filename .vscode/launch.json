@@ -68,28 +68,28 @@
             "name": "Clean",
             "type": "node-terminal",
             "request": "launch",
-            "command": "cmake --build ./build -t clean; exit;",
+            "command": "cmake --build ./build -t clean; exit",
             "cwd": "${workspaceFolder}"
         },
         {
             "name": "Build (Official Pico)",
             "type": "node-terminal",
             "request": "launch",
-            "command": "cmake -DMODXO_PINOUT=official_pico ./build; cmake --build ./build; pause; exit;",
+            "command": "cmake -DMODXO_PINOUT=official_pico ./build; cmake --build ./build; pause; exit",
             "cwd": "${workspaceFolder}"
         },
         {
             "name": "Build (YD-RP2040)",
             "type": "node-terminal",
             "request": "launch",
-            "command": "cmake -DMODXO_PINOUT=yd_rp2040 ./build; cmake --build ./build; pause; exit;",
+            "command": "cmake -DMODXO_PINOUT=yd_rp2040 ./build; cmake --build ./build; pause; exit",
             "cwd": "${workspaceFolder}"
         },
         {
             "name": "Build (RP2040-Zero)",
             "type": "node-terminal",
             "request": "launch",
-            "command": "cmake -DMODXO_PINOUT=rp2040_zero ./build; cmake --build ./build; pause; exit;",
+            "command": "cmake -DMODXO_PINOUT=rp2040_zero ./build; cmake --build ./build; pause; exit",
             "cwd": "${workspaceFolder}"
         },
     ]
