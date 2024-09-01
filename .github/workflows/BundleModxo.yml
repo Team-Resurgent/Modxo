@@ -49,7 +49,6 @@ jobs:
 
       - name: Create Draft Release
         uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/heads/main')
         with:
           tag_name: latest
           draft: true
