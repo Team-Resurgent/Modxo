@@ -46,7 +46,14 @@
 			"string_view": "c",
 			"*.tcc": "c",
 			"random": "c",
-			"functional": "c"
+			"functional": "c",
+			"spi.h": "c",
+			"*.in": "c",
+			"modxo.h": "c",
+			"legacy_display.h": "c",
+			"lpc_interface.h": "c",
+			"watchdog.h": "c",
+			"data_store.h": "c"
 		}
 	}
 }

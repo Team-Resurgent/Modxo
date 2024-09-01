@@ -30,9 +30,11 @@ typedef union
     {
         uint8_t cmd;
         uint8_t param1;
+        uint8_t param2;
+        uint8_t param3;
     };
-    uint8_t bytes[2];
-    uint16_t raw;
+    uint8_t bytes[4];
+    uint32_t raw;
 } MODXO_LCD_CMD;
 
 typedef struct

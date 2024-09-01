@@ -57,7 +57,7 @@ void legacy_display_poll()
                 legacy_display_set_spi();
                 break;
             case MODXO_LCD_SET_I2C:
-                legacy_display_set_i2c(rx_cmd.bytes[0]);
+                legacy_display_set_i2c(rx_cmd.param1);
                 break;
             default:
                 break;
