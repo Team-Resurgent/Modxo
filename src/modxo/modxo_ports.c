@@ -82,7 +82,6 @@ static void write_handler(uint16_t address, uint8_t *data)
         }
         else
         {
-            cmd_byte_idx++;
             switch (command_buffer.cmd)
             {
             case MODXO_LCD_SET_I2C:
