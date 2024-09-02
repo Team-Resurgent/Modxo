@@ -52,7 +52,6 @@ static int _erase_sector_number = -1;
 static int _program_sector_number = -1;
 uint8_t password_index = 0;
 uint8_t flash_size = 0;
-static int status = 1;
 
 char password_sequence[] = "DIE";
 
@@ -88,8 +87,6 @@ static void write_handler(uint16_t address, uint8_t *data)
             case MODXO_LCD_SET_I2C:
                 if (cmd_byte_idx == 2)
                 {
-                    status = status == 1 ? 0 : 1;
-                    gpio_put(25, status);
                     legacy_display_command(command_buffer.raw);
                     cmd_byte_idx = 0;
                 }
