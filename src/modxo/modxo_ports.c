@@ -76,7 +76,7 @@ static void write_handler(uint16_t address, uint8_t *data)
             switch (command_buffer.cmd)
             {
             case MODXO_LCD_SET_I2C:
-                cmd_byte_idx++;
+                break;
             default:
                 legacy_display_command(command_buffer.raw);
             }
