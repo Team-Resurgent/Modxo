@@ -13,8 +13,6 @@
 #define LCD_QUEUE_BUFFER_LEN 1024
 #define LCD_TIMEOUT_US 100
 
-static uint8_t status = 1;
-
 static struct
 {
     MODXO_QUEUE_ITEM_T buffer[LCD_QUEUE_BUFFER_LEN];
@@ -57,11 +55,6 @@ void legacy_display_poll()
                 legacy_display_set_spi();
                 break;
             case MODXO_LCD_SET_I2C:
-                if (rx_cmd.param1 == 0x10)
-                {
-                    status = status == 1 ? 0 : 1;
-                    gpio_put(25, status);
-                }
                 legacy_display_set_i2c(rx_cmd.param1);
                 break;
             default:
