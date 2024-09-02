@@ -42,7 +42,7 @@ typedef struct
     bool iscmd;
     union
     {
-        uint32_t cmd;
+        uint32_t raw;
         uint8_t data;
     };
 } MODXO_QUEUE_ITEM_T;

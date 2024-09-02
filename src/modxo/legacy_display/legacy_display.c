@@ -23,11 +23,11 @@ static struct
     uint8_t i2c_address;
 } private_data;
 
-void legacy_display_command(uint32_t cmd)
+void legacy_display_command(uint32_t raw)
 {
     MODXO_QUEUE_ITEM_T _item;
     _item.iscmd = true;
-    _item.cmd = cmd;
+    _item.raw = raw;
     modxo_queue_insert(&private_data.queue, &_item);
     __sev();
 }
@@ -49,7 +49,7 @@ void legacy_display_poll()
         if (_item.iscmd)
         {
             MODXO_LCD_CMD rx_cmd;
-            rx_cmd.raw = _item.cmd;
+            rx_cmd.raw = _item.raw;
 
             switch (rx_cmd.cmd)
             {
