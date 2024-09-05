@@ -6,6 +6,11 @@ Copyright (c) 2024, Shalx <Alejandro L. Huitron shalxmva@gmail.com>
 */
 #pragma once
 
+#include <hardware/spi.h>
+#include <hardware/structs/spi.h>
+#include <hardware/i2c.h>
+#include <hardware/structs/i2c.h>
+
 //LPC GPIOs
 #define LPC_LAD_START @LPC_LAD_START@
 #define LPC_CLK       @LPC_CLK@

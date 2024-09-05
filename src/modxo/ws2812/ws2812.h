@@ -18,7 +18,6 @@ typedef enum
 	LedColorWhite = 7
 } LedColorEnum;
 
-
 void ws2812_init();
 void ws2812_poll();
 void ws2812_set_color(uint8_t color);

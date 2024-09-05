@@ -56,7 +56,7 @@ pico_set_binary_type(${PROJECT_NAME} copy_to_ram)
 
 configure_file(${CMAKE_CURRENT_LIST_DIR}/src/modxo/lpc/lpc_comm.in temp/lpc_comm.pio @ONLY)
 pico_generate_pio_header(${PROJECT_NAME} "temp/lpc_comm.pio")
-pico_generate_pio_header(${PROJECT_NAME} ${CMAKE_CURRENT_LIST_DIR}/src/modxo/superio/WS2812.pio)
+pico_generate_pio_header(${PROJECT_NAME} ${CMAKE_CURRENT_LIST_DIR}/src/modxo/ws2812/ws2812.pio)
 
 #Source files
 target_sources(${PROJECT_NAME} PRIVATE
@@ -68,12 +68,11 @@ target_sources(${PROJECT_NAME} PRIVATE
     src/modxo/lpc/lpc_log.c
     src/modxo/lpc/lpc_regs.c
     src/modxo/flashrom/flashrom.c
-    src/modxo/superio/DATA_STORE.c
+    src/modxo/data_store/data_store.c
     src/modxo/superio/LPC47M152.c
-    src/modxo/superio/UART_16550.c
-    src/modxo/superio/WS2812.c
-    src/modxo/superio/SPI_PORT.c
-    src/modxo/text_display/hd44780.c
+    src/modxo/superio/uart_16550.c
+    src/modxo/ws2812/ws2812.c
+    src/modxo/legacy_display/legacy_display.c
     src/main.c
 )
 

@@ -33,15 +33,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <hardware/flash.h>
 
 #include "lpc/lpc_interface.h"
+#include "legacy_display/legacy_display.h"
 
 #include "modxo_ports.h"
 #include "flashrom/flashrom.h" // Delete
 #include "pico/multicore.h"
-#include "superio/SPI_PORT.h"
 
 #define STORAGE_CMD_TOTAL_BYTES 64
-
-static MODXO_TD_DRIVER_T *text_lcd_driver;
 
 enum
 {
@@ -57,80 +55,44 @@ uint8_t flash_size = 0;
 
 char password_sequence[] = "DIE";
 
-static struct
-{
-    union
-    {
-        struct
-        {
-            uint8_t text_lcd : 1;  // If text lcd is handled
-            uint8_t graph_lcd : 1; // If graphical lcd is handled
-            uint8_t user_sp : 1;   // If there is a serial port configured for printing messages
-        } bits;
-        uint8_t byte;
-    };
-} modxo_features = {
-    .byte = 0};
-
 static uint8_t cmd_byte_idx; // Index Byte Read
-MODXO_TD_CMD command_buffer;
+MODXO_LCD_CMD command_buffer;
 
 static void write_handler(uint16_t address, uint8_t *data)
 {
     switch (address)
     {
 
-    /*TEXT LCD Ports*/
-    case MODXO_REGISTER_LCD_DATA: // Text LCD Character Port
-        if (text_lcd_driver && text_lcd_driver->data)
-        {
-            text_lcd_driver->data(data);
-        }
+    case MODXO_REGISTER_LCD_DATA: 
+        legacy_display_data(data);
         cmd_byte_idx = 0;
         break;
-    case MODXO_REGISTER_LCD_COMMAND: // Text LCD Command Port (Home, Clear, Backlight, Contrast etc...)
-
-        if (text_lcd_driver && text_lcd_driver->command)
+    case MODXO_REGISTER_LCD_COMMAND: 
+        command_buffer.bytes[cmd_byte_idx] = *data;
+        cmd_byte_idx++;
+        if (cmd_byte_idx == 1)
         {
-            command_buffer.bytes[cmd_byte_idx] = *data;
-
-            if (cmd_byte_idx == 0)
+            switch (command_buffer.cmd)
             {
-
-                switch (command_buffer.cmd)
-                {
-                case MODXO_TD_SET_CURSOR_POSITION:
-                case MODXO_TD_SET_CONTRAST_BACKLIGHT:
-                case MODXO_TD_SEND_CUSTOM_CHAR_DATA:
-                    cmd_byte_idx++;
-                default:
-                    text_lcd_driver->command(command_buffer.raw);
-                }
+            case MODXO_LCD_SET_I2C:
+                break;
+            default:
+                legacy_display_command(command_buffer.raw);
             }
-            else
+        }
+        else
+        {
+            switch (command_buffer.cmd)
             {
-                cmd_byte_idx++;
-                switch (command_buffer.cmd)
+            case MODXO_LCD_SET_I2C:
+                if (cmd_byte_idx == 2)
                 {
-                case MODXO_TD_SET_CURSOR_POSITION:
-                    if (cmd_byte_idx == 3)
-                    {
-                        text_lcd_driver->command(command_buffer.raw);
-                        cmd_byte_idx = 0;
-                    }
-                    break;
-
-                case MODXO_TD_SET_CONTRAST_BACKLIGHT:
-                case MODXO_TD_SEND_CUSTOM_CHAR_DATA:
-                    if (cmd_byte_idx == 2)
-                    {
-                        text_lcd_driver->command(command_buffer.raw);
-                        cmd_byte_idx = 0;
-                    }
-                    break;
-                default:
+                    legacy_display_command(command_buffer.raw);
                     cmd_byte_idx = 0;
                 }
+                break;
+            default:
+                cmd_byte_idx = 0;
             }
         }
         break;
@@ -238,23 +200,10 @@ void modxo_ports_poll(void)
     }
 }
 
-void modxo_ports_init(MODXO_TD_DRIVER_T *drv)
+void modxo_ports_init()
 {
     lpc_interface_add_io_handler(MODXO_REGISTER_LCD_DATA, 0xFFF8, read_handler, write_handler);
     _program_sector_number = -1;
     _erase_sector_number = -1;
     cmd_byte_idx = 0;
-
-    if (drv != NULL)
-    {
-        text_lcd_driver = drv;
-    }
-    else
-    {
-        // If no text driver was provided, SPI Passthrough will be configured by default
-        // Using the same LCD Pins
-        spi_port_init(SPI_DISPLAY_INSTANCE, SPI_DISPLAY_BAUDRATE,
-                      SPI_DISPLAY_RX_PIN, SPI_DISPLAY_SCK_PIN,
-                      SPI_DISPLAY_TX_PIN, SPI_DISPLAY_SCN_PIN);
-    }
 }
