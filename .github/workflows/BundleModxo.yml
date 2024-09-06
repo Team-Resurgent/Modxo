@@ -65,6 +65,8 @@ jobs:
             ${{ github.workspace }}/build/modxo_yd_rp2040.uf2
             ${{ github.workspace }}/build/modxo_rp2040_zero.bin
             ${{ github.workspace }}/build/modxo_rp2040_zero.uf2
+            ${{ github.workspace }}/build/modxo_ultra.bin
+            ${{ github.workspace }}/build/modxo_ultra.uf2
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
