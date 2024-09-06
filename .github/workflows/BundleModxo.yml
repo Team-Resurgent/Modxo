@@ -44,6 +44,12 @@ jobs:
           cmake -DPICO_SDK_PATH=${{ github.workspace }}/pico-sdk -DMODXO_PINOUT=rp2040_zero .. 
           cmake --build .
 
+      - name: Build Modxo Ultra
+        run: |
+          cd ${{ github.workspace }}/build
+          cmake -DPICO_SDK_PATH=${{ github.workspace }}/pico-sdk -DMODXO_PINOUT=ultra .. 
+          cmake --build .
+
       - name: List Files
         run: ls ${{ github.workspace }}/build
 

@@ -37,6 +37,8 @@ if(${MODXO_PINOUT} MATCHES "yd_rp2040")
     set(PROJECT_NAME modxo_yd_rp2040)
 elseif(${MODXO_PINOUT} MATCHES "rp2040_zero")
     set(PROJECT_NAME modxo_rp2040_zero)
+elseif(${MODXO_PINOUT} MATCHES "ultra")
+    set(PROJECT_NAME modxo_ultra)
 endif()
 
 project(${PROJECT_NAME})
