@@ -126,12 +126,20 @@ int main(void)
     gpio_init(LED_STATUS_PIN);
     gpio_set_dir(LED_STATUS_PIN, GPIO_OUT);
     gpio_put(LED_STATUS_PIN, 1);
+#if UART_TX < 32
+    gpio_set_function(UART_TX, GPIO_FUNC_UART);
+#endif
+
+#if UART_RX < 32
+    gpio_set_function(UART_RX, GPIO_FUNC_UART);
+#endif
+    uart_init(UART_INST, 115200);
 
     modxo_init_interrupts();
     modxo_init();
 
     multicore_reset_core1();
     multicore_launch_core1(core1_main);
-
+    
     core0_main(); // Infinite loop
 }

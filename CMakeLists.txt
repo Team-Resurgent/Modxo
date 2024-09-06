@@ -1,6 +1,6 @@
 # == DO NEVER EDIT THE NEXT LINES for Raspberry Pi Pico VS Code Extension to work ==
 if(WIN32)
-   set(USERHOME $ENV{USERPROFILE})
+    set(USERHOME $ENV{USERPROFILE})
 else()
     set(USERHOME $ENV{HOME})
 endif()
@@ -89,7 +89,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 set(PICO_DEFAULT_BINARY_TYPE copy_to_ram)
 
 pico_enable_stdio_usb(${PROJECT_NAME} 1)
-pico_enable_stdio_uart(${PROJECT_NAME} 0)
+pico_enable_stdio_uart(${PROJECT_NAME} 1)
 
 # Create map/bin/hex/uf2 files
 pico_add_extra_outputs(${PROJECT_NAME})
