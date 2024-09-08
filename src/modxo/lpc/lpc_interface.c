@@ -305,8 +305,6 @@ void lpc_interface_init()
     {
         gpio_put(GPIO_D0, 0);
         gpio_set_dir(GPIO_D0, GPIO_OUT);
-        gpio_set_max_drivestrength(GPIO_D0, PADS_BANK0_GPIO0_DRIVE_VALUE_12MA);
-        gpio_set_max_drivestrength(LPC_LFRAME, PADS_BANK0_GPIO0_DRIVE_VALUE_12MA);
     }
     else
     {

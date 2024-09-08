@@ -90,7 +90,9 @@ void modxo_lpc_reset_on()
 
 void software_reset()
 {
+    // M0+ AIRCR Register
     //*((volatile uint32_t*)(PPB_BASE + 0x0ED0C)) = 0x5FA0004;
+
     watchdog_enable(1, 1);
     while(1);
 }
@@ -106,8 +108,6 @@ void modxo_low_power_mode()
 void modxo_init()
 {
     lpc_interface_init();
-
     modxo_lpcmem_init();
-
     modxo_lpcio_init();
 }
