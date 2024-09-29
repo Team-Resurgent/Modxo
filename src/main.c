@@ -120,7 +120,7 @@ void modxo_init_pin_irq(uint pin, uint32_t event)
 void modxo_init_interrupts()
 {
     modxo_init_pin_irq(LPC_RESET, GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE);
-    modxo_init_pin_irq(LPC_ON, GPIO_IRQ_EDGE_FALL | GPIO_IRQ_LEVEL_HIGH);
+    modxo_init_pin_irq(LPC_ON, GPIO_IRQ_EDGE_FALL);
 
     gpio_set_irq_callback(core0_irq_handler);
     irq_set_enabled(IO_IRQ_BANK0, true);
@@ -128,6 +128,7 @@ void modxo_init_interrupts()
 
 int main(void)
 {
+    set_sys_clock_khz(SYS_FREQ_IN_KHZ, true);
     stdio_init_all();
 
 #ifdef START_DELAY
