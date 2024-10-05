@@ -41,3 +41,5 @@ set(EXPANSION_PORT_I2C_SCL 21)
 
 #STATUS LED
 set(LED_STATUS_PIN 25)
+
+add_compile_definitions(PICO_FLASH_SPI_CLKDIV=4)
