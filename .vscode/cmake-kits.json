@@ -5,7 +5,7 @@
             "C": "${env:USERPROFILE}/.pico-sdk/toolchain/13_2_Rel1/bin/arm-none-eabi-gcc.exe",
             "CXX": "${env:USERPROFILE}/.pico-sdk/toolchain/13_2_Rel1/bin/arm-none-eabi-gcc.exe"
         },
-        "toolchainFile": "${env:USERPROFILE}/.pico-sdk/sdk/1.5.1/cmake/preload/toolchains/pico_arm_gcc.cmake",
+        "toolchainFile": "${env:USERPROFILE}/.pico-sdk/sdk/2.0.0/cmake/preload/toolchains/pico_arm_gcc.cmake",
         "environmentVariables": {
             "PATH": "${command:raspberry-pi-pico.getEnvPath};${env:PATH}"
         },

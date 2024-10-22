@@ -71,7 +71,7 @@ into an Original Xbox Modchip that allows running a bios.
 
 4.- After SDK is installed, git submodules must be updated from command line by running:
 ```
-cd %HOMEPATH%\.pico-sdk\sdk\1.5.1
+cd %HOMEPATH%\.pico-sdk\sdk\2.0.0
 git submodule update --init --recursive
 ```
 5.- Go to Raspberry Pi Pico Tab and click "Configure CMake"
