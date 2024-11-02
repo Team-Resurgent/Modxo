@@ -86,6 +86,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     pico_multicore
     hardware_i2c
     hardware_spi
+    hardware_flash
 )
 
 set(PICO_DEFAULT_BINARY_TYPE copy_to_ram)
