@@ -1,5 +1,6 @@
 # Generated Cmake Pico project file
 
+set(PICO_BOARD_HEADER_DIRS ${CMAKE_CURRENT_LIST_DIR}/boards/custom_pico_boards)
 cmake_minimum_required(VERSION 3.13)
 
 set(CMAKE_C_STANDARD 11)
@@ -25,6 +26,7 @@ endif()
 # ====================================================================================
 set(PICO_BOARD pico CACHE STRING "Board type")
 
+include(boards/modxo_pinout.cmake)
 # Pull in Raspberry Pi Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
 
@@ -32,18 +34,8 @@ if (PICO_SDK_VERSION_STRING VERSION_LESS "1.4.0")
   message(FATAL_ERROR "Raspberry Pi Pico SDK version 1.4.0 (or later) required. Your version is ${PICO_SDK_VERSION_STRING}")
 endif()
 
-set(PROJECT_NAME modxo_official_pico)
-if(${MODXO_PINOUT} MATCHES "yd_rp2040")
-    set(PROJECT_NAME modxo_yd_rp2040)
-elseif(${MODXO_PINOUT} MATCHES "rp2040_zero")
-    set(PROJECT_NAME modxo_rp2040_zero)
-elseif(${MODXO_PINOUT} MATCHES "ultra")
-    set(PROJECT_NAME modxo_ultra)
-endif()
-
 project(${PROJECT_NAME})
 
-include(boards/modxo_pinout.cmake)
 configure_file(${CMAKE_CURRENT_LIST_DIR}/boards/modxo_pinout.h.in modxo_pinout.h @ONLY)
 
 add_compile_definitions(PICO_FLASH_SIZE_BYTES=16777216)

@@ -288,10 +288,10 @@ void lpc_interface_init()
     {
         while (true)
         {
-            gpio_put(PICO_DEFAULT_LED_PIN, 1);
+            gpio_put(LED_STATUS_PIN, 1);
             sleep_ms(250);
             printf("Error: pio program can not be loaded\n");
-            gpio_put(PICO_DEFAULT_LED_PIN, 0);
+            gpio_put(LED_STATUS_PIN, 0);
             sleep_ms(250);
         }
     }
