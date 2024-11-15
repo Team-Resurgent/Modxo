@@ -6,13 +6,22 @@
 
 #
 
-Modxo (pronnounced as "Modsho") is a Xbox LPC Port firmware that converts the Raspberry Pi Pico
-into an Original Xbox Modchip that allows running a bios.
+Modxo (pronnounced "Modsho") is an RP2040 firmware that converts a Raspberry Pi Pico (or similar RP2040-based device) into an Original Xbox-compatible LPC peripheral device. 
+
+Modxo can be used for loading an Xbox BIOS image from the LPC port, as well as for interfacing comaptible Xbox software with peripheral devices such as HD44480 displays or addressable RGB LEDs.
+
+Modxo is *not* a modchip. Whereas legacy modchips rely on largely obsolete hardware like LPC flash storage chips or expensive programmable logic ICs, Modxo is the first fully software-based implementation of the LPC protocol. It is open source software, mostly written in C, developed using the official Raspberry Pi Pico SDK and designed to run on RP2040-based hardware. 
+
+No specialized hardware or complicated tooling is needed to load Modxo on a compatible device -- in most cased just a USB cable is all that is necessary. And installation works much like legacy devices -- all that is needed for installation is a compatible RP2040-based device, a few resistors, wire and basic soldering equipment. Custom PCBs exist to simplify the installation process even further.
 
 # How to Install
 ### 1. Requirements
-- Working LPC Port
-- Original Raspberry Pi Pico or RP2040 Zero (There are some clone boards that are not compatible)
+- An Xbox (any revision) with a working LPC Port. 1.6 Xboxes will need an LPC rebuild.
+- A RP2040 development board. There may be some clone boards that are not compatible. The following boards are known to work with Modxo:
+- - Official Raspberry Pi Pico or RP2040 Zero (There are some clone boards that are not compatible)
+  - YD-RP2040
+  - RP2040 Zero
+  - RP-Tiny
 - 4 100 Ohm resistors (tested with 1/4 W resistors)
 
 ### 2. Wiring diagrams
@@ -125,7 +134,7 @@ docker compose run --rm bios2uf2
  * Windbg get stuck sometimes when connected to Modxo SuperIO's serial port
 
 # Notes
- * Currently, Modxo uses the ID 0xAF. Any derivative hardware with significant changes should ideally use a different ID. This is so that software like PrometheOS can base features available from that returned ID.
+ * Currently, Modxo uses the ID 0xAF. Any derivative hardware with significant changes should ideally use a different ID. This is so that software like PrometheOS can target features appropriately.
  
 
 # Attribution Requirement
