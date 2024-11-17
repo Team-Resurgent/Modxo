@@ -57,3 +57,7 @@ Copyright (c) 2024, Shalx <Alejandro L. Huitron shalxmva@gmail.com>
 
 //STATUS LED GPIO
 #define LED_STATUS_PIN @LED_STATUS_PIN@
+
+//LED STRIP RGB (SK6812) OR BGR (WS2812)
+#define FIRST_LED_IN_STRIP_RGB false
+#define REST_LEDS_IN_STRIP_RGB false

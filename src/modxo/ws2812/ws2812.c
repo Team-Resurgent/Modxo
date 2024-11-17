@@ -235,11 +235,17 @@ static inline bool put_pixel(uint8_t strip, uint32_t pixel_grbx)
     return false;
 }
 
-static uint32_t traslate_pixel2gbrx(PIXEL_STATE pixel)
+static uint32_t traslate_pixel(PIXEL_STATE pixel, bool rgb)
 {
     HSV_COLOR hsv = rgb2hsv(pixel.rgb);
     hsv.v *= (pixel.brightness / 255.0f);
     RGB_COLOR rgb = hsv2rgb(hsv);
+    if (rgb)
+    {
+        return (((uint8_t)rgb.red) << 24) |
+           (((uint8_t)rgb.green) << 16) | 
+           (((uint8_t)rgb.blue) << 8); 
+    }
     return (((uint8_t)rgb.green) << 24) |
            (((uint8_t)rgb.blue) << 16) | 
            (((uint8_t)rgb.red) << 8);
@@ -257,7 +263,8 @@ static RGB_COLOR traslate_rgb2color(uint32_t rgb_value)
 static uint32_t inline get_next_pixel_value(uint8_t strip)
 {
     uint8_t display_led_no = strips[strip].next_led_to_display;
-    uint32_t display_color_value = traslate_pixel2gbrx(strips[strip].pixels[display_led_no]);
+    bool isRGB = display_led_no == 0 ? FIRST_LED_IN_STRIP_RGB : REST_LEDS_IN_STRIP_RGB;
+    uint32_t display_color_value = traslate_pixel(strips[strip].pixels[display_led_no], isRGB);
     return display_color_value;
 }
 
