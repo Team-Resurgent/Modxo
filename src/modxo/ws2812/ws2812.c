@@ -269,7 +269,7 @@ static RGB_COLOR traslate_rgb2color(uint32_t rgb_value)
 static uint32_t inline get_next_pixel_value(uint8_t strip)
 {
     uint8_t display_led_no = strips[strip].next_led_to_display;
-    bool isRGB = display_led_no == 0 ? FIRST_PIXEL_FORMAT : REST_PIXEL_FORMAT;
+    PIXEL_FORMAT isRGB = display_led_no == 0 ? FIRST_PIXEL_FORMAT : REST_PIXEL_FORMAT;
     uint32_t display_color_value = traslate_pixel(strips[strip].pixels[display_led_no], isRGB);
     return display_color_value;
 }
