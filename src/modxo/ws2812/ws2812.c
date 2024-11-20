@@ -108,8 +108,6 @@ typedef enum
     PIXEL_FORMAT_GBR,
 } PIXEL_FORMAT_TYPE;
 
-
-
 #define COL_ORDER_BRG             2
 #define COL_ORDER_RBG             3
 #define COL_ORDER_BGR             4
