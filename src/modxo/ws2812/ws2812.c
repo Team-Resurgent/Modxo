@@ -98,6 +98,16 @@ typedef struct
     uint8_t gpio_pin;
 } LED_STRIP;
 
+typedef enum
+{
+    PIXEL_FORMAT_GRB,
+    PIXEL_FORMAT_RGB,
+    PIXEL_FORMAT_BRG,
+    PIXEL_FORMAT_RBG,
+    PIXEL_FORMAT_BGR,
+    PIXEL_FORMAT_GBR,
+} PIXEL_FORMAT_TYPE;
+
 uint8_t selected_strip;
 bool updating_strips;
 
@@ -235,11 +245,41 @@ static inline bool put_pixel(uint8_t strip, uint32_t pixel_grbx)
     return false;
 }
 
-static uint32_t traslate_pixel2gbrx(PIXEL_STATE pixel)
+static uint32_t traslate_pixel(PIXEL_STATE pixel, PIXEL_FORMAT_TYPE pixel_format)
 {
     HSV_COLOR hsv = rgb2hsv(pixel.rgb);
     hsv.v *= (pixel.brightness / 255.0f);
     RGB_COLOR rgb = hsv2rgb(hsv);
+    if (pixel_format == PIXEL_FORMAT_RGB)
+    {
+        return (((uint8_t)rgb.red) << 24) |
+               (((uint8_t)rgb.green) << 16) | 
+               (((uint8_t)rgb.blue) << 8); 
+    }
+    else if (pixel_format == PIXEL_FORMAT_GRB)
+    {
+        return (((uint8_t)rgb.green) << 24) |
+               (((uint8_t)rgb.red) << 16) | 
+               (((uint8_t)rgb.blue) << 8); 
+    }
+    else if (pixel_format == PIXEL_FORMAT_BRG)
+    {
+        return (((uint8_t)rgb.blue) << 24) |
+               (((uint8_t)rgb.red) << 16) | 
+               (((uint8_t)rgb.green) << 8); 
+    }
+    else if (pixel_format == PIXEL_FORMAT_RBG)
+    {
+        return (((uint8_t)rgb.red) << 24) |
+               (((uint8_t)rgb.blue) << 16) | 
+               (((uint8_t)rgb.green) << 8); 
+    }
+    else if (pixel_format == PIXEL_FORMAT_BGR)
+    {
+        return (((uint8_t)rgb.blue) << 24) |
+               (((uint8_t)rgb.green) << 16) | 
+               (((uint8_t)rgb.red) << 8); 
+    }
     return (((uint8_t)rgb.green) << 24) |
            (((uint8_t)rgb.blue) << 16) | 
            (((uint8_t)rgb.red) << 8);
@@ -257,7 +297,8 @@ static RGB_COLOR traslate_rgb2color(uint32_t rgb_value)
 static uint32_t inline get_next_pixel_value(uint8_t strip)
 {
     uint8_t display_led_no = strips[strip].next_led_to_display;
-    uint32_t display_color_value = traslate_pixel2gbrx(strips[strip].pixels[display_led_no]);
+    PIXEL_FORMAT_TYPE pixel_format = display_led_no == 0 ? FIRST_PIXEL_FORMAT : REST_PIXEL_FORMAT;
+    uint32_t display_color_value = traslate_pixel(strips[strip].pixels[display_led_no], pixel_format);
     return display_color_value;
 }
 
