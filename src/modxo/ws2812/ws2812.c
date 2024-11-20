@@ -246,7 +246,7 @@ static uint32_t traslate_pixel(PIXEL_STATE pixel, PIXEL_FORMAT_TYPE pixel_format
     HSV_COLOR hsv = rgb2hsv(pixel.rgb);
     hsv.v *= (pixel.brightness / 255.0f);
     RGB_COLOR rgb = hsv2rgb(hsv);
-    if (PIXEL_FORMAT == PIXEL_FORMAT_RGB)
+    if (pixel_format == PIXEL_FORMAT_RGB)
     {
         return (((uint8_t)rgb.red) << 24) |
                (((uint8_t)rgb.green) << 16) | 
