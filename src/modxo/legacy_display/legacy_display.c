@@ -19,6 +19,8 @@ static struct
     MODXO_QUEUE_T queue;
     bool is_spi;
     uint8_t i2c_address;
+    bool has_i2c_prefix;
+    uint8_t i2c_prefix;
 } private_data;
 
 void legacy_display_command(uint32_t raw)
@@ -57,6 +59,12 @@ void legacy_display_poll()
             case MODXO_LCD_SET_I2C:
                 legacy_display_set_i2c(rx_cmd.param1);
                 break;
+            case MODXO_LCD_REMOVE_I2C_PREFIX:
+                legacy_display_remove_i2c_prefix();
+                break;
+            case MODXO_LCD_SET_I2C_PREFIX:
+                legacy_display_set_i2c_prefix(rx_cmd.param1);
+                break;
             default:
                 break;
             }
@@ -68,6 +76,14 @@ void legacy_display_poll()
                 gpio_put(LCD_PORT_SPI_CSN, 0);
                 spi_write_blocking(LCD_PORT_SPI_INST, &_item.data, 1);
                 gpio_put(LCD_PORT_SPI_CSN, 1);
+                return;
+            }
+            if (private_data.has_i2c_prefix)
+            {
+                char tempBuffer[2];
+                tempBuffer[0] = private_data.i2c_prefix;
+                tempBuffer[1] = _item.data;
+                i2c_write_timeout_us(LCD_PORT_I2C_INST, private_data.i2c_address, tempBuffer, 2, false, LCD_TIMEOUT_US);
                 return;
             }
             i2c_write_timeout_us(LCD_PORT_I2C_INST, private_data.i2c_address, &_item.data, 1, false, LCD_TIMEOUT_US);
@@ -96,6 +112,17 @@ void legacy_display_set_i2c(uint8_t i2c_address)
     gpio_set_function(LCD_PORT_I2C_SCL, GPIO_FUNC_I2C);
     gpio_pull_up(LCD_PORT_I2C_SDA);
     gpio_pull_up(LCD_PORT_I2C_SCL);
+}
+
+void legacy_display_remove_i2c_prefix()
+{
+    private_data.has_i2c_prefix = false;
+}
+
+void legacy_display_set_i2c_prefix(uint8_t prefix)
+{
+    private_data.has_i2c_prefix = true;
+    private_data.i2c_prefix = prefix;
 }
 
 void legacy_display_init()
