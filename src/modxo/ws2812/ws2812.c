@@ -100,9 +100,19 @@ typedef struct
 
 typedef enum
 {
+    PIXEL_FORMAT_GRB,
     PIXEL_FORMAT_RGB,
-    PIXEL_FORMAT_GBR
+    PIXEL_FORMAT_BRG,
+    PIXEL_FORMAT_RBG,
+    PIXEL_FORMAT_BGR,
+    PIXEL_FORMAT_GBR,
 } PIXEL_FORMAT_TYPE;
+
+
+
+#define COL_ORDER_BRG             2
+#define COL_ORDER_RBG             3
+#define COL_ORDER_BGR             4
 
 uint8_t selected_strip;
 bool updating_strips;
@@ -251,6 +261,30 @@ static uint32_t traslate_pixel(PIXEL_STATE pixel, PIXEL_FORMAT_TYPE pixel_format
         return (((uint8_t)rgb.red) << 24) |
                (((uint8_t)rgb.green) << 16) | 
                (((uint8_t)rgb.blue) << 8); 
+    }
+    else if (pixel_format == PIXEL_FORMAT_GRB)
+    {
+        return (((uint8_t)rgb.green) << 24) |
+               (((uint8_t)rgb.red) << 16) | 
+               (((uint8_t)rgb.blue) << 8); 
+    }
+    else if (pixel_format == PIXEL_FORMAT_BRG)
+    {
+        return (((uint8_t)rgb.blue) << 24) |
+               (((uint8_t)rgb.red) << 16) | 
+               (((uint8_t)rgb.green) << 8); 
+    }
+    else if (pixel_format == PIXEL_FORMAT_RBG)
+    {
+        return (((uint8_t)rgb.red) << 24) |
+               (((uint8_t)rgb.blue) << 16) | 
+               (((uint8_t)rgb.green) << 8); 
+    }
+    else if (pixel_format == PIXEL_FORMAT_BGR)
+    {
+        return (((uint8_t)rgb.blue) << 24) |
+               (((uint8_t)rgb.green) << 16) | 
+               (((uint8_t)rgb.red) << 8); 
     }
     return (((uint8_t)rgb.green) << 24) |
            (((uint8_t)rgb.blue) << 16) | 
