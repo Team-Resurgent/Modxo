@@ -547,9 +547,9 @@ void ws2812_set_color(uint8_t color) {
     send_data(255);
 
     select_command(CMD_FILL_STRIP_COL);
-    send_data((color & 4) == 4 ? 0xff : 0x00);
-    send_data((color & 2) == 2 ? 0xff : 0x00);
     send_data((color & 1) == 1 ? 0xff : 0x00);
+    send_data((color & 2) == 2 ? 0xff : 0x00);
+    send_data((color & 4) == 4 ? 0xff : 0x00);
 
     select_command(CMD_UPDATE_STRIPS);
 }
