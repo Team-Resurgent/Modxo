@@ -9,6 +9,8 @@ Copyright (c) 2024, Shalx <Alejandro L. Huitron shalxmva@gmail.com>
 #include "modxo_queue.h"
 #include "legacy_display/legacy_display.h"
 
+#define MODXO_REGISTER_CONFIG_REG_SEL 0xDEA4
+#define MODXO_REGISTER_CONFIG_REG_VAL 0xDEA5
 #define MODXO_REGISTER_DATA_STORE_COMMAND 0xDEA6
 #define MODXO_REGISTER_DATA_STORE_DATA 0xDEA7
 #define MODXO_REGISTER_LCD_DATA 0xDEA8

@@ -98,15 +98,6 @@ typedef struct
     uint8_t gpio_pin;
 } LED_STRIP;
 
-typedef enum
-{
-    PIXEL_FORMAT_GRB,
-    PIXEL_FORMAT_RGB,
-    PIXEL_FORMAT_BRG,
-    PIXEL_FORMAT_RBG,
-    PIXEL_FORMAT_BGR,
-    PIXEL_FORMAT_GBR,
-} PIXEL_FORMAT_TYPE;
 
 uint8_t selected_strip;
 bool updating_strips;

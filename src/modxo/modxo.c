@@ -36,6 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "lpc/lpc_log.h"
 #include "flashrom/flashrom.h"
 #include "data_store/data_store.h"
+#include "config/config_nvm.h"
 #include "superio/LPC47M152.h"
 #include "superio/uart_16550.h"
 #include "ws2812/ws2812.h"
@@ -107,6 +108,7 @@ void modxo_low_power_mode()
 
 void modxo_init()
 {
+    config_nvm_init();
     lpc_interface_init();
     modxo_lpcmem_init();
     modxo_lpcio_init();

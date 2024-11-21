@@ -18,6 +18,18 @@ typedef enum
 	LedColorWhite = 7
 } LedColorEnum;
 
+
+typedef enum
+{
+    PIXEL_FORMAT_GRB,
+    PIXEL_FORMAT_RGB,
+    PIXEL_FORMAT_BRG,
+    PIXEL_FORMAT_RBG,
+    PIXEL_FORMAT_BGR,
+    PIXEL_FORMAT_GBR,
+	PIXEL_INVALID_FORMAT=0xFF,
+} PIXEL_FORMAT_TYPE;
+
 void ws2812_init();
 void ws2812_poll();
 void ws2812_set_color(uint8_t color);
