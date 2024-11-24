@@ -28,7 +28,6 @@ Copyright (c) 2024, Shalx <Alejandro L. Huitron shalxmva@gmail.com>
 
 typedef enum
 {
-    BOARD_VARIANT_YD_RP2040,
     BOARD_VARIANT_OFFICIAL_PICO,
     BOARD_VARIANT_RP2040_ZERO_TINY,
     BOARD_VARIANT_YD_RP2040,
