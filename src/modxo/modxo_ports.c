@@ -159,7 +159,7 @@ static void read_handler(uint16_t address, uint8_t *data)
     case MODXO_REGISTER_CHIP_ID:
         *data = 0xAF;
         break;
-    case MODXO_REGISTER_VARIANT_ID:
+    case MODXO_REGISTER_BOARD_VARIANT_ID:
         *data = (uint8_t)BOARD_VARIANT;
         break;
     case MODXO_REGISTER_MEM_FLUSH:
