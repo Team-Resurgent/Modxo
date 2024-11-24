@@ -26,6 +26,15 @@ Copyright (c) 2024, Shalx <Alejandro L. Huitron shalxmva@gmail.com>
 #define MODXO_LCD_REMOVE_I2C_PREFIX 2
 #define MODXO_LCD_SET_I2C_PREFIX 3
 
+typedef enum
+{
+    BOARD_VARIANT_YD_RP2040,
+    BOARD_VARIANT_OFFICIAL_PICO,
+    BOARD_VARIANT_RP2040_ZERO_TINY,
+    BOARD_VARIANT_YD_RP2040,
+    BOARD_VARIANT_ULTRA,
+} BOARD_VARIANT_TYPE;
+
 typedef union
 {
     struct
