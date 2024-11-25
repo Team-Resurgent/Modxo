@@ -1,4 +1,6 @@
 #include "legacy_display.h"
+#include "../config/config_nvm.h"
+#include "../display_interface/display_interface.h"
 
 #include "../modxo_queue.h"
 #include "../modxo_ports.h"
@@ -71,47 +73,31 @@ void legacy_display_poll()
         }
         else
         {
-            if (private_data.is_spi)
-            {
-                gpio_put(LCD_PORT_SPI_CSN, 0);
-                spi_write_blocking(LCD_PORT_SPI_INST, &_item.data, 1);
-                gpio_put(LCD_PORT_SPI_CSN, 1);
-                return;
-            }
             if (private_data.has_i2c_prefix)
             {
-                char tempBuffer[2];
+                char tempBuffer[4];
                 tempBuffer[0] = private_data.i2c_prefix;
                 tempBuffer[1] = _item.data;
-                i2c_write_timeout_us(LCD_PORT_I2C_INST, private_data.i2c_address, tempBuffer, 2, false, LCD_TIMEOUT_US);
-                return;
+                display_write(*((uint32_t*)tempBuffer),2);
             }
-            i2c_write_timeout_us(LCD_PORT_I2C_INST, private_data.i2c_address, &_item.data, 1, false, LCD_TIMEOUT_US);
+            else
+            {
+                display_write(_item.data,1);
+            }
         }
     }
 }
 
 void legacy_display_set_spi()
 {
-    private_data.is_spi = true;
-    spi_init(LCD_PORT_SPI_INST, 1 * 1000000);
-    gpio_set_function(LCD_PORT_SPI_CLK, GPIO_FUNC_SPI);
-    gpio_set_function(LCD_PORT_SPI_MOSI, GPIO_FUNC_SPI);
-
-    gpio_init(LCD_PORT_SPI_CSN);
-    gpio_put(LCD_PORT_SPI_CSN, 0);
-    gpio_set_dir(LCD_PORT_SPI_CSN, GPIO_OUT);
+    legacy_display_remove_i2c_prefix();
+    display_set_interface(DI_SPI);
 }
 
 void legacy_display_set_i2c(uint8_t i2c_address)
 {
-    private_data.is_spi = false;
-    private_data.i2c_address = i2c_address;
-    i2c_init(LCD_PORT_I2C_INST, 400 * 1000);
-    gpio_set_function(LCD_PORT_I2C_SDA, GPIO_FUNC_I2C);
-    gpio_set_function(LCD_PORT_I2C_SCL, GPIO_FUNC_I2C);
-    gpio_pull_up(LCD_PORT_I2C_SDA);
-    gpio_pull_up(LCD_PORT_I2C_SCL);
+    config.display_config.addr1 = i2c_address;
+    display_set_interface(DI_I2C);
 }
 
 void legacy_display_remove_i2c_prefix()
@@ -128,5 +114,5 @@ void legacy_display_set_i2c_prefix(uint8_t prefix)
 void legacy_display_init()
 {
     modxo_queue_init(&private_data.queue, (void *)private_data.buffer, sizeof(private_data.buffer[0]), LCD_QUEUE_BUFFER_LEN);
-    legacy_display_set_spi();
+    display_set_interface(config.display_config.interface);
 }

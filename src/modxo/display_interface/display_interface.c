@@ -41,7 +41,8 @@ static void interface_init(){
     }
 }
 
-static void send_data(uint8_t* data, uint16_t len){
+static void send_data(uint8_t* data, uint16_t len)
+{
     switch(config.display_config.interface)
     {
         case DI_SPI:
@@ -59,6 +60,12 @@ void display_select_display(uint8_t display_number)
     selected_display = display_number;
 }
 
+void display_set_interface(DISPLAY_INTERFACE interface)
+{
+    config.display_config.interface = interface;
+    interface_init();
+}
+
 void display_init(void){
     modxo_queue_init(&queue, (void *)queue_buffer, sizeof(queue_buffer[0]), DISPLAY_INTERFACE_QUEUE_LEN);
     current_interface = config.display_config.interface;
@@ -71,7 +78,8 @@ void display_task(void)
 
     if(current_interface != config.display_config.interface)
     {
-        interface_init();
+        config_save_parameters();
+        current_interface = config.display_config.interface;
     }
 
     if (modxo_queue_remove(&queue, &item))
@@ -88,7 +96,6 @@ void display_write(uint32_t data, uint8_t len)
         item.data = data;
         item.len  = len;
         modxo_queue_insert(&queue, &item);
-        data++;
-        len--;
+        __sev();
     }
 }
