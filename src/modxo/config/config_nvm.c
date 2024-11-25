@@ -58,7 +58,8 @@ static NVM_PAGE* nvm_pages= (NVM_PAGE*)(NVM_FLASH_OFFSET + XIP_BASE);
 static MODXO_CONFIG default_nvm_parameters = {
             .first_bootbank_size = 0,
             .enable_superio_sp = 0,
-            .display_port_address = 0,
+            .display_config.addr1 = 0,
+            .display_config.addr2 = 0,
             .led_pf = PIXEL_INVALID_FORMAT,
         };
 
@@ -260,11 +261,23 @@ void config_set_value(uint8_t value){
     bool save = false;
 
     switch(reg_sel){
-        case NVM_REGISTER_LCD_TYPE:
-            if(config.display_port_address != value)
+        case NVM_REGISTER_DISPLAY_INTERFACE:
+            if(config.display_config.interface != value)
                 save = true;
 
-            config.display_port_address = value;
+            config.display_config.interface = value;
+            break;
+        case NVM_REGISTER_DISPLAY1_ADDRESS:
+            if(config.display_config.addr1 != value)
+                save = true;
+
+            config.display_config.addr1 = value;
+            break;
+        case NVM_REGISTER_DISPLAY2_ADDRESS:
+            if(config.display_config.addr2 != value)
+                save = true;
+
+            config.display_config.addr2 = value;
             break;
         case NVM_REGISTER_ENABLE_SUPERIO_SP:
             if(config.enable_superio_sp != value)
@@ -295,9 +308,14 @@ void config_set_value(uint8_t value){
 uint8_t config_get_value(void){
     uint8_t value=0;
     switch(reg_sel){
-        case NVM_REGISTER_LCD_TYPE:
-            value = config.display_port_address;
+        case NVM_REGISTER_DISPLAY_INTERFACE:
+            value = config.display_config.interface;
             break;
+        case NVM_REGISTER_DISPLAY1_ADDRESS:
+            value = config.display_config.addr1;
+            break;
+        case NVM_REGISTER_DISPLAY2_ADDRESS:
+            value = config.display_config.addr2;
             break;
         case NVM_REGISTER_ENABLE_SUPERIO_SP:
             value = config.enable_superio_sp;

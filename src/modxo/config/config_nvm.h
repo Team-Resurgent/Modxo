@@ -8,20 +8,30 @@ Copyright (c) 2024, Shalx <Alejandro L. Huitron shalxmva@gmail.com>
 
 #include <stdint.h>
 #include "../ws2812/ws2812.h"
+#include "../display_interface/display_interface.h"
 
 typedef struct{
     uint8_t first_bootbank_size:2;
     uint8_t enable_superio_sp:1;
-    uint8_t display_port_address; // 0 = SPI  !=0 I2C address
+
+    struct{
+      DISPLAY_INTERFACE interface;
+      uint8_t addr1;
+      uint8_t addr2;
+    }display_config;
+
     PIXEL_FORMAT_TYPE led_pf;
+
 }MODXO_CONFIG;
 
 typedef enum {
   NVM_REGISTER_NONE               = 0,
-  NVM_REGISTER_LCD_TYPE           = 1,
-  NVM_REGISTER_ENABLE_SUPERIO_SP  = 2,
-  NVM_REGISTER_BOOT_BANK_SIZE     = 3,
-  NVM_REGISTER_LED_PIXEL_FORMAT   = 4,
+  NVM_REGISTER_DISPLAY_INTERFACE  = 1, //0 = spi 1 = i2c
+  NVM_REGISTER_DISPLAY1_ADDRESS   = 2, 
+  NVM_REGISTER_DISPLAY2_ADDRESS   = 3, 
+  NVM_REGISTER_ENABLE_SUPERIO_SP  = 4,
+  NVM_REGISTER_BOOT_BANK_SIZE     = 5,
+  NVM_REGISTER_LED_PIXEL_FORMAT   = 6,
 } NVM_REGISTER_SEL;
 
 extern MODXO_CONFIG config;

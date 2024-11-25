@@ -31,6 +31,7 @@ Copyright (c) 2024, Shalx <Alejandro L. Huitron shalxmva@gmail.com>
 #define LCD_PORT_SPI_MOSI @LCD_PORT_SPI_MOSI@
 #define LCD_PORT_SPI_CLK @LCD_PORT_SPI_CLK@
 #define LCD_PORT_SPI_CSN @LCD_PORT_SPI_CSN@
+#define LCD_PORT_SPI_CSN2 @LCD_PORT_SPI_CSN2@
 
 //SD_CARD GPIOs
 #define SD_CARD_SPI_INST @SD_CARD_SPI_INST@

@@ -76,6 +76,9 @@ target_sources(${PROJECT_NAME} PRIVATE
     src/modxo/ws2812/ws2812.c
     src/modxo/legacy_display/legacy_display.c
     src/modxo/config/config_nvm.c
+    src/modxo/display_interface/display_interface.c
+    src/modxo/display_interface/spi_interface.c
+    src/modxo/display_interface/i2c_interface.c
     src/main.c
 )
 

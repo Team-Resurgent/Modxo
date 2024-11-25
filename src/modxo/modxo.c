@@ -67,6 +67,7 @@ void modxo_poll_core1()
 
 void modxo_poll_core0()
 {
+    display_task();
     legacy_display_poll();
 #ifdef LPC_LOGGING
     lpc_interface_poll();

@@ -36,5 +36,20 @@
     "raspberry-pi-pico.useCmakeTools": false,
     "raspberry-pi-pico.cmakePath": "${HOME}/.pico-sdk/cmake/v3.28.6/bin/cmake",
     "raspberry-pi-pico.ninjaPath": "${HOME}/.pico-sdk/ninja/v1.12.1/ninja",
-    "raspberry-pi-pico.python3Path": "${HOME}/.pico-sdk/python/3.12.1/python.exe"
+    "raspberry-pi-pico.python3Path": "${HOME}/.pico-sdk/python/3.12.1/python.exe",
+    "files.associations": {
+        "legacy_display.h": "c",
+        "config_nvm.h": "c",
+        "modxo_ports.h": "c",
+        "modxo_queue.h": "c",
+        "display_interface.h": "c",
+        "display_driver.h": "c",
+        "array": "c",
+        "string": "c",
+        "string_view": "c",
+        "modxo_pinout.h": "c",
+        "multicore.h": "c",
+        "binary_info.h": "c",
+        "stddef.h": "c"
+    }
 }
