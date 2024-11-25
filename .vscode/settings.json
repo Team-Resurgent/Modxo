@@ -50,6 +50,8 @@
         "modxo_pinout.h": "c",
         "multicore.h": "c",
         "binary_info.h": "c",
-        "stddef.h": "c"
+        "stddef.h": "c",
+        "config_lpc.h": "c",
+        "data_store.h": "c"
     }
 }
