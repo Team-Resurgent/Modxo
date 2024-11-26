@@ -288,9 +288,9 @@ static uint32_t traslate_pixel(PIXEL_STATE pixel, PIXEL_FORMAT_TYPE pixel_format
 static RGB_COLOR traslate_rgb2color(uint32_t rgb_value)
 {
     RGB_COLOR color;
-    color.red = (float)((rgb_value >> 16) & 0xff);
+    color.red = (float)(rgb_value & 0xff);
     color.green = (float)((rgb_value >> 8) & 0xff);
-    color.blue = (float)(rgb_value & 0xff);
+    color.blue = (float)((rgb_value >> 16) & 0xff);
     return color;
 }
 
@@ -547,9 +547,9 @@ void ws2812_set_color(uint8_t color) {
     send_data(255);
 
     select_command(CMD_FILL_STRIP_COL);
-    send_data((color & 4) == 4 ? 0xff : 0x00);
-    send_data((color & 2) == 2 ? 0xff : 0x00);
     send_data((color & 1) == 1 ? 0xff : 0x00);
+    send_data((color & 2) == 2 ? 0xff : 0x00);
+    send_data((color & 3) == 4 ? 0xff : 0x00);
 
     select_command(CMD_UPDATE_STRIPS);
 }
