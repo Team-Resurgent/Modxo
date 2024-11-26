@@ -44,12 +44,6 @@ jobs:
           cmake -DPICO_SDK_PATH=${{ github.workspace }}/pico-sdk -DMODXO_PINOUT=rp2040_zero_tiny .. 
           cmake --build .
 
-      - name: Build Modxo RP2040-Zero-Tiny Clone
-        run: |
-          cd ${{ github.workspace }}/build
-          cmake -DPICO_SDK_PATH=${{ github.workspace }}/pico-sdk -DMODXO_PINOUT=rp2040_zero_tiny_clone .. 
-          cmake --build .
-
       - name: Build Modxo Ultra
         run: |
           cd ${{ github.workspace }}/build

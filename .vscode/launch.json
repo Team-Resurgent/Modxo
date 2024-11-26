@@ -94,13 +94,6 @@
             "cwd": "${workspaceFolder}"
         },
         {
-            "name": "Build (RP2040-Zero-Tiny-Clone)",
-            "type": "node-terminal",
-            "request": "launch",
-            "command": "cmake -DMODXO_PINOUT=rp2040_zero_tiny_clone ./build; cmake --build ./build; pause; exit",
-            "cwd": "${workspaceFolder}"
-        },
-        {
             "name": "Build (Ultra)",
             "type": "node-terminal",
             "request": "launch",
