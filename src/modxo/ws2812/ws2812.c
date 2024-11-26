@@ -236,12 +236,12 @@ static HSV_COLOR rgb2hsv(RGB_COLOR rgb)
     return hsv;
 }
 
-static inline bool put_pixel(uint8_t strip, uint32_t pixel_grbx)
+static inline bool put_pixel(uint8_t strip, uint32_t pixel_color)
 {
     if (pio_sm_is_tx_fifo_full(LED_PIO, strip))
         return true;
 
-    pio_sm_put(LED_PIO, strip, pixel_grbx);
+    pio_sm_put(LED_PIO, strip, pixel_color);
     return false;
 }
 
@@ -547,9 +547,9 @@ void ws2812_set_color(uint8_t color) {
     send_data(255);
 
     select_command(CMD_FILL_STRIP_COL);
-    send_data((color & 1) == 1 ? 0xff : 0x00);
-    send_data((color & 2) == 2 ? 0xff : 0x00);
     send_data((color & 4) == 4 ? 0xff : 0x00);
+    send_data((color & 2) == 2 ? 0xff : 0x00);
+    send_data((color & 1) == 1 ? 0xff : 0x00);
 
     select_command(CMD_UPDATE_STRIPS);
 }
