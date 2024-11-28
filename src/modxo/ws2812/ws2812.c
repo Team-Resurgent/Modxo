@@ -297,7 +297,7 @@ static RGB_COLOR traslate_rgb2color(uint32_t rgb_value)
 static uint32_t inline get_next_pixel_value(uint8_t strip)
 {
     uint8_t display_led_no = strips[strip].next_led_to_display;
-    PIXEL_FORMAT_TYPE pixel_format = display_led_no == 0 ? FIRST_PIXEL_FORMAT : REST_PIXEL_FORMAT;
+    PIXEL_FORMAT_TYPE pixel_format = (display_led_no == 0 && strip == 0) ? FIRST_PIXEL_FORMAT : REST_PIXEL_FORMAT;
     uint32_t display_color_value = traslate_pixel(strips[strip].pixels[display_led_no], pixel_format);
     return display_color_value;
 }
