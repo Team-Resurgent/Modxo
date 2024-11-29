@@ -99,10 +99,10 @@ void software_reset()
 
 void modxo_low_power_mode()
 {
+    // Modxo sleep
+
     // Modxo reset
     software_reset();
-
-    // Modxo sleep
 }
 
 void modxo_init()
