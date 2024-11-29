@@ -89,15 +89,6 @@ typedef struct
     float v;
 } HSV_COLOR;
 
-typedef struct
-{
-    PIXEL_STATE pixels[256];
-    uint next_led_to_display;
-    uint total_leds;
-    uint8_t selected_pixel;
-    uint8_t gpio_pin;
-} LED_STRIP;
-
 typedef enum
 {
     PIXEL_FORMAT_GRB,
@@ -107,6 +98,16 @@ typedef enum
     PIXEL_FORMAT_BGR,
     PIXEL_FORMAT_GBR,
 } PIXEL_FORMAT_TYPE;
+
+typedef struct
+{
+    PIXEL_STATE pixels[256];
+    uint next_led_to_display;
+    uint total_leds;
+    uint8_t selected_pixel;
+    uint8_t gpio_pin;
+    PIXEL_FORMAT_TYPE pixel_format;
+} LED_STRIP;
 
 uint8_t selected_strip;
 bool updating_strips;
@@ -125,15 +126,19 @@ uint8_t current_led_color = LedColorOff;
 LED_STRIP strips[MAX_STRIPS] = {
     {
         .gpio_pin = LED_STRIP1,
+        .pixel_format = STRIP1_PIXEL_FORMAT,
     },
     {
         .gpio_pin = LED_STRIP2,
+        .pixel_format = STRIP2_PIXEL_FORMAT,
     },
     {
         .gpio_pin = LED_STRIP3,
+        .pixel_format = STRIP3_PIXEL_FORMAT,
     },
     {
         .gpio_pin = LED_STRIP4,
+        .pixel_format = STRIP4_PIXEL_FORMAT,
     }};
 
 static RGB_COLOR hsv2rgb(HSV_COLOR hsv)
@@ -297,7 +302,7 @@ static RGB_COLOR traslate_rgb2color(uint32_t rgb_value)
 static uint32_t inline get_next_pixel_value(uint8_t strip)
 {
     uint8_t display_led_no = strips[strip].next_led_to_display;
-    PIXEL_FORMAT_TYPE pixel_format = display_led_no == 0 ? FIRST_PIXEL_FORMAT : REST_PIXEL_FORMAT;
+    PIXEL_FORMAT_TYPE pixel_format = (display_led_no == 0 && strip == 0) ? RGB_STATUS_PIXEL_FORMAT : strips[strip].pixel_format;
     uint32_t display_color_value = traslate_pixel(strips[strip].pixels[display_led_no], pixel_format);
     return display_color_value;
 }
@@ -549,7 +554,7 @@ void ws2812_set_color(uint8_t color) {
     select_command(CMD_FILL_STRIP_COL);
     send_data((color & 1) == 1 ? 0xff : 0x00);
     send_data((color & 2) == 2 ? 0xff : 0x00);
-    send_data((color & 3) == 4 ? 0xff : 0x00);
+    send_data((color & 4) == 4 ? 0xff : 0x00);
 
     select_command(CMD_UPDATE_STRIPS);
 }
