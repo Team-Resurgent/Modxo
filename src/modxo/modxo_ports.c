@@ -79,6 +79,7 @@ static void write_handler(uint16_t address, uint8_t *data)
                 break;
             default:
                 legacy_display_command(command_buffer.raw);
+                cmd_byte_idx = 0;
             }
         }
         else
