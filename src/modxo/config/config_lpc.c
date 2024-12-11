@@ -25,16 +25,16 @@ void config_set_value(uint8_t value){
             display_set_interface(value);
             break;*/
         case NVM_REGISTER_DISPLAY1_ADDRESS:
-            if(config.display_config.addr1 != value)
+            if(config.display_config.addr[0] != value)
                 save = true;
 
-            config.display_config.addr1 = value;
+            config.display_config.addr[0] = value;
             break;
         case NVM_REGISTER_DISPLAY2_ADDRESS:
-            if(config.display_config.addr2 != value)
+            if(config.display_config.addr[1] != value)
                 save = true;
 
-            config.display_config.addr2 = value;
+            config.display_config.addr[1] = value;
             break;
         case NVM_REGISTER_ENABLE_SUPERIO_SP:
             if(config.enable_superio_sp != value)
@@ -93,10 +93,10 @@ uint8_t config_get_value(void){
             value = config.display_config.interface;
             break;
         case NVM_REGISTER_DISPLAY1_ADDRESS:
-            value = config.display_config.addr1;
+            value = config.display_config.addr[0];
             break;
         case NVM_REGISTER_DISPLAY2_ADDRESS:
-            value = config.display_config.addr2;
+            value = config.display_config.addr[1];
             break;
         case NVM_REGISTER_ENABLE_SUPERIO_SP:
             value = config.enable_superio_sp;

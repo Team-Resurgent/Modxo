@@ -7,6 +7,7 @@
 #include <pico/stdlib.h>
 #include "pico/multicore.h"
 #include "pico/binary_info.h"
+#include "../config/config_nvm.h"
 
 #include <modxo_pinout.h>
 
@@ -19,7 +20,6 @@ static struct
     MODXO_QUEUE_T queue;
     bool is_spi;
     int8_t spi_device;
-    uint8_t i2c_address;
     bool has_i2c_prefix;
     uint8_t i2c_prefix;
 } private_data;
@@ -85,10 +85,10 @@ void legacy_display_poll()
                 char tempBuffer[2];
                 tempBuffer[0] = private_data.i2c_prefix;
                 tempBuffer[1] = _item.data;
-                i2c_write_timeout_us(LCD_PORT_I2C_INST, private_data.i2c_address, tempBuffer, 2, false, LCD_TIMEOUT_US);
+                i2c_write_timeout_us(LCD_PORT_I2C_INST, config.display_config.addr[0], tempBuffer, 2, false, LCD_TIMEOUT_US);
                 return;
             }
-            i2c_write_timeout_us(LCD_PORT_I2C_INST, private_data.i2c_address, &_item.data, 1, false, LCD_TIMEOUT_US);
+            i2c_write_timeout_us(LCD_PORT_I2C_INST, config.display_config.addr[0], &_item.data, 1, false, LCD_TIMEOUT_US);
         }
     }
 }
@@ -110,7 +110,8 @@ void legacy_display_set_spi(uint8_t device)
 void legacy_display_set_i2c(uint8_t i2c_address)
 {
     private_data.is_spi = false;
-    private_data.i2c_address = i2c_address;
+    config.display_config.addr[0] = i2c_address;
+    config_save_parameters();
     i2c_init(LCD_PORT_I2C_INST, 400 * 1000);
     gpio_set_function(LCD_PORT_I2C_SDA, GPIO_FUNC_I2C);
     gpio_set_function(LCD_PORT_I2C_SCL, GPIO_FUNC_I2C);

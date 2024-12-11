@@ -15,8 +15,7 @@ typedef struct{
 
     struct{
       uint8_t interface;
-      uint8_t addr1;
-      uint8_t addr2;
+      uint8_t addr[2];
     }display_config;
 
     PIXEL_FORMAT_TYPE rgb_status_pf;
