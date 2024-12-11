@@ -132,5 +132,5 @@ void legacy_display_set_i2c_prefix(uint8_t prefix)
 void legacy_display_init()
 {
     modxo_queue_init(&private_data.queue, (void *)private_data.buffer, sizeof(private_data.buffer[0]), LCD_QUEUE_BUFFER_LEN);
-    legacy_display_set_spi();
+    legacy_display_set_spi(0);
 }
