@@ -74,6 +74,7 @@ static void write_handler(uint16_t address, uint8_t *data)
         {
             switch (command_buffer.cmd)
             {
+            case MODXO_LCD_SET_SPI:
             case MODXO_LCD_SET_I2C:
             case MODXO_LCD_SET_I2C_PREFIX:
                 break;

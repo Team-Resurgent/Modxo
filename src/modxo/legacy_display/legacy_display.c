@@ -18,6 +18,7 @@ static struct
     MODXO_QUEUE_ITEM_T buffer[LCD_QUEUE_BUFFER_LEN];
     MODXO_QUEUE_T queue;
     bool is_spi;
+    int8_t spi_device;
     uint8_t i2c_address;
     bool has_i2c_prefix;
     uint8_t i2c_prefix;
@@ -54,7 +55,7 @@ void legacy_display_poll()
             switch (rx_cmd.cmd)
             {
             case MODXO_LCD_SET_SPI:
-                legacy_display_set_spi();
+                legacy_display_set_spi(rx_cmd.param1);
                 break;
             case MODXO_LCD_SET_I2C:
                 legacy_display_set_i2c(rx_cmd.param1);
@@ -73,9 +74,10 @@ void legacy_display_poll()
         {
             if (private_data.is_spi)
             {
-                gpio_put(LCD_PORT_SPI_CSN, 0);
+                uint csPin = private_data.spi_device == 0 ? LCD_PORT_SPI_CSN1 : LCD_PORT_SPI_CSN2;
+                gpio_put(csPin, 0);
                 spi_write_blocking(LCD_PORT_SPI_INST, &_item.data, 1);
-                gpio_put(LCD_PORT_SPI_CSN, 1);
+                gpio_put(csPin, 1);
                 return;
             }
             if (private_data.has_i2c_prefix)
@@ -91,16 +93,18 @@ void legacy_display_poll()
     }
 }
 
-void legacy_display_set_spi()
+void legacy_display_set_spi(uint8_t device)
 {
     private_data.is_spi = true;
+    private_data.spi_device = device;
     spi_init(LCD_PORT_SPI_INST, 1 * 1000000);
     gpio_set_function(LCD_PORT_SPI_CLK, GPIO_FUNC_SPI);
     gpio_set_function(LCD_PORT_SPI_MOSI, GPIO_FUNC_SPI);
 
-    gpio_init(LCD_PORT_SPI_CSN);
-    gpio_put(LCD_PORT_SPI_CSN, 0);
-    gpio_set_dir(LCD_PORT_SPI_CSN, GPIO_OUT);
+    uint csPin = private_data.spi_device == 0 ? LCD_PORT_SPI_CSN1 : LCD_PORT_SPI_CSN2;
+    gpio_init(csPin);
+    gpio_put(csPin, 0);
+    gpio_set_dir(csPin, GPIO_OUT);
 }
 
 void legacy_display_set_i2c(uint8_t i2c_address)
