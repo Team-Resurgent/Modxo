@@ -32,6 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "modxo.h"
 #include "modxo_ports.h"
+#include "modxo_debug.h"
 #include "lpc/lpc_interface.h"
 #include "lpc/lpc_log.h"
 #include "flashrom/flashrom.h"
@@ -53,11 +54,10 @@ static void modxo_lpcmem_init()
 
 static void modxo_lpcio_init()
 {
-    if(config.enable_superio_sp)
-    {
-        lpc47m152_init();
-        uart_16550_init();
-    }
+#ifndef DEBUG_SUPERIO_DISABLED
+    lpc47m152_init();
+    uart_16550_init();
+#endif
     
     data_store_init();
     ws2812_init();

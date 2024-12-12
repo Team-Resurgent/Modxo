@@ -1,3 +1,30 @@
+/*
+SPDX short identifier: BSD-2-Clause
+BSD 2-Clause License
+
+Copyright (c) 2024, Team Resurgent, Shalx
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
 #include "legacy_display.h"
 
 #include "../modxo_queue.h"
@@ -20,6 +47,7 @@ static struct
     MODXO_QUEUE_T queue;
     bool is_spi;
     int8_t spi_device;
+    uint8_t i2c_address;
     bool has_i2c_prefix;
     uint8_t i2c_prefix;
 } private_data;
@@ -85,10 +113,10 @@ void legacy_display_poll()
                 char tempBuffer[2];
                 tempBuffer[0] = private_data.i2c_prefix;
                 tempBuffer[1] = _item.data;
-                i2c_write_timeout_us(LCD_PORT_I2C_INST, config.display_config.addr[0], tempBuffer, 2, false, LCD_TIMEOUT_US);
+                i2c_write_timeout_us(LCD_PORT_I2C_INST, private_data.i2c_address, tempBuffer, 2, false, LCD_TIMEOUT_US);
                 return;
             }
-            i2c_write_timeout_us(LCD_PORT_I2C_INST, config.display_config.addr[0], &_item.data, 1, false, LCD_TIMEOUT_US);
+            i2c_write_timeout_us(LCD_PORT_I2C_INST, private_data.i2c_address, &_item.data, 1, false, LCD_TIMEOUT_US);
         }
     }
 }
@@ -110,8 +138,7 @@ void legacy_display_set_spi(uint8_t device)
 void legacy_display_set_i2c(uint8_t i2c_address)
 {
     private_data.is_spi = false;
-    config.display_config.addr[0] = i2c_address;
-    config_save_parameters();
+    private_data.i2c_address = i2c_address;
     i2c_init(LCD_PORT_I2C_INST, 400 * 1000);
     gpio_set_function(LCD_PORT_I2C_SDA, GPIO_FUNC_I2C);
     gpio_set_function(LCD_PORT_I2C_SCL, GPIO_FUNC_I2C);
