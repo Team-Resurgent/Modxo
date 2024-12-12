@@ -43,6 +43,9 @@ endif()
 
 project(${PROJECT_NAME})
 
+if(${DEBUG_PRINTS} MATCHES 1)
+    add_definitions( -DDEBUG_PRINTS )
+endif()
 include(boards/modxo_pinout.cmake)
 configure_file(${CMAKE_CURRENT_LIST_DIR}/boards/modxo_pinout.h.in modxo_pinout.h @ONLY)
 
@@ -75,6 +78,8 @@ target_sources(${PROJECT_NAME} PRIVATE
     src/modxo/superio/uart_16550.c
     src/modxo/ws2812/ws2812.c
     src/modxo/legacy_display/legacy_display.c
+    src/modxo/config/config_nvm.c
+    src/modxo/config/config_lpc.c
     src/main.c
 )
 

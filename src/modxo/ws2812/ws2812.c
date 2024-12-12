@@ -34,6 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "hardware/clocks.h"
 #include "ws2812.pio.h"
 #include "ws2812.h"
+#include "../config/config_nvm.h"
 
 #include "../lpc/lpc_interface.h"
 #include "../lpc/lpc_regs.h"
@@ -89,16 +90,6 @@ typedef struct
     float v;
 } HSV_COLOR;
 
-typedef enum
-{
-    PIXEL_FORMAT_GRB,
-    PIXEL_FORMAT_RGB,
-    PIXEL_FORMAT_BRG,
-    PIXEL_FORMAT_RBG,
-    PIXEL_FORMAT_BGR,
-    PIXEL_FORMAT_GBR,
-} PIXEL_FORMAT_TYPE;
-
 typedef struct
 {
     PIXEL_STATE pixels[256];
@@ -106,7 +97,6 @@ typedef struct
     uint total_leds;
     uint8_t selected_pixel;
     uint8_t gpio_pin;
-    PIXEL_FORMAT_TYPE pixel_format;
 } LED_STRIP;
 
 uint8_t selected_strip;
@@ -126,19 +116,15 @@ uint8_t current_led_color = LedColorOff;
 LED_STRIP strips[MAX_STRIPS] = {
     {
         .gpio_pin = LED_STRIP1,
-        .pixel_format = STRIP1_PIXEL_FORMAT,
     },
     {
         .gpio_pin = LED_STRIP2,
-        .pixel_format = STRIP2_PIXEL_FORMAT,
     },
     {
         .gpio_pin = LED_STRIP3,
-        .pixel_format = STRIP3_PIXEL_FORMAT,
     },
     {
         .gpio_pin = LED_STRIP4,
-        .pixel_format = STRIP4_PIXEL_FORMAT,
     }};
 
 static RGB_COLOR hsv2rgb(HSV_COLOR hsv)
@@ -302,7 +288,7 @@ static RGB_COLOR traslate_rgb2color(uint32_t rgb_value)
 static uint32_t inline get_next_pixel_value(uint8_t strip)
 {
     uint8_t display_led_no = strips[strip].next_led_to_display;
-    PIXEL_FORMAT_TYPE pixel_format = (display_led_no == 0 && strip == 0) ? RGB_STATUS_PIXEL_FORMAT : strips[strip].pixel_format;
+    PIXEL_FORMAT_TYPE pixel_format = (display_led_no == 0 && strip == 0) ? config.rgb_status_pf: config.rgb_strip_pf[strip];
     uint32_t display_color_value = traslate_pixel(strips[strip].pixels[display_led_no], pixel_format);
     return display_color_value;
 }
