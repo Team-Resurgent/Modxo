@@ -158,10 +158,10 @@ static void config_read_hdlr(uint16_t address, uint8_t *data)
 {
     switch (address)
     {
-    case MODXO_REGISTER_CONFIG_REG_SEL:
+    case MODXO_REGISTER_NVM_CONFIG_SEL:
         *data = config_get_reg_sel();
         break;
-    case MODXO_REGISTER_CONFIG_REG_VAL:
+    case MODXO_REGISTER_NVM_CONFIG_VAL:
         *data = config_get_value();
         break;
     default:
@@ -174,10 +174,10 @@ static void config_write_hdlr(uint16_t address, uint8_t *data)
 {
     switch (address)
     {
-    case MODXO_REGISTER_CONFIG_REG_SEL:
+    case MODXO_REGISTER_NVM_CONFIG_SEL:
         config_set_reg_sel(*data);
         break;
-    case MODXO_REGISTER_CONFIG_REG_VAL:
+    case MODXO_REGISTER_NVM_CONFIG_VAL:
         config_set_value(*data);
         break;
     }
@@ -186,5 +186,5 @@ static void config_write_hdlr(uint16_t address, uint8_t *data)
 void config_nvm_init(void)
 {
     config_retrieve_parameters();
-    lpc_interface_add_io_handler(MODXO_REGISTER_CONFIG_REG_SEL, 0xFFFE, config_read_hdlr, config_write_hdlr);
+    lpc_interface_add_io_handler(MODXO_REGISTER_NVM_CONFIG_SEL, 0xFFFE, config_read_hdlr, config_write_hdlr);
 }
