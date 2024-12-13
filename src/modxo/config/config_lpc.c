@@ -30,6 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../modxo_ports.h"
 #include "../lpc/lpc_interface.h"
+#include "../modxo_debug.h"
 
 static NVM_REGISTER_SEL reg_sel = NVM_REGISTER_NONE;
 
@@ -95,7 +96,7 @@ uint8_t config_get_value(void)
     switch (reg_sel)
     {
     case NVM_REGISTER_RGB_STATUS_PF:
-        value = config.rgb_status_pf = value;
+        value = config.rgb_status_pf;
         break;
     case NVM_REGISTER_RGB_STRIP1_PF:
         value = config.rgb_strip_pf[0];

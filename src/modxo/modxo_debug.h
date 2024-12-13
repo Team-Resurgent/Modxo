@@ -6,6 +6,7 @@ Copyright (c) 2024, Team Resurgent, Shalx
 */
 #pragma once
 
+#include <stdio.h>
 #ifdef DEBUG_PRINTS
 #define DEBUG_SUPERIO_DISABLED
 #define DEBUG_PRINTF(...) printf(__VA_ARGS__)
