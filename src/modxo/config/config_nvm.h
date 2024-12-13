@@ -10,14 +10,6 @@ Copyright (c) 2024, Team Resurgent, Shalx
 #include "../ws2812/ws2812.h"
 
 typedef struct{
-    uint8_t first_bootbank_size:2;
-    uint8_t enable_superio_sp:1;
-
-    struct{
-      uint8_t interface;
-      uint8_t addr[2];
-    }display_config;
-
     PIXEL_FORMAT_TYPE rgb_status_pf;
     PIXEL_FORMAT_TYPE rgb_strip_pf[4];
 
@@ -25,16 +17,11 @@ typedef struct{
 
 typedef enum {
   NVM_REGISTER_NONE               =  0,
-  NVM_REGISTER_DISPLAY_INTERFACE  =  1, //0 = spi 1 = i2c
-  NVM_REGISTER_DISPLAY1_ADDRESS   =  2, 
-  NVM_REGISTER_DISPLAY2_ADDRESS   =  3, 
-  NVM_REGISTER_ENABLE_SUPERIO_SP  =  4,
-  NVM_REGISTER_BOOT_BANK_SIZE     =  5,
-  NVM_REGISTER_RGB_STATUS_PF      =  6,
-  NVM_REGISTER_RGB_STRIP1_PF      =  7,
-  NVM_REGISTER_RGB_STRIP2_PF      =  8,
-  NVM_REGISTER_RGB_STRIP3_PF      =  9,
-  NVM_REGISTER_RGB_STRIP4_PF      = 10,
+  NVM_REGISTER_RGB_STATUS_PF      =  1,
+  NVM_REGISTER_RGB_STRIP1_PF      =  2,
+  NVM_REGISTER_RGB_STRIP2_PF      =  3,
+  NVM_REGISTER_RGB_STRIP3_PF      =  4,
+  NVM_REGISTER_RGB_STRIP4_PF      =  5,
 } NVM_REGISTER_SEL;
 
 extern MODXO_CONFIG config;
