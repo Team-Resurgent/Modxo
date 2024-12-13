@@ -55,9 +55,6 @@ MODXO_CONFIG config={0};
 static NVM_PAGE* nvm_pages= (NVM_PAGE*)(NVM_FLASH_OFFSET + XIP_BASE);
 
 static MODXO_CONFIG default_nvm_parameters = {
-            .first_bootbank_size = 0,
-            .enable_superio_sp = 0,
-            .display_config.addr = {0,0},
             .rgb_status_pf = RGB_STATUS_PIXEL_FORMAT,
             .rgb_strip_pf[0]  = STRIP1_PIXEL_FORMAT,
             .rgb_strip_pf[1]  = STRIP2_PIXEL_FORMAT,
