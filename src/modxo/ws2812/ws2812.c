@@ -519,7 +519,7 @@ void ws2812_poll()
     }
 }
 
-static void ws2812_update_pixels()
+void ws2812_update_pixels()
 {
     for (uint i = 0; i < 4; i++)
     {
