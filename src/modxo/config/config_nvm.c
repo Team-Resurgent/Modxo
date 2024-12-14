@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <hardware/sync.h>
 #include <hardware/flash.h>
 #include <hardware/regs/addressmap.h>
+#include <hardware/sync.h>
 
 #include "../lpc/lpc_interface.h"
 #include "config_nvm.h"
@@ -228,6 +229,7 @@ static void nvm_save_page(int page_no, MODXO_CONFIG* pars){
 
 void config_save_parameters(){
     save_config=true;
+    __sev();
 }
 
 void config_poll()

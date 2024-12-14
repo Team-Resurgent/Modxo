@@ -32,6 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "pico/stdlib.h"
 #include "hardware/pio.h"
 #include "hardware/clocks.h"
+#include <hardware/sync.h>
 #include "ws2812.pio.h"
 #include "ws2812.h"
 #include "../config/config_nvm.h"
@@ -526,6 +527,7 @@ void ws2812_update_pixels()
         strips[i].next_led_to_display = 0;
     }
     updating_strips = true;
+    __sev();
 }
 
 void ws2812_set_color(uint8_t color) {
