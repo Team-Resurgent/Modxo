@@ -35,6 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../lpc/lpc_interface.h"
 #include "config_nvm.h"
 #include "../modxo_ports.h"
+#include "../modxo_debug.h"
 #include <string.h>
 
 #define NVM_FLASH_OFFSET 0x3D000
@@ -51,6 +52,7 @@ typedef struct{
     uint16_t crc;
 }NVM_PAGE;
 
+static bool save_config=false;
 MODXO_CONFIG config={0};
 static NVM_PAGE* nvm_pages= (NVM_PAGE*)(NVM_FLASH_OFFSET + XIP_BASE);
 
@@ -100,7 +102,7 @@ static uint16_t crc_ccitt_false[] = {
 static uint16_t calc_crc(const void* data, uint16_t len) {
     uint16_t calc = 0xFFFF;
     const uint8_t* buf = (const uint8_t*)data;
-
+    
     for (;len; len--) {
         calc = (calc << 8) ^ crc_ccitt_false[ ((calc >> 8) ^ (*buf++)) & 0xFF];
     }
@@ -114,10 +116,11 @@ static bool is_page_empty(uint8_t page_no){
     uint32_t* flash_ptr = (uint32_t*)&nvm_pages[page_no];
 
     for(uint i =0;i<(NVM_PAGE_SIZE/4);i++){
-        if(*flash_ptr != 0xFFFFFFFF){
+        if(*flash_ptr != ((uint32_t)0xFFFFFFFF)){
             is_empty = false;
             break;
         }
+        flash_ptr++;
     }
 
     return is_empty;    
@@ -172,12 +175,11 @@ static int look_next_empty_page(int page_no){
 static int look_last_config(){
     int page = -1;
     for(page = NVM_TOTAL_PAGES-1; page >= 0; page--){
-        if(is_page_valid(page)){
+        if(is_page_valid(page)){   
             break;
         }
     }
 
-    printf("\t\tLast config found at page %d\n", page);
     return page;
 }
 
@@ -216,6 +218,7 @@ static void nvm_save_page(int page_no, MODXO_CONFIG* pars){
         program_nvm_page(page_no,&page);
         restore_interrupts (ints);
     } else {
+        prepare_nvm_page(&page, pars);
         ints = save_and_disable_interrupts();
         program_nvm_page(page_no, &page);
         restore_interrupts (ints);
@@ -224,13 +227,21 @@ static void nvm_save_page(int page_no, MODXO_CONFIG* pars){
 }
 
 void config_save_parameters(){
-    int page_no;
+    save_config=true;
+}
 
-    //Save it after the last valid config
-    page_no = look_last_config();
-    page_no = look_next_empty_page(page_no);
+void config_poll()
+{
+    if(save_config)
+    {
+        int page_no;
+        //Save it after the last valid config
+        page_no = look_last_config();
+        page_no = look_next_empty_page(page_no);
 
-    nvm_save_page(page_no, &config);
+        nvm_save_page(page_no, &config);
+        save_config=false;
+    }
 }
 
 void config_retrieve_parameters(){

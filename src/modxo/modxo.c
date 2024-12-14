@@ -68,6 +68,7 @@ static void modxo_lpcio_init()
 void modxo_poll_core1()
 {
     modxo_ports_poll();
+    config_poll();
 }
 
 void modxo_poll_core0()
