@@ -42,7 +42,7 @@ elseif(${MODXO_PINOUT} MATCHES "ultra")
 endif()
 
 project(${PROJECT_NAME})
-
+set(DEBUG_PRINTS 1)
 if(${DEBUG_PRINTS} MATCHES 1)
     add_definitions( -DDEBUG_PRINTS )
 endif()

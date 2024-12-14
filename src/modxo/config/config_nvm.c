@@ -199,6 +199,7 @@ static void program_nvm_page(uint8_t number, NVM_PAGE* buffer){
 static void nvm_save_page(int page_no, MODXO_CONFIG* pars){
     NVM_PAGE page;
     uint32_t ints;
+    uint8_t* ptr=(uint8_t*)&page;
     
     //sleep_ms(2000);
     if(page_no == -1){
@@ -224,9 +225,21 @@ static void nvm_save_page(int page_no, MODXO_CONFIG* pars){
         restore_interrupts (ints);
     }
 
+    DEBUG_PRINTF("\tSaved on Page%d ---- contents:\n",page_no);
+    for(int t=0,c=0;t<sizeof(NVM_PAGE);t++,c++){
+        c%=16;
+        if(c==0){
+            DEBUG_PRINTF("\n\t\t",*ptr);
+        }
+
+        DEBUG_PRINTF("%02X ",*ptr);
+        ptr++;
+    }
+    DEBUG_PRINTF("\n");
 }
 
 void config_save_parameters(){
+    DEBUG_PRINTF("Saving\n");
     save_config=true;
 }
 
@@ -237,7 +250,9 @@ void config_poll()
         int page_no;
         //Save it after the last valid config
         page_no = look_last_config();
+        DEBUG_PRINTF("\tLast config on page [%d]\n",page_no);
         page_no = look_next_empty_page(page_no);
+        DEBUG_PRINTF("\tNext empty page [%d]\n",page_no);
 
         nvm_save_page(page_no, &config);
         save_config=false;
