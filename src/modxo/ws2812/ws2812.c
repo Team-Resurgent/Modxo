@@ -320,15 +320,6 @@ static void enable_strip(uint8_t data)
 {
 }
 
-static void update_pixels()
-{
-    for (uint i = 0; i < 4; i++)
-    {
-        strips[i].next_led_to_display = 0;
-    }
-    updating_strips = true;
-}
-
 static void fill_strip(uint32_t rgb24_color)
 {
     RGB_COLOR color = traslate_rgb2color(rgb24_color);
@@ -440,7 +431,7 @@ static void select_command(uint8_t cmd)
 
     if (cmd == CMD_UPDATE_STRIPS)
     {
-        update_pixels();
+        ws2812_update_pixels();
     }
 }
 
@@ -528,6 +519,15 @@ void ws2812_poll()
     }
 }
 
+static void ws2812_update_pixels()
+{
+    for (uint i = 0; i < 4; i++)
+    {
+        strips[i].next_led_to_display = 0;
+    }
+    updating_strips = true;
+}
+
 void ws2812_set_color(uint8_t color) {
     current_led_color = color;
 
@@ -578,5 +578,5 @@ void ws2812_init()
 
     lpc_interface_add_io_handler(WS2812_PORT_BASE, WS2812_ADDRESS_MASK, lpc_port_read, lpc_port_write);
 
-    update_pixels();
+    ws2812_update_pixels();
 }

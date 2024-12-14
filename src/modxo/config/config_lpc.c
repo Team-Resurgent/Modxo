@@ -30,6 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../modxo_ports.h"
 #include "../lpc/lpc_interface.h"
+#include "../ws2812/ws2812.h"
 #include "../modxo_debug.h"
 
 static NVM_REGISTER_SEL reg_sel = NVM_REGISTER_NONE;
@@ -47,37 +48,48 @@ NVM_REGISTER_SEL config_get_reg_sel(void)
 void config_set_value(uint8_t value)
 {
     bool save = false;
+    bool update_pixels = false;
 
     switch (reg_sel)
     {
     case NVM_REGISTER_RGB_STATUS_PF:
         if (config.rgb_status_pf != value)
+        {
             save = true;
-
+            update_pixels = true;
+        }
         config.rgb_status_pf = value;
         break;
     case NVM_REGISTER_RGB_STRIP1_PF:
         if (config.rgb_strip_pf[0] != value)
+        {
             save = true;
-
+            update_pixels = true;
+        }
         config.rgb_strip_pf[0] = value;
         break;
     case NVM_REGISTER_RGB_STRIP2_PF:
         if (config.rgb_strip_pf[1] != value)
+        {
             save = true;
-
+            update_pixels = true;
+        }
         config.rgb_strip_pf[1] = value;
         break;
     case NVM_REGISTER_RGB_STRIP3_PF:
         if (config.rgb_strip_pf[2] != value)
+        {
             save = true;
-
+            update_pixels = true;
+        }
         config.rgb_strip_pf[2] = value;
         break;
     case NVM_REGISTER_RGB_STRIP4_PF:
         if (config.rgb_strip_pf[3] != value)
+        {
             save = true;
-
+            update_pixels = true;
+        }
         config.rgb_strip_pf[3] = value;
         break;
     default:
@@ -87,6 +99,11 @@ void config_set_value(uint8_t value)
     if (save)
     {
         config_save_parameters();
+    }
+
+    if (update_pixels)
+    {
+        ws2812_update_pixels();
     }
 }
 
