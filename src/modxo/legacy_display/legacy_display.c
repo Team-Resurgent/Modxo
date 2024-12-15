@@ -139,7 +139,7 @@ void legacy_display_set_i2c(uint8_t i2c_address)
 {
     private_data.is_spi = false;
     private_data.i2c_address = i2c_address;
-    i2c_init(LCD_PORT_I2C_INST, 100 * 1000);
+    i2c_init(LCD_PORT_I2C_INST, 72 * 1000);
     gpio_set_function(LCD_PORT_I2C_SDA, GPIO_FUNC_I2C);
     gpio_set_function(LCD_PORT_I2C_SCL, GPIO_FUNC_I2C);
     gpio_pull_up(LCD_PORT_I2C_SDA);
