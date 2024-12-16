@@ -136,7 +136,7 @@ void legacy_display_set_spi_mode(uint8_t spi_mode)
 
 void legacy_display_set_clk(uint8_t clk_khz)
 {
-    private_data.clk_khz = max(clk_khz, 1);
+    private_data.clk_khz = MAX(clk_khz, 1);
 }
 
 void legacy_display_set_spi(uint8_t device)
