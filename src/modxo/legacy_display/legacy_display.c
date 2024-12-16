@@ -125,13 +125,14 @@ void legacy_display_set_spi(uint8_t device)
 {
     private_data.is_spi = true;
     private_data.spi_device = device;
-    spi_init(LCD_PORT_SPI_INST, 1 * 1000000);
+    spi_init(LCD_PORT_SPI_INST, 100 * 1000);
+    spi_set_format(LCD_PORT_SPI_INST, 8, SPI_CPOL_1, SPI_CPHA_1, SPI_MSB_FIRST);
     gpio_set_function(LCD_PORT_SPI_CLK, GPIO_FUNC_SPI);
     gpio_set_function(LCD_PORT_SPI_MOSI, GPIO_FUNC_SPI);
 
     uint csPin = private_data.spi_device == 0 ? LCD_PORT_SPI_CSN1 : LCD_PORT_SPI_CSN2;
     gpio_init(csPin);
-    gpio_put(csPin, 0);
+    gpio_put(csPin, 1);
     gpio_set_dir(csPin, GPIO_OUT);
 }
 
