@@ -31,6 +31,7 @@ Copyright (c) 2024, Shalx <Alejandro L. Huitron shalxmva@gmail.com>
 #define MODXO_LCD_REMOVE_I2C_PREFIX 2
 #define MODXO_LCD_SET_I2C_PREFIX 3
 #define MODXO_LCD_SET_CLK 4
+#define MODXO_LCD_SET_SPI_MODE 5
 
 typedef enum
 {
