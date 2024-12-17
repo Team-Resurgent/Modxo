@@ -121,7 +121,7 @@ void legacy_display_poll()
                 char tempBuffer[2];
                 tempBuffer[0] = private_data.i2c_prefix;
                 tempBuffer[1] = _item.data;
-                i2c_write_timeout_us(LCD_PORT_I2C_INST, private_data.i2c_address, tempBuffer, 2, false, LCD_TIMEOUT_US);
+                i2c_write_timeout_us(LCD_PORT_I2C_INST, private_data.i2c_address, &tempBuffer[0], 2, false, LCD_TIMEOUT_US);
                 return;
             }
             i2c_write_timeout_us(LCD_PORT_I2C_INST, private_data.i2c_address, &_item.data, 1, false, LCD_TIMEOUT_US);
