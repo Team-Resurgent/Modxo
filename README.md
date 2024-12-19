@@ -106,7 +106,7 @@ Output will be `out/modxo_[pinout].uf2`
 
 There are also some extra parameters that can be passed to the build script:
 
-- MODXO_PINOUT=`official_pico` | `yd_rp2040` | `rp2040_zero` - Default is `official_pico`.
+- MODXO_PINOUT=`official_pico` | `yd_rp2040` | `rp2040_zero` | `xiao_rp2040` - Default is `official_pico`.
 
 - CLEAN=`y`: triggers a clean build. Default is disabled.
 

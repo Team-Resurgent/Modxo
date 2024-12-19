@@ -552,6 +552,13 @@ void ws2812_init()
     selected_strip = 0;
     updating_strips = false;
 
+    if (LED_STRIP1_PWR != 31)
+    {
+        gpio_init(LED_STRIP1_PWR);
+        gpio_set_dir(LED_STRIP1_PWR, GPIO_OUT);
+        gpio_put(LED_STRIP1_PWR, 1);
+    }
+
     LPC_REG_INIT(pixel_color_reg, pixel_color_value);
     LPC_REG_RESET(pixel_color_reg);
 

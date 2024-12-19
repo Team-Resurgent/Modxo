@@ -44,6 +44,12 @@ jobs:
           cmake -DPICO_SDK_PATH=${{ github.workspace }}/pico-sdk -DMODXO_PINOUT=rp2040_zero_tiny .. 
           cmake --build .
 
+      - name: Build Modxo XIAO-RP2040
+        run: |
+          cd ${{ github.workspace }}/build
+          cmake -DPICO_SDK_PATH=${{ github.workspace }}/pico-sdk -DMODXO_PINOUT=xiao_rp2040 .. 
+          cmake --build .
+
       - name: Build Modxo Ultra
         run: |
           cd ${{ github.workspace }}/build
@@ -67,6 +73,8 @@ jobs:
             ${{ github.workspace }}/build/modxo_rp2040_zero_tiny.uf2
             ${{ github.workspace }}/build/modxo_rp2040_zero_tiny_clone.bin
             ${{ github.workspace }}/build/modxo_rp2040_zero_tiny_clone.uf2
+            ${{ github.workspace }}/build/modxo_xiao_rp2040.bin
+            ${{ github.workspace }}/build/modxo_xiao_rp2040.uf2
             ${{ github.workspace }}/build/modxo_ultra.bin
             ${{ github.workspace }}/build/modxo_ultra.uf2
 
@@ -81,5 +89,7 @@ jobs:
             ${{ github.workspace }}/build/modxo_yd_rp2040.uf2
             ${{ github.workspace }}/build/modxo_rp2040_zero.bin
             ${{ github.workspace }}/build/modxo_rp2040_zero.uf2
+            ${{ github.workspace }}/build/modxo_xiao_rp2040.bin
+            ${{ github.workspace }}/build/modxo_xiao_rp2040.uf2
             ${{ github.workspace }}/build/modxo_ultra.bin
             ${{ github.workspace }}/build/modxo_ultra.uf2
