@@ -77,6 +77,8 @@ static void write_handler(uint16_t address, uint8_t *data)
             case MODXO_LCD_SET_SPI:
             case MODXO_LCD_SET_I2C:
             case MODXO_LCD_SET_I2C_PREFIX:
+            case MODXO_LCD_SET_CLK:
+            case MODXO_LCD_SET_SPI_MODE:
                 break;
             default:
                 legacy_display_command(command_buffer.raw);
