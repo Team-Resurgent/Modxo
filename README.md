@@ -34,7 +34,7 @@ No specialized hardware or complicated tooling is needed to load Modxo on a comp
 
 #### Flashing steps (Single Bios)
 
-The following steps are only required if not using PrometheOS (as it already contains a Modxo)...
+The following steps are not required if you intend to use PrometheOS, and just flash PrometheOS-{board-variant}.uf2 directly...
 
 1. Connect Raspberry Pi Pico to a PC with BOOTSEL button (or equivalent button on compatible RP2040 hardware) pressed and a new drive will become available.
 2. Copy Modxo-{board variant}.uf2 into the Raspberry Pi Pico Drive.
@@ -45,7 +45,7 @@ The following steps are only required if not using PrometheOS (as it already con
 
 The following steps are only needed if wanting to upgrade PrometheOS with Modxo updates/fixes...
 
-1. Ensure PrometheOS.uf2 is flashed
+1. Assuming PrometheOS-{board-variant}.uf2 is already flashed.
 2. Connect Raspberry Pi Pico to a PC with BOOTSEL button (or equivalent button on compatible RP2040 hardware) pressed and a new drive will become available.
 3. Copy Modxo-{board variant}.uf2 into the Raspberry Pi Pico Drive.
    
