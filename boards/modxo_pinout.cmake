@@ -7,6 +7,7 @@
 #Default pin values, so the pinout files can skip them if not used
 set(LED_STATUS_PIN PICO_DEFAULT_LED_PIN)
 
+set(LED_STRIP_PWR 31) #Not Used
 set(LED_STRIP1 31) #Not Used
 set(LED_STRIP2 31) #Not Used
 set(LED_STRIP3 31) #Not Used

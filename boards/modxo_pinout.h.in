@@ -47,6 +47,7 @@ Copyright (c) 2024, Shalx <Alejandro L. Huitron shalxmva@gmail.com>
 #define UART_RX @UART_RX@
 
 //RGB LED GPIOs
+#define LED_STRIP_PWR @LED_STRIP_PWR@
 #define LED_STRIP1 @LED_STRIP1@
 #define LED_STRIP2 @LED_STRIP2@
 #define LED_STRIP3 @LED_STRIP3@

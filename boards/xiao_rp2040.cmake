@@ -35,6 +35,7 @@ set(UART_TX 31)            # Discarded pin
 set(UART_RX 31)            # Discarded pin
 
 #RGB LED GPIOs
+set(LED_STRIP1_PWR 11)
 set(LED_STRIP1 12)
 
 #EXPANSION PORT
