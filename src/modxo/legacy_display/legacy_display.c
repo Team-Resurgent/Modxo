@@ -108,7 +108,7 @@ void legacy_display_poll()
         }
         else
         {
-            if (private_data.is_spi)
+            if (LCD_PORT_SPI_ENABLE && private_data.is_spi)
             {
                 uint csPin = private_data.spi_device == 0 ? LCD_PORT_SPI_CSN1 : LCD_PORT_SPI_CSN2;
                 gpio_put(csPin, 0);
@@ -116,17 +116,20 @@ void legacy_display_poll()
                 gpio_put(csPin, 1);
                 return;
             }
-            if (private_data.has_i2c_prefix)
+            if (LCD_PORT_I2C_ENABLE)
             {
-                gpio_put(25, private_data.i2c_prefix == 0x40 ? 0 : 1);
-       
-                char tempBuffer[2];
-                tempBuffer[0] = private_data.i2c_prefix;
-                tempBuffer[1] = _item.data;
-                i2c_write_timeout_us(LCD_PORT_I2C_INST, private_data.i2c_address, &tempBuffer[0], 2, false, LCD_TIMEOUT_US);
-                return;
+                if (private_data.has_i2c_prefix)
+                {
+                    gpio_put(25, private_data.i2c_prefix == 0x40 ? 0 : 1);
+        
+                    char tempBuffer[2];
+                    tempBuffer[0] = private_data.i2c_prefix;
+                    tempBuffer[1] = _item.data;
+                    i2c_write_timeout_us(LCD_PORT_I2C_INST, private_data.i2c_address, &tempBuffer[0], 2, false, LCD_TIMEOUT_US);
+                    return;
+                }
+                i2c_write_timeout_us(LCD_PORT_I2C_INST, private_data.i2c_address, &_item.data, 1, false, LCD_TIMEOUT_US);
             }
-            i2c_write_timeout_us(LCD_PORT_I2C_INST, private_data.i2c_address, &_item.data, 1, false, LCD_TIMEOUT_US);
         }
     }
 }
@@ -145,6 +148,11 @@ void legacy_display_set_spi(uint8_t device)
 {
     private_data.is_spi = true;
     private_data.spi_device = device;
+    if (!LCD_PORT_SPI_ENABLE)
+    {
+        return;
+    }
+
     spi_init(LCD_PORT_SPI_INST, private_data.clk_khz * 1000);
     gpio_set_function(LCD_PORT_SPI_CLK, GPIO_FUNC_SPI);
     gpio_set_function(LCD_PORT_SPI_MOSI, GPIO_FUNC_SPI);
@@ -160,6 +168,11 @@ void legacy_display_set_i2c(uint8_t i2c_address)
 {
     private_data.is_spi = false;
     private_data.i2c_address = i2c_address;
+    if (!LCD_PORT_I2C_ENABLE)
+    {
+        return;
+    }
+
     i2c_init(LCD_PORT_I2C_INST, private_data.clk_khz * 1000);
     gpio_set_function(LCD_PORT_I2C_SDA, GPIO_FUNC_I2C);
     gpio_set_function(LCD_PORT_I2C_SCL, GPIO_FUNC_I2C);
