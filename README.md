@@ -34,14 +34,14 @@ No specialized hardware or complicated tooling is needed to load Modxo on a comp
 
 #### Flashing steps (Single Bios)
 1. Connect Raspberry Pi Pico to a PC with BOOTSEL button (or equivalent button on compatible RP2040 hardware) pressed and a new drive will become available.
-2. Copy Modxo.uf2 into the Raspberry Pi Pico Drive.
+2. Copy Modxo-{board variant}.uf2 into the Raspberry Pi Pico Drive.
 3. Reconnect Raspberry Pi Pico with BOOTSEL button pressed, so the previous drive will showup again.
 4. Copy your bios UF2 file into the drive
 
 #### Upgrading PrometheOS's Modxo steps
 1. Ensure PrometheOS.uf2 is flashed
 2. Connect Raspberry Pi Pico to a PC with BOOTSEL button (or equivalent button on compatible RP2040 hardware) pressed and a new drive will become available.
-3. Copy Modxo.uf2 into the Raspberry Pi Pico Drive.
+3. Copy Modxo-{board variant}.uf2 into the Raspberry Pi Pico Drive.
    
 ### Wiring diagrams
 ---
