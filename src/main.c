@@ -136,7 +136,7 @@ int main(void)
 #endif
     gpio_init(LED_STATUS_PIN);
     gpio_set_dir(LED_STATUS_PIN, GPIO_OUT);
-    gpio_put(LED_STATUS_PIN, 1);
+    gpio_put(LED_STATUS_PIN, LED_STATUS_ON_LEVEL);
 
     modxo_init_interrupts();
 

@@ -10,29 +10,29 @@ set(LPC_ON        4)
 #LCD_PORT GPIOs
 set(LCD_PORT_I2C_ENABLE false)
 set(LCD_PORT_I2C_INST i2c0)
-set(LCD_PORT_I2C_SDA 32)
-set(LCD_PORT_I2C_SCL 32)
+set(LCD_PORT_I2C_SDA 31)
+set(LCD_PORT_I2C_SCL 31)
 
 set(LCD_PORT_SPI_ENABLE false)
 set(LCD_PORT_SPI_INST spi1)
 set(LCD_PORT_SPI_MOSI ${LCD_PORT_I2C_SCL})
 set(LCD_PORT_SPI_CLK  ${LCD_PORT_I2C_SDA})
-set(LCD_PORT_SPI_CSN1  32)
-set(LCD_PORT_SPI_CSN2  32)
+set(LCD_PORT_SPI_CSN1  31)
+set(LCD_PORT_SPI_CSN2  31)
 
 #SD_CARD GPIOs
 set(SD_CARD_SPI_ENABLE false)
 set(SD_CARD_SPI_INST spi0) # Discarded pin
-set(SD_CARD_SPI_MISO 32)   # Discarded pin
-set(SD_CARD_SPI_CSN  32)   # Discarded pin
-set(SD_CARD_SPI_CLK  32)   # Discarded pin
-set(SD_CARD_SPI_MOSI 32)   # Discarded pin
+set(SD_CARD_SPI_MISO 31)   # Discarded pin
+set(SD_CARD_SPI_CSN  31)   # Discarded pin
+set(SD_CARD_SPI_CLK  31)   # Discarded pin
+set(SD_CARD_SPI_MOSI 31)   # Discarded pin
 
 #UART GPIOs
 set(UART_ENABLE false)
 set(UART_INST uart0)
-set(UART_TX 32)            # Discarded pin
-set(UART_RX 32)            # Discarded pin
+set(UART_TX 31)            # Discarded pin
+set(UART_RX 31)            # Discarded pin
 
 #RGB LED GPIOs
 set(LED_STRIP1 12)
@@ -43,6 +43,8 @@ set(EXPANSION_PORT_I2C_SDA 6)
 set(EXPANSION_PORT_I2C_SCL 7)
 
 #STATUS LED
+set(LED_STATUS_ON_LEVEL 0)
+set(LED_STATUS_OFF_LEVEL 1)
 set(LED_STATUS_PIN 25)
 
 #LED STRIP PIXEL FORMAT

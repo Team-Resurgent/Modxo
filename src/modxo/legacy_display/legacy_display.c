@@ -120,7 +120,7 @@ void legacy_display_poll()
             {
                 if (private_data.has_i2c_prefix)
                 {
-                    gpio_put(25, private_data.i2c_prefix == 0x40 ? 0 : 1);
+                    gpio_put(LED_STATUS_PIN, private_data.i2c_prefix == 0x40 ? LED_STATUS_OFF_LEVEL : LED_STATUS_ON_LEVEL);
         
                     char tempBuffer[2];
                     tempBuffer[0] = private_data.i2c_prefix;
