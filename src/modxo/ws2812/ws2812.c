@@ -579,6 +579,4 @@ void ws2812_init()
     }
 
     lpc_interface_add_io_handler(WS2812_PORT_BASE, WS2812_ADDRESS_MASK, lpc_port_read, lpc_port_write);
-
-    ws2812_update_pixels();
 }
