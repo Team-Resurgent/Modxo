@@ -527,7 +527,7 @@ void ws2812_update_pixels()
         strips[i].next_led_to_display = 0;
     }
     updating_strips = true;
-    //__sev();
+    __sev();
 }
 
 void ws2812_set_color(uint8_t color) {
