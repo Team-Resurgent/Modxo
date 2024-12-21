@@ -41,12 +41,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SYS_FREQ_IN_KHZ (266 * 1000)
 
 bool reset_pin = false;
+bool modxo_active = false;
 
 void core1_main()
 {
     while (true)
     {
-        modxo_poll_core1();
+        if(modxo_active) {
+            modxo_poll_core1();
+        }
         __wfe();
     }
 }
@@ -55,7 +58,9 @@ void core0_main()
 {
     while (true)
     {
-        modxo_poll_core0();
+        if(modxo_active) {
+            modxo_poll_core0();
+        }
         __wfe();
     }
 }
@@ -80,6 +85,7 @@ void pin_3_3v_high()
     gpio_set_irq_enabled(LPC_ON, GPIO_IRQ_LEVEL_HIGH, false);
     set_sys_clock_khz(SYS_FREQ_IN_KHZ, true);
     modxo_init();
+    modxo_active = true;
 }
 
 void core0_irq_handler(uint gpio, uint32_t event)
