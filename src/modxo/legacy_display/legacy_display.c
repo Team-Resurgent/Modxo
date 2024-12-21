@@ -114,6 +114,7 @@ void legacy_display_poll()
                 gpio_put(csPin, 0);
                 spi_write_blocking(LCD_PORT_SPI_INST, &_item.data, 1);
                 gpio_put(csPin, 1);
+                __sev();
                 return;
             }
             if (LCD_PORT_I2C_ENABLE)
@@ -126,11 +127,13 @@ void legacy_display_poll()
                     tempBuffer[0] = private_data.i2c_prefix;
                     tempBuffer[1] = _item.data;
                     i2c_write_timeout_us(LCD_PORT_I2C_INST, private_data.i2c_address, &tempBuffer[0], 2, false, 1000);
+                    __sev();
                     return;
                 }
                 i2c_write_timeout_us(LCD_PORT_I2C_INST, private_data.i2c_address, &_item.data, 1, false, LCD_TIMEOUT_US);
             }
         }
+        __sev();
     }
 }
 
