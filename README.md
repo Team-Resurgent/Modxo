@@ -32,11 +32,22 @@ No specialized hardware or complicated tooling is needed to load Modxo on a comp
 2. Drag and Drop your bios file
 3. UF2 File with bios image will be downloaded
 
-#### Flashing steps
+#### Flashing steps (Single Bios)
+
+The following steps are not required if you intend to use PrometheOS, and just flash PrometheOS-{board-variant}.uf2 directly...
+
 1. Connect Raspberry Pi Pico to a PC with BOOTSEL button (or equivalent button on compatible RP2040 hardware) pressed and a new drive will become available.
-2. Copy Modxo.uf2 into the Raspberry Pi Pico Drive.
+2. Copy Modxo-{board variant}.uf2 into the Raspberry Pi Pico Drive.
 3. Reconnect Raspberry Pi Pico with BOOTSEL button pressed, so the previous drive will showup again.
 4. Copy your bios UF2 file into the drive
+
+#### Upgrading PrometheOS's Modxo steps 
+
+The following steps are only needed if wanting to upgrade PrometheOS with Modxo updates/fixes...
+
+1. Assuming PrometheOS-{board-variant}.uf2 is already flashed.
+2. Connect Raspberry Pi Pico to a PC with BOOTSEL button (or equivalent button on compatible RP2040 hardware) pressed and a new drive will become available.
+3. Copy Modxo-{board variant}.uf2 into the Raspberry Pi Pico Drive.
    
 ### Wiring diagrams
 ---
@@ -106,7 +117,7 @@ Output will be `out/modxo_[pinout].uf2`
 
 There are also some extra parameters that can be passed to the build script:
 
-- MODXO_PINOUT=`official_pico` | `yd_rp2040` | `rp2040_zero` - Default is `official_pico`.
+- MODXO_PINOUT=`official_pico` | `yd_rp2040` | `rp2040_zero` | `xiao_rp2040` - Default is `official_pico`.
 
 - CLEAN=`y`: triggers a clean build. Default is disabled.
 
