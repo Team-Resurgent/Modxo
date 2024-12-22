@@ -45,7 +45,9 @@ static struct
 {
     MODXO_QUEUE_ITEM_T buffer[LCD_QUEUE_BUFFER_LEN];
     MODXO_QUEUE_T queue;
+    int8_t clk_khz;
     bool is_spi;
+    int8_t spi_mode;
     int8_t spi_device;
     uint8_t i2c_address;
     bool has_i2c_prefix;
@@ -94,44 +96,74 @@ void legacy_display_poll()
             case MODXO_LCD_SET_I2C_PREFIX:
                 legacy_display_set_i2c_prefix(rx_cmd.param1);
                 break;
+            case MODXO_LCD_SET_CLK:
+                legacy_display_set_clk(rx_cmd.param1);
+                break;
+            case MODXO_LCD_SET_SPI_MODE:
+                legacy_display_set_spi_mode(rx_cmd.param1);
+                break;
             default:
                 break;
             }
         }
         else
         {
-            if (private_data.is_spi)
+            if (LCD_PORT_SPI_ENABLE && private_data.is_spi)
             {
                 uint csPin = private_data.spi_device == 0 ? LCD_PORT_SPI_CSN1 : LCD_PORT_SPI_CSN2;
                 gpio_put(csPin, 0);
                 spi_write_blocking(LCD_PORT_SPI_INST, &_item.data, 1);
                 gpio_put(csPin, 1);
+                __sev();
                 return;
             }
-            if (private_data.has_i2c_prefix)
+            if (LCD_PORT_I2C_ENABLE)
             {
-                char tempBuffer[2];
-                tempBuffer[0] = private_data.i2c_prefix;
-                tempBuffer[1] = _item.data;
-                i2c_write_timeout_us(LCD_PORT_I2C_INST, private_data.i2c_address, tempBuffer, 2, false, LCD_TIMEOUT_US);
-                return;
+                if (private_data.has_i2c_prefix)
+                {
+                    gpio_put(LED_STATUS_PIN, private_data.i2c_prefix == 0x40 ? LED_STATUS_OFF_LEVEL : LED_STATUS_ON_LEVEL);
+        
+                    char tempBuffer[2];
+                    tempBuffer[0] = private_data.i2c_prefix;
+                    tempBuffer[1] = _item.data;
+                    i2c_write_timeout_us(LCD_PORT_I2C_INST, private_data.i2c_address, &tempBuffer[0], 2, false, 1000);
+                    __sev();
+                    return;
+                }
+                i2c_write_timeout_us(LCD_PORT_I2C_INST, private_data.i2c_address, &_item.data, 1, false, LCD_TIMEOUT_US);
             }
-            i2c_write_timeout_us(LCD_PORT_I2C_INST, private_data.i2c_address, &_item.data, 1, false, LCD_TIMEOUT_US);
         }
+        __sev();
     }
+}
+
+void legacy_display_set_spi_mode(uint8_t spi_mode)
+{
+    private_data.spi_mode = spi_mode & 3;
+}
+
+void legacy_display_set_clk(uint8_t clk_khz)
+{
+    private_data.clk_khz = MAX(clk_khz, 1);
 }
 
 void legacy_display_set_spi(uint8_t device)
 {
     private_data.is_spi = true;
     private_data.spi_device = device;
-    spi_init(LCD_PORT_SPI_INST, 1 * 1000000);
+    if (!LCD_PORT_SPI_ENABLE)
+    {
+        return;
+    }
+
+    spi_init(LCD_PORT_SPI_INST, private_data.clk_khz * 1000);
     gpio_set_function(LCD_PORT_SPI_CLK, GPIO_FUNC_SPI);
     gpio_set_function(LCD_PORT_SPI_MOSI, GPIO_FUNC_SPI);
+    spi_set_format(LCD_PORT_SPI_INST, 8, (private_data.spi_mode & 2) == 2 ? SPI_CPOL_1 : SPI_CPOL_0, (private_data.spi_mode & 1) == 1 ? SPI_CPHA_1 : SPI_CPHA_0, SPI_MSB_FIRST);
 
     uint csPin = private_data.spi_device == 0 ? LCD_PORT_SPI_CSN1 : LCD_PORT_SPI_CSN2;
     gpio_init(csPin);
-    gpio_put(csPin, 0);
+    gpio_put(csPin, 1);
     gpio_set_dir(csPin, GPIO_OUT);
 }
 
@@ -139,7 +171,12 @@ void legacy_display_set_i2c(uint8_t i2c_address)
 {
     private_data.is_spi = false;
     private_data.i2c_address = i2c_address;
-    i2c_init(LCD_PORT_I2C_INST, 400 * 1000);
+    if (!LCD_PORT_I2C_ENABLE)
+    {
+        return;
+    }
+
+    i2c_init(LCD_PORT_I2C_INST, private_data.clk_khz * 1000);
     gpio_set_function(LCD_PORT_I2C_SDA, GPIO_FUNC_I2C);
     gpio_set_function(LCD_PORT_I2C_SCL, GPIO_FUNC_I2C);
     gpio_pull_up(LCD_PORT_I2C_SDA);
@@ -160,5 +197,7 @@ void legacy_display_set_i2c_prefix(uint8_t prefix)
 void legacy_display_init()
 {
     modxo_queue_init(&private_data.queue, (void *)private_data.buffer, sizeof(private_data.buffer[0]), LCD_QUEUE_BUFFER_LEN);
+    legacy_display_set_clk(100);
+    legacy_display_set_spi_mode(3);
     legacy_display_set_spi(0);
 }
