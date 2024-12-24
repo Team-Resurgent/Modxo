@@ -25,6 +25,10 @@ endif()
 # ====================================================================================
 set(PICO_BOARD pico CACHE STRING "Board type")
 
+if(${MODXO_PINOUT} MATCHES "official_pico2")
+    set(PICO_BOARD pico2)
+endif()
+
 # Pull in Raspberry Pi Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
 
@@ -35,7 +39,6 @@ endif()
 set(PROJECT_NAME modxo_official_pico)
 if(${MODXO_PINOUT} MATCHES "official_pico2")
     set(PROJECT_NAME modxo_official_pico2)
-    set(PICO_BOARD pico2 CACHE STRING "Board type")
 elseif(${MODXO_PINOUT} MATCHES "yd_rp2040")
     set(PROJECT_NAME modxo_yd_rp2040)
 elseif(${MODXO_PINOUT} MATCHES "rp2040_zero_tiny")
