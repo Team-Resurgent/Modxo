@@ -36,6 +36,7 @@ Copyright (c) 2024, Shalx <Alejandro L. Huitron shalxmva@gmail.com>
 typedef enum
 {
     MODXO_VARIANT_OFFICIAL_PICO,
+    MODXO_VARIANT_OFFICIAL_PICO2,
     MODXO_VARIANT_RP2040_ZERO_TINY,
     MODXO_VARIANT_YD_RP2040,
     MODXO_VARIANT_XIAO_RP2040,

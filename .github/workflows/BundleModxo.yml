@@ -29,30 +29,42 @@ jobs:
       - name: Build Modxo Official Pico
         run: |
           cd ${{ github.workspace }}/build
+          rm -fr ./*
           cmake -DPICO_SDK_PATH=${{ github.workspace }}/pico-sdk -DMODXO_PINOUT=official_pico .. 
+          cmake --build .
+
+      - name: Build Modxo Official Pico2
+        run: |
+          cd ${{ github.workspace }}/build
+          rm -fr ./*
+          cmake -DPICO_SDK_PATH=${{ github.workspace }}/pico-sdk -DMODXO_PINOUT=official_pico2 .. 
           cmake --build .
 
       - name: Build Modxo YD-RP2040
         run: |
           cd ${{ github.workspace }}/build
+          rm -fr ./*
           cmake -DPICO_SDK_PATH=${{ github.workspace }}/pico-sdk -DMODXO_PINOUT=yd_rp2040 .. 
           cmake --build .
 
       - name: Build Modxo RP2040-Zero-Tiny
         run: |
           cd ${{ github.workspace }}/build
+          rm -fr ./*
           cmake -DPICO_SDK_PATH=${{ github.workspace }}/pico-sdk -DMODXO_PINOUT=rp2040_zero_tiny .. 
           cmake --build .
 
       - name: Build Modxo XIAO-RP2040
         run: |
           cd ${{ github.workspace }}/build
+          rm -fr ./*
           cmake -DPICO_SDK_PATH=${{ github.workspace }}/pico-sdk -DMODXO_PINOUT=xiao_rp2040 .. 
           cmake --build .
 
       - name: Build Modxo Ultra
         run: |
           cd ${{ github.workspace }}/build
+          rm -fr ./*
           cmake -DPICO_SDK_PATH=${{ github.workspace }}/pico-sdk -DMODXO_PINOUT=ultra .. 
           cmake --build .
 
@@ -67,6 +79,8 @@ jobs:
           files: |
             ${{ github.workspace }}/build/modxo_official_pico.bin
             ${{ github.workspace }}/build/modxo_official_pico.uf2
+            ${{ github.workspace }}/build/modxo_official_pico2.bin
+            ${{ github.workspace }}/build/modxo_official_pico2.uf2
             ${{ github.workspace }}/build/modxo_yd_rp2040.bin
             ${{ github.workspace }}/build/modxo_yd_rp2040.uf2
             ${{ github.workspace }}/build/modxo_rp2040_zero_tiny.bin
@@ -85,6 +99,8 @@ jobs:
           files: |
             ${{ github.workspace }}/build/modxo_official_pico.bin
             ${{ github.workspace }}/build/modxo_official_pico.uf2
+            ${{ github.workspace }}/build/modxo_official_pico2.bin
+            ${{ github.workspace }}/build/modxo_official_pico2.uf2
             ${{ github.workspace }}/build/modxo_yd_rp2040.bin
             ${{ github.workspace }}/build/modxo_yd_rp2040.uf2
             ${{ github.workspace }}/build/modxo_rp2040_zero.bin
