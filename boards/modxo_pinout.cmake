@@ -16,6 +16,8 @@ set(LED_STRIP4 31) #Not Used
 #pinout selector
 if(${MODXO_PINOUT} MATCHES "official_pico")
     include(boards/official_pico.cmake)
+elseif(${MODXO_PINOUT} MATCHES "official_pico2")
+    include(boards/official_pico2.cmake)
 elseif(${MODXO_PINOUT} MATCHES "yd_rp2040")
     include(boards/yd_rp2040.cmake)
 elseif(${MODXO_PINOUT} MATCHES "rp2040_zero_tiny")
