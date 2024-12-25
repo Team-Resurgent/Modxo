@@ -62,13 +62,19 @@ The following steps are only needed if wanting to upgrade PrometheOS with Modxo 
 ---
 #### Official Raspberry Pi Pico
 
-   ![LPC Header wiring diagram](images/official_pinout.png)
+   ![LPC Header wiring diagram](images/official_pinout_pico1.png)
+
+   * Note: Please add the diode if connecting the Pico to USB. This avoid powering the LPC 5V Pin from the USB cable which could have unintended consequences.
+---
+#### Official Raspberry Pi Pico 2
+
+   ![LPC Header wiring diagram](images/official_pinout_pico2.png)
 
    * Note: Please add the diode if connecting the Pico to USB. This avoid powering the LPC 5V Pin from the USB cable which could have unintended consequences.
 ---
 #### YD-RP2040
 
-   ![LPC Header wiring diagram](images/YDRP2040_pinout.png)
+   ![LPC Header wiring diagram](images/YD_RP2040_pinout.png)
 
    * Note: Dont forget to add solder to jumper R68 if using the onboard RGB Led
 ---
@@ -77,6 +83,11 @@ The following steps are only needed if wanting to upgrade PrometheOS with Modxo 
    ![LPC Header wiring diagram](images/RP2040_Zero_pinout.png)
 
    * Note:  Please add the diode if connecting the Pico to USB. This avoid powering the LPC 5V Pin from the USB cable which could have unintended consequences.
+---
+#### XIAO-RP2040
+
+   ![LPC Header wiring diagram](images/XIAO-RP2040_pnout.png)
+
 ---
 
 ## Firmware Build Instructions
