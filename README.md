@@ -19,9 +19,10 @@ No specialized hardware or complicated tooling is needed to load Modxo on a comp
 - An Xbox (any revision) with a working LPC Port. 1.6 Xboxes will need an LPC rebuild.
 - A RP2040 development board. There may be some clone boards that are not compatible. The following boards are known to work with Modxo:
 - - Official Raspberry Pi Pico
+  - Official Raspberry Pi Pico 2
   - YD-RP2040
-  - RP2040 Zero
-  - RP-Tiny
+  - RP2040 Zero/Tiny
+  - XIAO RP2040
 - 4 100 Ohm resistors (tested with 1/4 W resistors)
 - 1 1N4148 Diode (technically optional but highly recommended with certain development boards, see board-specific installation instructions below for more information)
 
@@ -62,21 +63,32 @@ The following steps are only needed if wanting to upgrade PrometheOS with Modxo 
 ---
 #### Official Raspberry Pi Pico
 
-   ![LPC Header wiring diagram](images/official_pinout.png)
+   ![LPC Header wiring diagram](images/official_pinout_pico1.png)
+
+   * Note: Please add the diode if connecting the Pico to USB. This avoid powering the LPC 5V Pin from the USB cable which could have unintended consequences.
+---
+#### Official Raspberry Pi Pico 2
+
+   ![LPC Header wiring diagram](images/official_pinout_pico2.png)
 
    * Note: Please add the diode if connecting the Pico to USB. This avoid powering the LPC 5V Pin from the USB cable which could have unintended consequences.
 ---
 #### YD-RP2040
 
-   ![LPC Header wiring diagram](images/YDRP2040_pinout.png)
+   ![LPC Header wiring diagram](images/YD_RP2040_pinout.png)
 
    * Note: Dont forget to add solder to jumper R68 if using the onboard RGB Led
 ---
-#### RP2040-Zero
+#### RP2040-Zero/Tiny
 
    ![LPC Header wiring diagram](images/RP2040_Zero_pinout.png)
 
    * Note:  Please add the diode if connecting the Pico to USB. This avoid powering the LPC 5V Pin from the USB cable which could have unintended consequences.
+---
+#### XIAO-RP2040
+
+   ![LPC Header wiring diagram](images/XIAO-RP2040_pnout.png)
+
 ---
 
 ## Firmware Build Instructions
