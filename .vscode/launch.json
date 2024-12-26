@@ -80,6 +80,13 @@
             "cwd": "${workspaceFolder}"
         },
         {
+            "name": "Build (Official Pico2)",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "cmake -DMODXO_PINOUT=official_pico2 ./build; cmake --build ./build; pause; exit",
+            "cwd": "${workspaceFolder}"
+        },
+        {
             "name": "Build (YD-RP2040)",
             "type": "node-terminal",
             "request": "launch",

@@ -14,17 +14,17 @@ set(LED_STRIP3 31) #Not Used
 set(LED_STRIP4 31) #Not Used
 
 #pinout selector
-if(${MODXO_PINOUT} MATCHES "official_pico")
+if(${MODXO_PINOUT} STREQUAL "official_pico")
     include(boards/official_pico.cmake)
-elseif(${MODXO_PINOUT} MATCHES "official_pico2")
+elseif(${MODXO_PINOUT} STREQUAL "official_pico2")
     include(boards/official_pico2.cmake)
-elseif(${MODXO_PINOUT} MATCHES "yd_rp2040")
+elseif(${MODXO_PINOUT} STREQUAL "yd_rp2040")
     include(boards/yd_rp2040.cmake)
-elseif(${MODXO_PINOUT} MATCHES "rp2040_zero_tiny")
+elseif(${MODXO_PINOUT} STREQUAL "rp2040_zero_tiny")
     include(boards/rp2040_zero_tiny.cmake)
-elseif(${MODXO_PINOUT} MATCHES "xiao_rp2040")
+elseif(${MODXO_PINOUT} STREQUAL "xiao_rp2040")
     include(boards/xiao_rp2040.cmake)
-elseif(${MODXO_PINOUT} MATCHES "ultra")
+elseif(${MODXO_PINOUT} STREQUAL "ultra")
     include(boards/ultra.cmake)
 else()
     set(MODXO_PINOUT "official_pico")
