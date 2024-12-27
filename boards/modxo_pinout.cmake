@@ -12,23 +12,23 @@ set(LED_STRIP1 31) #Not Used
 set(LED_STRIP2 31) #Not Used
 set(LED_STRIP3 31) #Not Used
 set(LED_STRIP4 31) #Not Used
+set(BOARD_LED_BRIGHTNESS_ADJUST 1) #Default
+set(BOARD_FLASH_SIZE 16777216)
 
 #pinout selector
-if(${MODXO_PINOUT} STREQUAL "official_pico")
-    include(boards/official_pico.cmake)
-elseif(${MODXO_PINOUT} STREQUAL "official_pico2")
-    include(boards/official_pico2.cmake)
-elseif(${MODXO_PINOUT} STREQUAL "yd_rp2040")
-    include(boards/yd_rp2040.cmake)
-elseif(${MODXO_PINOUT} STREQUAL "rp2040_zero_tiny")
-    include(boards/rp2040_zero_tiny.cmake)
-elseif(${MODXO_PINOUT} STREQUAL "xiao_rp2040")
-    include(boards/xiao_rp2040.cmake)
-elseif(${MODXO_PINOUT} STREQUAL "ultra")
-    include(boards/ultra.cmake)
+set(BOARD_PINOUT_FILE "${CMAKE_CURRENT_LIST_DIR}/${MODXO_PINOUT}.cmake")
+if( EXISTS ${BOARD_PINOUT_FILE})
+    include(${BOARD_PINOUT_FILE})
 else()
-    set(MODXO_PINOUT "official_pico")
-    message(STATUS "NOTE: Modxo pinout not defined.")
-    include(boards/official_pico.cmake)
+    message(FATAL_ERROR "Pinout file not found: ${BOARD_PINOUT_FILE}")
 endif()
+
+add_compile_definitions(BOARD_LED_BRIGHTNESS_ADJUST=${BOARD_LED_BRIGHTNESS_ADJUST})
 message(STATUS "Building for ${MODXO_PINOUT}.")
+
+configure_file(${CMAKE_CURRENT_LIST_DIR}/modxo_pinout.h.in modxo_pinout.h @ONLY)
+
+add_compile_definitions(PICO_FLASH_SIZE_BYTES=${BOARD_FLASH_SIZE})
+
+#Output filename
+set(PROJECT_NAME "modxo_${MODXO_PINOUT}")
