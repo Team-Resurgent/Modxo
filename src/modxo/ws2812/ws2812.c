@@ -240,7 +240,7 @@ static inline bool put_pixel(uint8_t strip, uint32_t pixel_color)
 static uint32_t traslate_pixel(PIXEL_STATE pixel, PIXEL_FORMAT_TYPE pixel_format)
 {
     HSV_COLOR hsv = rgb2hsv(pixel.rgb);
-    hsv.v *= (pixel.brightness / 255.0f);
+    hsv.v *= (pixel.brightness / (255.0f * BOARD_LED_BRIGHTNESS_ADJUST));
     RGB_COLOR rgb = hsv2rgb(hsv);
     if (pixel_format == PIXEL_FORMAT_RGB)
     {

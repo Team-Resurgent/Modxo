@@ -9,7 +9,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Initialise pico_sdk from installed location
 # (note this can come from environment, CMake cache etc)
 
-# == DO NEVER EDIT THE NEXT LINES for Raspberry Pi Pico VS Code Extension to work ==
+# == DO NOT EDIT THE FOLLOWING LINES for the Raspberry Pi Pico VS Code Extension to work ==
 if(WIN32)
     set(USERHOME $ENV{USERPROFILE})
 else()
@@ -25,9 +25,12 @@ endif()
 # ====================================================================================
 set(PICO_BOARD pico CACHE STRING "Board type")
 
-if(${MODXO_PINOUT} STREQUAL "official_pico2")
-    set(PICO_BOARD pico2)
+if(NOT DEFINED MODXO_PINOUT)
+    message(STATUS "NOTE: Modxo pinout not defined. Using official_pico")
+    set(MODXO_PINOUT "official_pico")
 endif()
+
+include(boards/modxo_pinout.cmake)
 
 # Pull in Raspberry Pi Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
@@ -36,28 +39,13 @@ if (PICO_SDK_VERSION_STRING VERSION_LESS "1.4.0")
   message(FATAL_ERROR "Raspberry Pi Pico SDK version 1.4.0 (or later) required. Your version is ${PICO_SDK_VERSION_STRING}")
 endif()
 
-set(PROJECT_NAME modxo_official_pico)
-if(${MODXO_PINOUT} STREQUAL "official_pico2")
-    set(PROJECT_NAME modxo_official_pico2)
-elseif(${MODXO_PINOUT} STREQUAL "yd_rp2040")
-    set(PROJECT_NAME modxo_yd_rp2040)
-elseif(${MODXO_PINOUT} STREQUAL "rp2040_zero_tiny")
-    set(PROJECT_NAME modxo_rp2040_zero_tiny)
-elseif(${MODXO_PINOUT} STREQUAL "xiao_rp2040")
-    set(PROJECT_NAME modxo_xiao_rp2040)
-elseif(${MODXO_PINOUT} STREQUAL "ultra")
-    set(PROJECT_NAME modxo_ultra)
-endif()
 
 project(${PROJECT_NAME})
 
 if(${DEBUG_PRINTS} MATCHES 1)
     add_definitions( -DDEBUG_PRINTS )
 endif()
-include(boards/modxo_pinout.cmake)
-configure_file(${CMAKE_CURRENT_LIST_DIR}/boards/modxo_pinout.h.in modxo_pinout.h @ONLY)
 
-add_compile_definitions(PICO_FLASH_SIZE_BYTES=16777216)
 #add_compile_definitions(START_DELAY) #10s Delay to be able to catch startup messages
 #add_compile_definitions(LPC_LOGGING) #10s Delay to be able to catch startup messages
 
