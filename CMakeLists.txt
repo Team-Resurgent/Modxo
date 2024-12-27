@@ -30,6 +30,7 @@ if(NOT DEFINED MODXO_PINOUT)
     set(MODXO_PINOUT "official_pico")
 endif()
 
+include(boards/modxo_pinout.cmake)
 
 # Pull in Raspberry Pi Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
@@ -38,7 +39,6 @@ if (PICO_SDK_VERSION_STRING VERSION_LESS "1.4.0")
   message(FATAL_ERROR "Raspberry Pi Pico SDK version 1.4.0 (or later) required. Your version is ${PICO_SDK_VERSION_STRING}")
 endif()
 
-include(boards/modxo_pinout.cmake)
 
 project(${PROJECT_NAME})
 
