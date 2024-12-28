@@ -65,6 +65,12 @@ void core0_main()
     }
 }
 
+void init_status_led() {
+    gpio_init(LED_STATUS_PIN);
+    gpio_set_dir(LED_STATUS_PIN, GPIO_OUT);
+    gpio_put(LED_STATUS_PIN, LED_STATUS_ON_LEVEL);
+}
+
 void reset_pin_falling()
 {
     modxo_lpc_reset_off();
@@ -84,6 +90,7 @@ void pin_3_3v_high()
 {
     gpio_set_irq_enabled(LPC_ON, GPIO_IRQ_LEVEL_HIGH, false);
     set_sys_clock_khz(SYS_FREQ_IN_KHZ, true);
+    init_status_led();
     modxo_init();
     modxo_active = true;
 }
@@ -140,9 +147,6 @@ int main(void)
 #ifdef START_DELAY
     sleep_ms(2000);
 #endif
-    gpio_init(LED_STATUS_PIN);
-    gpio_set_dir(LED_STATUS_PIN, GPIO_OUT);
-    gpio_put(LED_STATUS_PIN, LED_STATUS_ON_LEVEL);
 
     modxo_init_interrupts();
 
