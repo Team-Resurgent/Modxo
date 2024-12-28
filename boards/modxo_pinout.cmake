@@ -14,6 +14,8 @@ set(LED_STRIP3 31) #Not Used
 set(LED_STRIP4 31) #Not Used
 set(BOARD_LED_BRIGHTNESS_ADJUST 1) #Default
 set(BOARD_FLASH_SIZE 16777216)
+set(PICO_PLATFORM rp2040) #Default platform
+set(PICO_BOARD pico CACHE STRING "Board type" FORCE ) #Default platform
 
 #pinout selector
 set(BOARD_PINOUT_FILE "${CMAKE_CURRENT_LIST_DIR}/${MODXO_PINOUT}.cmake")
