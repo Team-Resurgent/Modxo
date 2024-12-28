@@ -32,8 +32,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "pico/stdlib.h"
 #include "hardware/pio.h"
 #include "hardware/clocks.h"
+#include <hardware/sync.h>
 #include "ws2812.pio.h"
 #include "ws2812.h"
+#include "../config/config_nvm.h"
 
 #include "../lpc/lpc_interface.h"
 #include "../lpc/lpc_regs.h"
@@ -89,16 +91,6 @@ typedef struct
     float v;
 } HSV_COLOR;
 
-typedef enum
-{
-    PIXEL_FORMAT_GRB,
-    PIXEL_FORMAT_RGB,
-    PIXEL_FORMAT_BRG,
-    PIXEL_FORMAT_RBG,
-    PIXEL_FORMAT_BGR,
-    PIXEL_FORMAT_GBR,
-} PIXEL_FORMAT_TYPE;
-
 typedef struct
 {
     PIXEL_STATE pixels[256];
@@ -106,7 +98,6 @@ typedef struct
     uint total_leds;
     uint8_t selected_pixel;
     uint8_t gpio_pin;
-    PIXEL_FORMAT_TYPE pixel_format;
 } LED_STRIP;
 
 uint8_t selected_strip;
@@ -126,19 +117,15 @@ uint8_t current_led_color = LedColorOff;
 LED_STRIP strips[MAX_STRIPS] = {
     {
         .gpio_pin = LED_STRIP1,
-        .pixel_format = STRIP1_PIXEL_FORMAT,
     },
     {
         .gpio_pin = LED_STRIP2,
-        .pixel_format = STRIP2_PIXEL_FORMAT,
     },
     {
         .gpio_pin = LED_STRIP3,
-        .pixel_format = STRIP3_PIXEL_FORMAT,
     },
     {
         .gpio_pin = LED_STRIP4,
-        .pixel_format = STRIP4_PIXEL_FORMAT,
     }};
 
 static RGB_COLOR hsv2rgb(HSV_COLOR hsv)
@@ -253,7 +240,7 @@ static inline bool put_pixel(uint8_t strip, uint32_t pixel_color)
 static uint32_t traslate_pixel(PIXEL_STATE pixel, PIXEL_FORMAT_TYPE pixel_format)
 {
     HSV_COLOR hsv = rgb2hsv(pixel.rgb);
-    hsv.v *= (pixel.brightness / 255.0f);
+    hsv.v *= (pixel.brightness / (255.0f * BOARD_LED_BRIGHTNESS_ADJUST));
     RGB_COLOR rgb = hsv2rgb(hsv);
     if (pixel_format == PIXEL_FORMAT_RGB)
     {
@@ -302,7 +289,7 @@ static RGB_COLOR traslate_rgb2color(uint32_t rgb_value)
 static uint32_t inline get_next_pixel_value(uint8_t strip)
 {
     uint8_t display_led_no = strips[strip].next_led_to_display;
-    PIXEL_FORMAT_TYPE pixel_format = (display_led_no == 0 && strip == 0) ? RGB_STATUS_PIXEL_FORMAT : strips[strip].pixel_format;
+    PIXEL_FORMAT_TYPE pixel_format = (display_led_no == 0 && strip == 0) ? config.rgb_status_pf: config.rgb_strip_pf[strip];
     uint32_t display_color_value = traslate_pixel(strips[strip].pixels[display_led_no], pixel_format);
     return display_color_value;
 }
@@ -332,15 +319,6 @@ static void set_pixel_count(uint8_t data)
 
 static void enable_strip(uint8_t data)
 {
-}
-
-static void update_pixels()
-{
-    for (uint i = 0; i < 4; i++)
-    {
-        strips[i].next_led_to_display = 0;
-    }
-    updating_strips = true;
 }
 
 static void fill_strip(uint32_t rgb24_color)
@@ -454,7 +432,7 @@ static void select_command(uint8_t cmd)
 
     if (cmd == CMD_UPDATE_STRIPS)
     {
-        update_pixels();
+        ws2812_update_pixels();
     }
 }
 
@@ -542,6 +520,16 @@ void ws2812_poll()
     }
 }
 
+void ws2812_update_pixels()
+{
+    for (uint i = 0; i < 4; i++)
+    {
+        strips[i].next_led_to_display = 0;
+    }
+    updating_strips = true;
+    __sev();
+}
+
 void ws2812_set_color(uint8_t color) {
     current_led_color = color;
 
@@ -563,6 +551,13 @@ void ws2812_init()
 {
     selected_strip = 0;
     updating_strips = false;
+
+    if (LED_STRIP1_PWR != 31)
+    {
+        gpio_init(LED_STRIP1_PWR);
+        gpio_set_dir(LED_STRIP1_PWR, GPIO_OUT);
+        gpio_put(LED_STRIP1_PWR, 1);
+    }
 
     LPC_REG_INIT(pixel_color_reg, pixel_color_value);
     LPC_REG_RESET(pixel_color_reg);
@@ -592,5 +587,5 @@ void ws2812_init()
 
     lpc_interface_add_io_handler(WS2812_PORT_BASE, WS2812_ADDRESS_MASK, lpc_port_read, lpc_port_write);
 
-    update_pixels();
+    ws2812_update_pixels();
 }

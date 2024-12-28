@@ -32,10 +32,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "modxo.h"
 #include "modxo_ports.h"
+#include "modxo_debug.h"
 #include "lpc/lpc_interface.h"
 #include "lpc/lpc_log.h"
 #include "flashrom/flashrom.h"
 #include "data_store/data_store.h"
+#include "config/config_lpc.h"
+#include "config/config_nvm.h"
 #include "superio/LPC47M152.h"
 #include "superio/uart_16550.h"
 #include "ws2812/ws2812.h"
@@ -51,8 +54,11 @@ static void modxo_lpcmem_init()
 
 static void modxo_lpcio_init()
 {
+#ifndef DEBUG_SUPERIO_DISABLED
     lpc47m152_init();
     uart_16550_init();
+#endif
+    
     data_store_init();
     ws2812_init();
     legacy_display_init();
@@ -62,6 +68,7 @@ static void modxo_lpcio_init()
 void modxo_poll_core1()
 {
     modxo_ports_poll();
+    config_poll();
 }
 
 void modxo_poll_core0()
@@ -107,6 +114,7 @@ void modxo_low_power_mode()
 
 void modxo_init()
 {
+    config_nvm_init();
     lpc_interface_init();
     modxo_lpcmem_init();
     modxo_lpcio_init();

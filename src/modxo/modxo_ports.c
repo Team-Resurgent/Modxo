@@ -74,11 +74,15 @@ static void write_handler(uint16_t address, uint8_t *data)
         {
             switch (command_buffer.cmd)
             {
+            case MODXO_LCD_SET_SPI:
             case MODXO_LCD_SET_I2C:
             case MODXO_LCD_SET_I2C_PREFIX:
+            case MODXO_LCD_SET_CLK:
+            case MODXO_LCD_SET_SPI_MODE:
                 break;
             default:
                 legacy_display_command(command_buffer.raw);
+                cmd_byte_idx = 0;
             }
         }
         else
@@ -207,7 +211,7 @@ void modxo_ports_poll(void)
 
 void modxo_ports_init()
 {
-    lpc_interface_add_io_handler(MODXO_REGISTER_LCD_DATA, 0xFFF8, read_handler, write_handler);
+    lpc_interface_add_io_handler(MODXO_REGISTER_LCD_COMMAND, 0xFFF8, read_handler, write_handler);
     _program_sector_number = -1;
     _erase_sector_number = -1;
     cmd_byte_idx = 0;

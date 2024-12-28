@@ -9,7 +9,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Initialise pico_sdk from installed location
 # (note this can come from environment, CMake cache etc)
 
-# == DO NEVER EDIT THE NEXT LINES for Raspberry Pi Pico VS Code Extension to work ==
+# == DO NOT EDIT THE FOLLOWING LINES for the Raspberry Pi Pico VS Code Extension to work ==
 if(WIN32)
     set(USERHOME $ENV{USERPROFILE})
 else()
@@ -25,6 +25,17 @@ endif()
 # ====================================================================================
 set(PICO_BOARD pico CACHE STRING "Board type")
 
+if(NOT DEFINED MODXO_PINOUT)
+    if(PICO_BOARD EQUAL pico2)
+        set(MODXO_PINOUT "official_pico2")
+    else()
+        set(MODXO_PINOUT "official_pico")
+    endif()
+    message(STATUS "NOTE: Modxo pinout not defined. Using ${MODXO_PINOUT}")
+endif()
+
+include(boards/modxo_pinout.cmake)
+
 # Pull in Raspberry Pi Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
 
@@ -32,21 +43,13 @@ if (PICO_SDK_VERSION_STRING VERSION_LESS "1.4.0")
   message(FATAL_ERROR "Raspberry Pi Pico SDK version 1.4.0 (or later) required. Your version is ${PICO_SDK_VERSION_STRING}")
 endif()
 
-set(PROJECT_NAME modxo_official_pico)
-if(${MODXO_PINOUT} MATCHES "yd_rp2040")
-    set(PROJECT_NAME modxo_yd_rp2040)
-elseif(${MODXO_PINOUT} MATCHES "rp2040_zero_tiny")
-    set(PROJECT_NAME modxo_rp2040_zero_tiny)
-elseif(${MODXO_PINOUT} MATCHES "ultra")
-    set(PROJECT_NAME modxo_ultra)
-endif()
 
 project(${PROJECT_NAME})
 
-include(boards/modxo_pinout.cmake)
-configure_file(${CMAKE_CURRENT_LIST_DIR}/boards/modxo_pinout.h.in modxo_pinout.h @ONLY)
+if(${DEBUG_PRINTS} MATCHES 1)
+    add_definitions( -DDEBUG_PRINTS )
+endif()
 
-add_compile_definitions(PICO_FLASH_SIZE_BYTES=16777216)
 #add_compile_definitions(START_DELAY) #10s Delay to be able to catch startup messages
 #add_compile_definitions(LPC_LOGGING) #10s Delay to be able to catch startup messages
 
@@ -75,6 +78,8 @@ target_sources(${PROJECT_NAME} PRIVATE
     src/modxo/superio/uart_16550.c
     src/modxo/ws2812/ws2812.c
     src/modxo/legacy_display/legacy_display.c
+    src/modxo/config/config_nvm.c
+    src/modxo/config/config_lpc.c
     src/main.c
 )
 
