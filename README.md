@@ -92,12 +92,12 @@ The following steps are only needed if wanting to upgrade PrometheOS with Modxo 
 ---
 #### BSX NOVA
 
-    ![BSX Nova JST Wiring](images/Nova_JST_Layouts.png)
+   ![BSX Nova JST Wiring](images/Nova_JST_Layouts.png)
 
 ---
 #### BSX MINI
 
-    ![BSX Mini JST Wiring](images/Mini_JST_Layouts.png)
+   ![BSX Mini JST Wiring](images/Mini_JST_Layouts.png)
 
 ---
 
