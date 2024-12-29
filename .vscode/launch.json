@@ -114,5 +114,12 @@
             "command": "cmake -DMODXO_PINOUT=ultra ./build; cmake --build ./build; pause; exit",
             "cwd": "${workspaceFolder}",
         },
+        {
+            "name": "Build (BSX)",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "cmake -DMODXO_PINOUT=bsx ./build; cmake --build ./build; pause; exit",
+            "cwd": "${workspaceFolder}",
+        },
     ]
 }
