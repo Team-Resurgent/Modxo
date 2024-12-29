@@ -90,6 +90,16 @@ The following steps are only needed if wanting to upgrade PrometheOS with Modxo 
    ![LPC Header wiring diagram](images/XIAO-RP2040_pnout.png)
 
 ---
+#### BSX NOVA
+
+    ![BSX Nova JST Wiring](images/Nova_JST_Layouts.png)
+
+---
+#### BSX MINI
+
+    ![BSX Mini JST Wiring](images/Mini_JST_Layouts.png)
+
+---
 
 ## Firmware Build Instructions
 
