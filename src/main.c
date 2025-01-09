@@ -35,6 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "hardware/gpio.h"
 #include "tusb.h"
 
+#include "modxo/flashrom/flashrom.h"
 #include "modxo/modxo.h"
 #include "modxo_pinout.h"
 
@@ -83,7 +84,14 @@ void reset_pin_rising()
 
 void pin_3_3v_falling()
 {
-    modxo_low_power_mode();
+    if(!tud_cdc_connected())
+    {
+        modxo_low_power_mode();
+    }
+    else
+    {
+        flashrom_set_mmc(MODXO_BANK_BOOTLOADER);
+    }
 }
 
 void pin_3_3v_high()
