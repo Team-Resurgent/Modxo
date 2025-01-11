@@ -80,6 +80,8 @@ target_sources(${PROJECT_NAME} PRIVATE
     src/modxo/legacy_display/legacy_display.c
     src/modxo/config/config_nvm.c
     src/modxo/config/config_lpc.c
+    src/modxo/usb/usb_descriptors.c
+    src/modxo/usb/usb_device.c
     src/main.c
 )
 
@@ -92,12 +94,18 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     hardware_i2c
     hardware_spi
     hardware_flash
+    tinyusb_device 
+    tinyusb_board  
+)
+
+# Add the standard include files to the build
+target_include_directories(${PROJECT_NAME} PRIVATE
+  src/modxo/usb
 )
 
 set(PICO_DEFAULT_BINARY_TYPE copy_to_ram)
 
-pico_enable_stdio_usb(${PROJECT_NAME} 1)
-pico_enable_stdio_uart(${PROJECT_NAME} 0)
+pico_enable_stdio_uart(${PROJECT_NAME} 1)
 
 # Create map/bin/hex/uf2 files
 pico_add_extra_outputs(${PROJECT_NAME})

@@ -42,6 +42,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "superio/LPC47M152.h"
 #include "superio/uart_16550.h"
 #include "ws2812/ws2812.h"
+#include "usb/usb_device.h"
 #include "legacy_display/legacy_display.h"
 #include "hardware/watchdog.h"
 
@@ -73,6 +74,7 @@ void modxo_poll_core1()
 
 void modxo_poll_core0()
 {
+    usb_poll();
     legacy_display_poll();
 #ifdef LPC_LOGGING
     lpc_interface_poll();
@@ -106,10 +108,17 @@ void software_reset()
 
 void modxo_low_power_mode()
 {
-    // Modxo sleep
+    if(!usb_isconnected())
+    {
+        // Modxo sleep
 
-    // Modxo reset
-    software_reset();
+        // Modxo reset
+        software_reset();
+    }
+    else
+    {
+        flashrom_set_mmc(MODXO_BANK_BOOTLOADER);
+    }
 }
 
 void modxo_init()

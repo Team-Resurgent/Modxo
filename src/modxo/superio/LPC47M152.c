@@ -116,10 +116,15 @@ static void lpc47m152_read_handler(uint16_t address, uint8_t *data)
     }
 }
 
-void lpc47m152_init(void)
+void lpc47m152_reset()
 {
     lpc47m152_regs.config_mode = false;
     lpc47m152_regs.index_port = 0;
-    lpc47m152_regs.device_id = 0;
+    lpc47m152_regs.device_id = 0;    
+}
+
+void lpc47m152_init(void)
+{
+    lpc47m152_reset();
     lpc_interface_add_io_handler(0x002E, 0xFFFE, lpc47m152_read_handler, lpc47m152_write_handler); // LPC47M152(superio) port emulation
 }

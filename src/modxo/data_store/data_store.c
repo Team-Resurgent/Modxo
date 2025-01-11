@@ -67,10 +67,14 @@ static void lpc_port_write(uint16_t address, uint8_t *data)
     }
 }
 
-void data_store_init()
+void data_store_reset()
 {
     data_store_cmd = 0;
     memset(data_store_buffer, 0, sizeof(data_store_buffer));
+}
 
+void data_store_init()
+{
+    data_store_reset();
     lpc_interface_add_io_handler(DATA_STORE_PORT_BASE, DATA_STORE_ADDRESS_MASK, lpc_port_read, lpc_port_write);
 }

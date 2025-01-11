@@ -38,11 +38,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 void uart_16550_port_write(uint16_t address, uint8_t *data)
 {
     // UART Ports
-    if ((address == 0x3F8))
-    {
-        if (tud_cdc_connected())
-            tud_cdc_write(data, 1);
-    }
+    if(tud_cdc_connected())
+        switch(address)
+        {
+            case 0x3F8:
+                tud_cdc_n_write(0, data, 1);
+                break;
+            case 0x2F8:
+                tud_cdc_n_write(1, data, 1);
+                break;
+        }
 }
 
 void uart_16550_port_read(uint16_t address, uint8_t *data)
@@ -50,25 +55,32 @@ void uart_16550_port_read(uint16_t address, uint8_t *data)
     // UART Ports
     if (tud_cdc_connected())
     { // If usb serial port is open
-        if (address == 0x3FD)
+        switch(address)
         {
-            *data = (tud_cdc_write_available() ? 0x20 : 0x00) | (tud_cdc_available() ? 0x01 : 0x00);
-        }
-
-        if (address == 0x3F8)
-        {
-            tud_cdc_read(data, 1);
+            case 0x3FD:
+                *data = (tud_cdc_n_write_available(0) ? 0x20 : 0x00) | (tud_cdc_n_available(0) ? 0x01 : 0x00);
+                break;
+            case 0x2FD:
+                *data = (tud_cdc_n_write_available(1) ? 0x20 : 0x00) | (tud_cdc_n_available(1) ? 0x01 : 0x00);
+                break;
+            case 0x3F8:
+                tud_cdc_n_read(0, data, 1);
+                break;
+            case 0x2F8:
+                tud_cdc_n_read(1, data, 1);
+                break;
         }
     }
     else
     {
-        if (address == 0x3FD)
+        switch(address)
         {
-            *data = 0xff; // prevents potential busy-wait infinite loop in kernel
-        }
-        else
-        {
-            *data = 0;
+            case 0x2FD:
+            case 0x3FD:
+                *data = 0xff; // prevents potential busy-wait infinite loop in kernel
+                break;
+            default:
+                *data = 0;
         }
     }
 }
@@ -76,4 +88,5 @@ void uart_16550_port_read(uint16_t address, uint8_t *data)
 void uart_16550_init(void)
 {
     lpc_interface_add_io_handler(0x03F8, 0xFFF8, uart_16550_port_read, uart_16550_port_write); // 16550 Uart port emulation
+    lpc_interface_add_io_handler(0x02F8, 0xFFF8, uart_16550_port_read, uart_16550_port_write); // 16550 Uart port emulation
 }

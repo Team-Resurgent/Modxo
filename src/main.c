@@ -33,11 +33,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "hardware/clocks.h"
 #include "hardware/dma.h"
 #include "hardware/gpio.h"
-#include "tusb.h"
 
 #include "modxo/flashrom/flashrom.h"
 #include "modxo/modxo.h"
 #include "modxo_pinout.h"
+#include "modxo/usb/usb_device.h"
+
+#include "bsp/board_api.h"
+#include "tusb.h"
 
 #define SYS_FREQ_IN_KHZ (266 * 1000)
 
@@ -84,7 +87,7 @@ void reset_pin_rising()
 
 void pin_3_3v_falling()
 {
-    if(!tud_cdc_connected())
+    if(!usb_isconnected())
     {
         modxo_low_power_mode();
     }
@@ -151,6 +154,7 @@ void modxo_init_interrupts()
 int main(void)
 {
     stdio_init_all();
+    usb_init();
 
 #ifdef START_DELAY
     sleep_ms(2000);
