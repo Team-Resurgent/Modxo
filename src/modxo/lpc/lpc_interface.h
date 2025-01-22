@@ -22,7 +22,8 @@ typedef void (*lpc_handler_cback)(uint32_t address, uint8_t *data);
 typedef void (*SUPERIO_PORT_CALLBACK_T)(uint16_t address, uint8_t *data);
 
 void lpc_interface_set_callback(LPC_OP_TYPE op, lpc_handler_cback cback);
-void lpc_interface_init();
+void lpc_interface_reset(void);
+void lpc_interface_init(void);
 void lpc_interface_disable_onboard_flash(bool disable);
 void lpc_interface_start_sm(void);
 bool lpc_interface_add_io_handler(uint16_t port_base, uint16_t mask, SUPERIO_PORT_CALLBACK_T read_cback, SUPERIO_PORT_CALLBACK_T write_cback);

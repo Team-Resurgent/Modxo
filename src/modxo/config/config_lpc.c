@@ -163,6 +163,11 @@ static void config_write_hdlr(uint16_t address, uint8_t *data)
     }
 }
 
+void config_nvm_reset(void)
+{
+    config_retrieve_parameters();
+}
+
 void config_nvm_init(void)
 {
     config_retrieve_parameters();

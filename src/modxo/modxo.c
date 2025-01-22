@@ -47,24 +47,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 extern uint8_t current_led_color;
 
-static void modxo_lpcmem_init()
-{
-    flashrom_init();
-}
-
-static void modxo_lpcio_init()
-{
-#ifndef DEBUG_SUPERIO_DISABLED
-    lpc47m152_init();
-    uart_16550_init();
-#endif
-    
-    data_store_init();
-    ws2812_init();
-    legacy_display_init();
-    modxo_ports_init();
-}
-
 void modxo_poll_core1()
 {
     modxo_ports_poll();
@@ -86,8 +68,7 @@ void modxo_lpc_reset_off()
     ws2812_set_color(LedColorOff);
     current_led_color = color;
 
-    // Reset State Machines
-    lpc_interface_start_sm();
+    modxo_reset();
 }
 
 void modxo_lpc_reset_on()
@@ -112,10 +93,27 @@ void modxo_low_power_mode()
     software_reset();
 }
 
-void modxo_init()
+void modxo_reset()
+{
+    config_nvm_reset();
+    flashrom_reset();
+    lpc_interface_reset();
+    modxo_ports_reset();
+}
+
+void modxo_init(void)
 {
     config_nvm_init();
+    flashrom_init();
     lpc_interface_init();
-    modxo_lpcmem_init();
-    modxo_lpcio_init();
+    
+#ifndef DEBUG_SUPERIO_DISABLED
+    lpc47m152_init();
+    uart_16550_init();
+#endif
+    
+    data_store_init();
+    ws2812_init();
+    legacy_display_init();
+    modxo_ports_init();
 }

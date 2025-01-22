@@ -26,7 +26,7 @@
 
 .program lpc_read_request
 .define public LCLK_PIN   @LPC_CLK@
-.side_set 1 opt pindirs
+.side_set 1 opt
 .wrap_target
     pull
 wait_start:
@@ -46,7 +46,7 @@ wait_cmd:
     jmp X!=Y check_start_again
     
     irq set 7
-    mov X, OSR side 1
+    mov X, OSR side 0
     mov ISR, null
 
 read_nibbles:
@@ -69,7 +69,7 @@ repeat:
     jmp X-- repeat
    ;wait 1 gpio LCLK_PIN
    set pindirs, 0b00000 [7]
-   irq clear 7 side 0
+   irq clear 7 side 1
 .wrap
 % c-sdk {
 

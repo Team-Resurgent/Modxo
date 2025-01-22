@@ -101,6 +101,11 @@ uint8_t flashrom_get_mmc(void)
     return mmc_register;
 }
 
+void flashrom_reset(void)
+{
+    flashrom_set_mmc(MODXO_BANK_BOOTLOADER);
+}
+
 bool flashrom_init(void)
 {
     flashrom_set_mmc(MODXO_BANK_BOOTLOADER);

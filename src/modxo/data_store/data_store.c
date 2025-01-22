@@ -67,6 +67,12 @@ static void lpc_port_write(uint16_t address, uint8_t *data)
     }
 }
 
+void data_store_reset(void)
+{
+    data_store_cmd = 0;
+    memset(data_store_buffer, 0, sizeof(data_store_buffer));
+}
+
 void data_store_init()
 {
     data_store_cmd = 0;

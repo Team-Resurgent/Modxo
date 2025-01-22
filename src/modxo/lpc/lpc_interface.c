@@ -60,6 +60,7 @@ typedef struct
 
 static void io_write_hdlr(uint32_t address, uint8_t *data);
 static void io_read_hdlr(uint32_t address, uint8_t *data);
+static void gpio_set_max_drivestrength(io_rw_32 gpio, uint32_t strength);
 
 LPC_SM_HANDLER lpc_handlers[LPC_OP_TOTAL] = {
     [LPC_OP_IO_READ] = {.nibbles_read = 4, .cyctype_dir = 0, .handler = io_read_hdlr, .address_len = 16},
@@ -118,8 +119,10 @@ static void lpc_gpio_init(PIO pio)
     pio_gpio_init(pio, LPC_CLK);
     gpio_disable_pulls(LPC_CLK);
 
-    pio_gpio_init(pio, LPC_LFRAME);
     gpio_disable_pulls(LPC_LFRAME);
+    gpio_set_oeover(LPC_LFRAME, 1);
+    gpio_set_outover(LPC_LFRAME, 2);
+    pio_gpio_init(pio, LPC_LFRAME);
 }
 
 static void gpio_set_max_drivestrength(io_rw_32 gpio, uint32_t strength)
@@ -273,7 +276,12 @@ void lpc_interface_start_sm()
     enable_pio_interrupts();
 }
 
-void lpc_interface_init()
+void lpc_interface_reset(void)
+{
+    lpc_interface_start_sm();
+}
+
+void lpc_interface_init(void)
 {
 
     _pio = pio0;
