@@ -67,13 +67,13 @@ Los siguientes pasos solo son necesarios sí desea actualizar PrometheOS con act
 
    ![Diagrama de cableado del LPC](images/official_pinout_pico1.png)
 
-   * Nota: Agregue el diosdo si conecta la Raspberry Pi Pico al USB. Esto evita que se alimente el el pin LPC de 5v desde el cable USB, lo que podría tener consecuencias no deseadas.
+   * Nota: agregue el diosdo si conecta la Raspberry Pi Pico al USB. Esto evita que se alimente el el pin LPC de 5v desde el cable USB, lo que podría tener consecuencias no deseadas.
 ---
-#### Official Raspberry Pi Pico 2
+#### Raspberry Pi Pico 2 (Oficial)
 
-   ![LPC Header wiring diagram](images/official_pinout_pico2.png)
+   ![Diagrama de cableado del LPC](images/official_pinout_pico2.png)
 
-   * Note: Please add the diode if connecting the Pico to USB. This avoid powering the LPC 5V Pin from the USB cable which could have unintended consequences.
+   *Nota: agregue el diodo si conecta la Raspberry Pi Pico al USB. Esto evita que se alimente el pin LPC de 5v desde el cable USB, lo que podría tener consecuencias no deseadas.
 ---
 #### YD-RP2040
 
