@@ -35,14 +35,14 @@ No necesita ningún hardware especializado ni herramientas complicadas para carg
 2. Arrastre y suelte su archivo de BIOS
 3. Una vez subido el archivo de BIOS, se creará un archivo UF2 con la imagen del BIOS que debe descargar
 
-#### Flashing steps (Single Bios) Pasos para Flashear (BIOS simple)
+#### Pasos para Flashear (BIOS simple)
 
-The following steps are not required if you intend to use PrometheOS, and just flash PrometheOS-{board-variant}.uf2 directly...
+Los siguientes pasos no son requeridos sí pretende utilizar PrometheOS, sólo actualice PrometheOS-{variante de placa}.uf2 directamente...
 
-1. Connect Raspberry Pi Pico to a PC with BOOTSEL button (or equivalent button on compatible RP2040 hardware) pressed and a new drive will become available.
-2. Copy Modxo-{board variant}.uf2 into the Raspberry Pi Pico Drive.
-3. Reconnect Raspberry Pi Pico with BOOTSEL button pressed, so the previous drive will showup again.
-4. Copy your bios UF2 file into the drive
+1. Conecte la placa Raspberry Pi Pico al PC con el botón BOOTSEL (ó cualquier botón equivalente) presionado, Windows detectará una nueva unidad de almacenamiento y la abrirá.
+2. Copie Modxo-{variante de placa}.uf2 en la unidad de la Raspberry Pi Pico. Una vez hecho esto, la Raspberry se desconectará automáticamente.
+3. Reconecte la Raspberry Pi Pico con el botón BOOTSEL presionado, de modo que la unidad de almacenamiento de la Raspberry Pi Pico aparazca nuevamente.
+4. Copie el archivo UF2 de su BIOS en la unidad de la Raspberry Pi Pico.
 
 #### Upgrading PrometheOS's Modxo steps 
 
