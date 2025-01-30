@@ -44,13 +44,13 @@ Los siguientes pasos no son requeridos sí pretende utilizar PrometheOS, sólo a
 3. Reconecte la Raspberry Pi Pico con el botón BOOTSEL presionado, de modo que la unidad de almacenamiento de la Raspberry Pi Pico aparazca nuevamente.
 4. Copie el archivo UF2 de su BIOS en la unidad de la Raspberry Pi Pico.
 
-#### Upgrading PrometheOS's Modxo steps 
+#### Pasos para actualizar PrometheOS en Modxo
 
-The following steps are only needed if wanting to upgrade PrometheOS with Modxo updates/fixes...
+Los siguientes pasos solo son necesarios sí desea actualizar PrometheOS con actualizaciones/correciones de errores de Modxo...
 
-1. Assuming PrometheOS-{board-variant}.uf2 is already flashed.
-2. Connect Raspberry Pi Pico to a PC with BOOTSEL button (or equivalent button on compatible RP2040 hardware) pressed and a new drive will become available.
-3. Copy Modxo-{board variant}.uf2 into the Raspberry Pi Pico Drive.
+1. Suponiendo que PrometheOS-{variante de placa}.uf2 ya está instalado.
+2. Conecte la Raspberry Pi Pico a la PC con el botón BOOTSEL (o cualquier botón equivalente) presionado, y una nueva unidad de almacenamiento aparecerá.
+3. Copie Modxo-{variante de placa}.uf2 en la unidad de la Raspberry Pi Pico.
    
 ### Wiring diagrams
 ---
