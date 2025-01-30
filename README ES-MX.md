@@ -77,9 +77,9 @@ Los siguientes pasos solo son necesarios sí desea actualizar PrometheOS con act
 ---
 #### YD-RP2040
 
-   ![LPC Header wiring diagram](images/YD_RP2040_pinout.png)
+   ![Diagrama de cableado del LPC](images/YD_RP2040_pinout.png)
 
-   * Note: Dont forget to add solder to jumper R68 if using the onboard RGB Led
+   * Nota: No olvide puentear R68 si usa LEDS RGB integrados en la placa
 ---
 #### RP2040-Zero/Tiny
 
