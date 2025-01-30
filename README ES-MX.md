@@ -63,11 +63,11 @@ Los siguientes pasos solo son necesarios sí desea actualizar PrometheOS con act
   * LFrame no es requerido para la depuración USB.
   * Se requiere una reconstrucción del LPC para la versión 1.6
 ---
-#### Official Raspberry Pi Pico
+#### Raspberry Pi Pico (Oficial) y Raspberry Pi Pico W (Oficial)
 
-   ![LPC Header wiring diagram](images/official_pinout_pico1.png)
+   ![Diagrama de cableado del LPC](images/official_pinout_pico1.png)
 
-   * Note: Please add the diode if connecting the Pico to USB. This avoid powering the LPC 5V Pin from the USB cable which could have unintended consequences.
+   * Nota: Agregue el diosdo si conecta la Raspberry Pi Pico al USB. Esto evita que se alimente el el pin LPC de 5v desde el cable USB, lo que podría tener consecuencias no deseadas.
 ---
 #### Official Raspberry Pi Pico 2
 
