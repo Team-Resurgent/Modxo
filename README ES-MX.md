@@ -6,25 +6,27 @@
 
 # Modxo
 
-Modxo (pronnounced "Modsho") is an RP2040 firmware that converts a Raspberry Pi Pico (or similar RP2040-based device) into an Original Xbox-compatible LPC peripheral device. 
+Modxo (pronunciado "Modsho") es un firmware RP2040 que convierte una Raspberry Pi Pico (o cualquier dispositivo similar basado en  RP2040) en un dispositivo LPC compatible con la Xbox original.
 
-Modxo can be used for loading an Xbox BIOS image from the LPC port, as well as for interfacing compatible Xbox software with peripheral devices such as HD44480 displays or addressable RGB LEDs.
 
-Modxo is *not* a modchip. Whereas legacy modchips rely on largely obsolete hardware like LPC flash storage chips or expensive programmable logic ICs, Modxo is the first fully software-defined implementation of an LPC peripheral device. It is open source software, mostly written in C, developed using the official Raspberry Pi Pico SDK and designed to run on RP2040-based hardware. 
+Modxo puede ser usado para cargar una imagen de BIOS de XBOX Original desde el puerto LPC, asi como para interconectar software compatible con la XBOX con dispositivos periféricos como pantallas HD44480 o LEDs RGB direccionables. 
 
-No specialized hardware or complicated tooling is needed to load Modxo on a compatible device -- in most cased just a USB cable is all that is necessary. And installation works much like legacy devices -- all that is needed for installation is a compatible RP2040-based device, a few resistors, wire and basic soldering equipment. Custom PCBs exist to simplify the installation process even further.
+Modxo *no es un modchip*. Mientras que los modchips tradicionales dependen de hardware obsoleto, como chips de almacenamiento flash LPC o costosos circuitos integrados programables, Modxo es la primer implementacion de un dispotivo perférico definido completamente por software de un dispositivo periférico LPC. Es un software de código abierto, mayormente escrito en C, desarrollado usando el SDK oficial de Raspberry Pi Pico y diseñado para correr en hardware basado en el procesador RP2040.
 
-## How to Install
-### Requirements
-- An Xbox (any revision) with a working LPC Port. 1.6 Xboxes will need an LPC rebuild.
-- A RP2040 development board. There may be some clone boards that are not compatible. The following boards are known to work with Modxo:
-- - Official Raspberry Pi Pico
-  - Official Raspberry Pi Pico 2
+No necesita ningún hardware especializado ni herramientas complicadas para cargar Modxo en un dispositivo compatible -- en la mayoría de los casos, basta con un cable USB. Y la instalación funciona de forma muy similar a los dispositivos antiguos -- todo lo que necesita para la instalación es un dispositivo compatible con el procesador RP2040, algunas resistencias, cable y equipo básico de soldadura. Existe PCBs personlizado que simplifican aún más el proceso de instalación.
+
+## Cómo instalar
+### Requisitos
+- Una Xbox (cualquier versión) con un puerto LPC funcional. Las Xbox 1.6 necesitarán una reconstrucción del puerto LPC
+- Una placa de desarrolo RP2040. Es posible que algunas placas clon no sean compatibles. Se sabe que las placas compatibles que funcionan con Modxo son las siguientes:
+- - Raspberry Pi Pico (Oficial)
+  - Raspberry Pi Pico W (Oficial)
+  - Raspberry Pi Pico 2 (Oficial)
   - YD-RP2040
   - RP2040 Zero/Tiny
   - XIAO RP2040
-- 4 100 Ohm resistors (tested with 1/4 W resistors)
-- 1 1N4148 Diode (technically optional but highly recommended with certain development boards, see board-specific installation instructions below for more information)
+- 4 resistencias de 100 Ohm (probadas con resistencias de 1/4  de Watt)
+- 1 Diodo 1N4148 (tecnicamente opcional pero altamente recomendado con ciertas placas de desarrolo, consulte las instrucciones especificas de instalacion de cada placa, mencionadas a continuación para obtener más información)
 
 ### Flashing firmware
 
