@@ -52,16 +52,16 @@ Los siguientes pasos solo son necesarios sí desea actualizar PrometheOS con act
 2. Conecte la Raspberry Pi Pico a la PC con el botón BOOTSEL (o cualquier botón equivalente) presionado, y una nueva unidad de almacenamiento aparecerá.
 3. Copie Modxo-{variante de placa}.uf2 en la unidad de la Raspberry Pi Pico.
    
-### Wiring diagrams
+### Diagramas de cableado
 ---
-#### LPC Header
-   ![LPC Header wiring diagram](images/lpc_header_wiring.png)
+#### Encabezado LPC
+   ![Diagrama de cableado del LPC](images/lpc_header_wiring.png)
 
-  Notes:
-  * D0 is required for versions 1.0 - 1.5 unless it is grounded.
-  * LFrame and LPC 3.3V connections are required by version 1.6 or when connecting the Pico to USB port.
-  * LFrame is not required for USB debug.
-  * LPC Rebuild is required for version 1.6
+  Notas:
+  * D0 es requerido para versiones 1.0 - 1.5 a menos esté conectado a tierra.
+  * Las conexiones LFrame y LPC 3.3v solo son necesarios para la versión 1.6 o cuando se conecta la Raspberry Pi Pico al puerto USB.
+  * LFrame no es requerido para la depuración USB.
+  * Se requiere una reconstrucción del LPC para la versión 1.6
 ---
 #### Official Raspberry Pi Pico
 
