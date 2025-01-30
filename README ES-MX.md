@@ -11,9 +11,9 @@ Modxo (pronunciado "Modsho") es un firmware RP2040 que convierte una Raspberry P
 
 Modxo puede ser usado para cargar una imagen de BIOS de XBOX Original desde el puerto LPC, asi como para interconectar software compatible con la XBOX con dispositivos periféricos como pantallas HD44480 o LEDs RGB direccionables. 
 
-Modxo *no es un modchip*. Mientras que los modchips tradicionales dependen de hardware obsoleto, como chips de almacenamiento flash LPC o costosos circuitos integrados programables, Modxo es la primer implementacion de un dispotivo perférico definido completamente por software de un dispositivo periférico LPC. Es un software de código abierto, mayormente escrito en C, desarrollado usando el SDK oficial de Raspberry Pi Pico y diseñado para correr en hardware basado en el procesador RP2040.
+Modxo *no es un modchip*. Mientras que los modchips tradicionales dependen de hardware obsoleto, como chips de almacenamiento flash LPC o costosos circuitos integrados programables, Modxo es la primer implementación de un dispotivo perférico definido completamente por software de un dispositivo periférico LPC. Es un software de código abierto, mayormente escrito en C, desarrollado usando el SDK oficial de Raspberry Pi Pico y diseñado para correr en hardware basado en el procesador RP2040.
 
-No necesita ningún hardware especializado ni herramientas complicadas para cargar Modxo en un dispositivo compatible -- en la mayoría de los casos, basta con un cable USB. Y la instalación funciona de forma muy similar a los dispositivos antiguos -- todo lo que necesita para la instalación es un dispositivo compatible con el procesador RP2040, algunas resistencias, cable y equipo básico de soldadura. Existe PCBs personlizado que simplifican aún más el proceso de instalación.
+No necesita ningún hardware especializado ni herramientas complicadas para cargar Modxo en un dispositivo compatible -- en la mayoría de los casos, basta con un cable USB. Y la instalación funciona de forma muy similar a los dispositivos antiguos -- todo lo que necesita para la instalación es un dispositivo compatible con el procesador RP2040, algunas resistencias, cable y equipo básico de soldadura. Existen PCBs personlizados que simplifican aún más el proceso de instalación.
 
 ## Cómo instalar
 ### Requisitos
@@ -26,16 +26,16 @@ No necesita ningún hardware especializado ni herramientas complicadas para carg
   - RP2040 Zero/Tiny
   - XIAO RP2040
 - 4 resistencias de 100 Ohm (probadas con resistencias de 1/4  de Watt)
-- 1 Diodo 1N4148 (tecnicamente opcional pero altamente recomendado con ciertas placas de desarrolo, consulte las instrucciones especificas de instalacion de cada placa, mencionadas a continuación para obtener más información)
+- 1 Diodo 1N4148 (tecnicamente opcional pero altamente recomendado con ciertas placas de desarrolo, consulte las instrucciones especificas de instalación de cada placa, mencionadas a continuación para obtener más información)
 
-### Flashing firmware
+### Actualización del firmware
 
-#### Packing Bios
-1. Go to [https://team-resurgent.github.io/modxo/](https://team-resurgent.github.io/Modxo/)
-2. Drag and Drop your bios file
-3. UF2 File with bios image will be downloaded
+#### Empaquetando BIOS
+1. Ve a [https://team-resurgent.github.io/modxo/](https://team-resurgent.github.io/Modxo/)
+2. Arrastre y suelte su archivo de BIOS
+3. Una vez subido el archivo de BIOS, se creará un archivo UF2 con la imagen del BIOS que debe descargar
 
-#### Flashing steps (Single Bios)
+#### Flashing steps (Single Bios) Pasos para Flashear (BIOS simple)
 
 The following steps are not required if you intend to use PrometheOS, and just flash PrometheOS-{board-variant}.uf2 directly...
 
