@@ -96,7 +96,6 @@ void modxo_low_power_mode()
 void modxo_reset()
 {
     config_nvm_reset();
-    flashrom_reset();
     lpc_interface_reset();
     modxo_ports_reset();
 }
