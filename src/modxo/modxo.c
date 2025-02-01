@@ -97,6 +97,9 @@ void modxo_reset()
 {
     config_nvm_reset();
     lpc_interface_reset();
+#ifndef DEBUG_SUPERIO_DISABLED
+    lpc47m152_reset();
+#endif
     modxo_ports_reset();
 }
 
@@ -105,12 +108,10 @@ void modxo_init(void)
     config_nvm_init();
     flashrom_init();
     lpc_interface_init();
-    
 #ifndef DEBUG_SUPERIO_DISABLED
     lpc47m152_init();
     uart_16550_init();
 #endif
-    
     data_store_init();
     ws2812_init();
     legacy_display_init();

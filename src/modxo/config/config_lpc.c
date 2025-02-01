@@ -170,6 +170,6 @@ void config_nvm_reset(void)
 
 void config_nvm_init(void)
 {
-    config_retrieve_parameters();
+    config_nvm_reset();
     lpc_interface_add_io_handler(MODXO_REGISTER_NVM_CONFIG_SEL, 0xFFFE, config_read_hdlr, config_write_hdlr);
 }

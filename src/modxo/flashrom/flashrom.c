@@ -108,7 +108,7 @@ void flashrom_reset(void)
 
 bool flashrom_init(void)
 {
-    flashrom_set_mmc(MODXO_BANK_BOOTLOADER);
+    flashrom_reset();
     lpc_interface_set_callback(LPC_OP_MEM_READ, flashrom_memread_handler);
     lpc_interface_set_callback(LPC_OP_MEM_WRITE, flashrom_memwrite_handler);
 

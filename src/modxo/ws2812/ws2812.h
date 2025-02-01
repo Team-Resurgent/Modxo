@@ -10,7 +10,7 @@ typedef enum
 { 
 	LedColorOff = 0,
 	LedColorRed = 1,
-	LedColorGgreen = 2,
+	LedColorGreen = 2,
 	LedColorAmber = 3,
 	LedColorBlue = 4,
 	LedColorPurple = 5,

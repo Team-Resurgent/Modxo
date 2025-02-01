@@ -213,13 +213,11 @@ void modxo_ports_reset(void)
 {
     _program_sector_number = -1;
     _erase_sector_number = -1;
-    cmd_byte_idx = 0;    
+    cmd_byte_idx = 0;
 }
 
 void modxo_ports_init(void)
 {
     lpc_interface_add_io_handler(MODXO_REGISTER_LCD_COMMAND, 0xFFF8, read_handler, write_handler);
-    _program_sector_number = -1;
-    _erase_sector_number = -1;
-    cmd_byte_idx = 0;
+    modxo_ports_reset();
 }
