@@ -66,6 +66,7 @@ static void lpc47m152_write_handler(uint16_t address, uint8_t *data)
                 if (*data == EXIT_CONFIGURATION_MODE_VALUE)
                 {
                     lpc47m152_regs.config_mode = false;
+                    tud_cdc_read_flush();
                 }
                 else
                 {
