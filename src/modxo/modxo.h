@@ -15,4 +15,5 @@ void modxo_poll_core0(void);
 void modxo_lpc_reset_off(void);
 void modxo_lpc_reset_on(void);
 void modxo_low_power_mode(void);
+void modxo_enable_lpm(bool enable);
 

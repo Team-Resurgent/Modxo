@@ -35,17 +35,18 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../lpc/lpc_interface.h"
 #include "tusb.h"
 
-void uart_16550_port_write(uint16_t address, uint8_t *data)
+static void uart_16550_port_write(uint16_t address, uint8_t *data)
 {
-    // UART Ports
-    if ((address == 0x3F8))
-    {
-        if (tud_cdc_connected())
+    if(tud_cdc_connected())
+        // UART Ports
+        if ((address == 0x3F8))
+        {
             tud_cdc_write(data, 1);
-    }
+            tud_cdc_write_flush();
+        }
 }
 
-void uart_16550_port_read(uint16_t address, uint8_t *data)
+static void uart_16550_port_read(uint16_t address, uint8_t *data)
 {
     // UART Ports
     if (tud_cdc_connected())
@@ -70,6 +71,15 @@ void uart_16550_port_read(uint16_t address, uint8_t *data)
         {
             *data = 0;
         }
+    }
+}
+
+void uart_16550_reset(void)
+{
+    if(tud_cdc_connected())
+    {
+        tud_cdc_write_clear();
+        tud_cdc_read_flush();
     }
 }
 

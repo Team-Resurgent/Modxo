@@ -44,6 +44,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ws2812/ws2812.h"
 #include "legacy_display/legacy_display.h"
 #include "hardware/watchdog.h"
+#include "tusb.h"
 
 extern uint8_t current_led_color;
 
@@ -90,7 +91,8 @@ void modxo_low_power_mode()
     // Modxo sleep
 
     // Modxo reset
-    software_reset();
+    if(!tud_cdc_connected())
+        software_reset();
 }
 
 void modxo_reset()

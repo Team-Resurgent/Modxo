@@ -33,7 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "hardware/structs/bus_ctrl.h"
 
 #include "../lpc/lpc_interface.h"
-#include "tusb.h"
+#include "uart_16550.h"
 
 #define ENTER_CONFIGURATION_MODE_VALUE 0x55
 #define EXIT_CONFIGURATION_MODE_VALUE 0xAA
@@ -49,8 +49,6 @@ static struct
 
 static void lpc47m152_write_handler(uint16_t address, uint8_t *data)
 {
-    if (tud_cdc_connected())
-    {
         switch (address)
         {
         case 0x002E:
@@ -66,7 +64,7 @@ static void lpc47m152_write_handler(uint16_t address, uint8_t *data)
                 if (*data == EXIT_CONFIGURATION_MODE_VALUE)
                 {
                     lpc47m152_regs.config_mode = false;
-                    tud_cdc_read_flush();
+                    uart_16550_reset();
                 }
                 else
                 {
@@ -87,13 +85,10 @@ static void lpc47m152_write_handler(uint16_t address, uint8_t *data)
             */
             break;
         }
-    }
 }
 
 static void lpc47m152_read_handler(uint16_t address, uint8_t *data)
 {
-    if (tud_cdc_connected())
-    {
         if (lpc47m152_regs.config_mode)
         {
             switch (address)
@@ -114,7 +109,6 @@ static void lpc47m152_read_handler(uint16_t address, uint8_t *data)
                 break;
             }
         }
-    }
 }
 
 void lpc47m152_reset(void) {
