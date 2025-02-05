@@ -95,7 +95,6 @@ void modxo_low_power_mode()
 
 void modxo_reset()
 {
-    config_nvm_reset();
     lpc_interface_reset();
 #ifndef DEBUG_SUPERIO_DISABLED
     lpc47m152_reset();
