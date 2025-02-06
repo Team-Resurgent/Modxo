@@ -92,6 +92,7 @@ void pin_3_3v_high()
     gpio_set_irq_enabled(LPC_ON, GPIO_IRQ_LEVEL_HIGH, false);
     set_sys_clock_khz(SYS_FREQ_IN_KHZ, true);
     init_status_led();
+    flashrom_reset();
     modxo_reset();
     modxo_active = true;
 }
@@ -151,7 +152,6 @@ int main(void)
 
     modxo_init_interrupts();
     modxo_init();
-
 
     multicore_reset_core1();
     multicore_launch_core1(core1_main);

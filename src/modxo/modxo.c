@@ -97,7 +97,6 @@ void modxo_low_power_mode()
 
 void modxo_reset()
 {
-    flashrom_reset();
     lpc_interface_reset();
 #ifndef DEBUG_SUPERIO_DISABLED
     lpc47m152_reset();
