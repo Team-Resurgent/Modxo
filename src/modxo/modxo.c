@@ -44,7 +44,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ws2812/ws2812.h"
 #include "legacy_display/legacy_display.h"
 #include "hardware/watchdog.h"
+#include "hardware/clocks.h"
 #include "tusb.h"
+
+#if PICO_RP2350
+ #define SYS_FREQ_DEFAULT (150 * 1000)
+#else
+ #define SYS_FREQ_DEFAULT (133 * 1000)
+#endif
 
 extern uint8_t current_led_color;
 
@@ -88,11 +95,12 @@ void software_reset()
 
 void modxo_low_power_mode()
 {
-    // Modxo sleep
-
     // Modxo reset
     if(!tud_cdc_connected())
         software_reset();
+
+    // Modxo sleep
+    set_sys_clock_khz(SYS_FREQ_DEFAULT, true);
 }
 
 void modxo_reset()

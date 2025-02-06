@@ -35,6 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "hardware/gpio.h"
 #include "tusb.h"
 
+#include "modxo/flashrom/flashrom.h"
 #include "modxo/modxo.h"
 #include "modxo_pinout.h"
 
@@ -85,12 +86,13 @@ void pin_3_3v_falling()
 {
     modxo_low_power_mode();
     modxo_active = false;
+    gpio_set_irq_enabled(LPC_ON, GPIO_IRQ_LEVEL_HIGH, true);
 }
 
 void pin_3_3v_high()
 {
-    gpio_set_irq_enabled(LPC_ON, GPIO_IRQ_LEVEL_HIGH, false);
     set_sys_clock_khz(SYS_FREQ_IN_KHZ, true);
+    gpio_set_irq_enabled(LPC_ON, GPIO_IRQ_LEVEL_HIGH, false);
     init_status_led();
     flashrom_reset();
     modxo_reset();
@@ -114,15 +116,11 @@ void core0_irq_handler(uint gpio, uint32_t event)
         pin_3_3v_falling();
     }
 
+    // Use LEVEL_HIGH because rising edge triggers too early after power-up (~500us)
     if (gpio == LPC_ON && (event & GPIO_IRQ_LEVEL_HIGH) != 0)
     {
         pin_3_3v_high();
     }
-}
-
-void xbox_shutdown()
-{
-    multicore_reset_core1();
 }
 
 void modxo_init_pin_irq(uint pin, uint32_t event)
@@ -150,11 +148,10 @@ int main(void)
     sleep_ms(2000);
 #endif
 
-    modxo_init_interrupts();
-    modxo_init();
-
     multicore_reset_core1();
     multicore_launch_core1(core1_main);
 
+    modxo_init();
+    modxo_init_interrupts();
     core0_main(); // Infinite loop
 }

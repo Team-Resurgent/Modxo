@@ -176,7 +176,7 @@ static int look_next_empty_page(int page_no){
 static int look_last_config(){
     int page = -1;
     for(page = NVM_TOTAL_PAGES-1; page >= 0; page--){
-        if(is_page_valid(page)){   
+        if(is_page_valid(page)){
             break;
         }
     }

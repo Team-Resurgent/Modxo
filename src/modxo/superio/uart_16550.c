@@ -37,13 +37,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 static void uart_16550_port_write(uint16_t address, uint8_t *data)
 {
-    if(tud_cdc_connected())
+    if(tud_cdc_connected()) {
         // UART Ports
         if ((address == 0x3F8))
         {
             tud_cdc_write(data, 1);
             tud_cdc_write_flush();
         }
+    }
 }
 
 static void uart_16550_port_read(uint16_t address, uint8_t *data)
