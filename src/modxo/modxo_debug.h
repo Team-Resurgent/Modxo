@@ -13,3 +13,5 @@ Copyright (c) 2024, Team Resurgent, Shalx
 #else
 #define DEBUG_PRINTF(...) 
 #endif
+
+extern bool modxo_pc_connected;

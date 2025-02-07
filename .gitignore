@@ -57,3 +57,4 @@ build
 build_docker
 out
 bios
+.vscode/settings.json

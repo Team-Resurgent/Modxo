@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "hardware/irq.h"
 #include "pico/multicore.h"
 #include "hardware/structs/bus_ctrl.h"
+#include "../modxo_debug.h"
 
 #include "../lpc/lpc_interface.h"
 #include "uart_16550.h"
@@ -50,7 +51,7 @@ static struct
 
 static void lpc47m152_write_handler(uint16_t address, uint8_t *data)
 {
-    if (tud_cdc_connected())
+    if(modxo_pc_connected)
     {
         switch (address)
         {
@@ -93,7 +94,7 @@ static void lpc47m152_write_handler(uint16_t address, uint8_t *data)
 
 static void lpc47m152_read_handler(uint16_t address, uint8_t *data)
 {
-    if (tud_cdc_connected())
+    if(modxo_pc_connected)
     {
         if (lpc47m152_regs.config_mode)
         {
