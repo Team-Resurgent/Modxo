@@ -34,6 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../lpc/lpc_interface.h"
 #include "uart_16550.h"
+#include "tusb.h"
 
 #define ENTER_CONFIGURATION_MODE_VALUE 0x55
 #define EXIT_CONFIGURATION_MODE_VALUE 0xAA
@@ -49,6 +50,8 @@ static struct
 
 static void lpc47m152_write_handler(uint16_t address, uint8_t *data)
 {
+    if (tud_cdc_connected())
+    {
         switch (address)
         {
         case 0x002E:
@@ -85,10 +88,13 @@ static void lpc47m152_write_handler(uint16_t address, uint8_t *data)
             */
             break;
         }
+    }
 }
 
 static void lpc47m152_read_handler(uint16_t address, uint8_t *data)
 {
+    if (tud_cdc_connected())
+    {
         if (lpc47m152_regs.config_mode)
         {
             switch (address)
@@ -109,6 +115,7 @@ static void lpc47m152_read_handler(uint16_t address, uint8_t *data)
                 break;
             }
         }
+    }
 }
 
 void lpc47m152_reset(void) {
