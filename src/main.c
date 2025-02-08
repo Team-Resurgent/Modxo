@@ -39,8 +39,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "modxo/modxo.h"
 #include "modxo_pinout.h"
 
-#define SYS_FREQ_IN_KHZ (266 * 1000)
-
 bool reset_pin = false;
 bool modxo_active = false;
 
