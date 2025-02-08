@@ -8,6 +8,12 @@ Copyright (c) 2024, Shalx <Alejandro L. Huitron shalxmva@gmail.com>
 
 #include "hardware/pio.h"
 
+#if PICO_RP2350
+ #define SYS_FREQ_DEFAULT (150 * 1000)
+#else
+ #define SYS_FREQ_DEFAULT (133 * 1000)
+#endif
+
 void modxo_reset(void);
 void modxo_init(void);
 void modxo_poll_core1(void);

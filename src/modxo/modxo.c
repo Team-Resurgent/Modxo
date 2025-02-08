@@ -47,12 +47,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "hardware/clocks.h"
 #include "tusb.h"
 
-#if PICO_RP2350
- #define SYS_FREQ_DEFAULT (150 * 1000)
-#else
- #define SYS_FREQ_DEFAULT (133 * 1000)
-#endif
-
 extern uint8_t current_led_color;
 bool modxo_pc_connected = false;
 

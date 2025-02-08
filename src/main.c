@@ -142,6 +142,7 @@ void modxo_init_interrupts()
 
 int main(void)
 {
+    set_sys_clock_khz(SYS_FREQ_IN_KHZ, true);
     stdio_init_all();
 
 #ifdef START_DELAY
@@ -152,6 +153,7 @@ int main(void)
     multicore_launch_core1(core1_main);
 
     modxo_init();
+    set_sys_clock_khz(SYS_FREQ_DEFAULT, true);
     modxo_init_interrupts();
     core0_main(); // Infinite loop
 }
