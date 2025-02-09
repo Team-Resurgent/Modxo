@@ -123,6 +123,7 @@ void lpc47m152_reset(void) {
     lpc47m152_regs.config_mode = false;
     lpc47m152_regs.index_port = 0;
     lpc47m152_regs.device_id = 0;
+    uart_16550_reset();
 }
 
 void lpc47m152_init(void)
