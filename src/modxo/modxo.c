@@ -72,7 +72,7 @@ void modxo_lpc_reset_off()
     ws2812_set_color(LedColorOff);
     current_led_color = color;
 
-    modxo_reset();
+    //modxo_reset();
 }
 
 void modxo_lpc_reset_on()
