@@ -7,7 +7,7 @@
 # Translated versions
 *Note: some translations could be outdated and may take a while to be updated than english version.
 
- - [English](https://github.com/Team-Resurgent)
+ - [English](https://github.com/Team-Resurgent/Modxo)
  - [Español](https://github.com/Team-Resurgent/Modxo/blob/main/README%20ES-MX.md)
  
 

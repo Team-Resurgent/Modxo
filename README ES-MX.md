@@ -6,9 +6,9 @@
 
 # Versiones traducidas
 
-*Nota: algunas traducciones pueden estár desactualizdas, y pueden tardar un poco en actualizarse en comparación con la versión en inglés.
+*Nota: algunas traducciones pueden estár desactualizadas, y pueden tardar un poco en actualizarse en comparación con la versión en inglés.
 
- - [English](https://github.com/Team-Resurgent)
+ - [English](https://github.com/Team-Resurgent/Modxo)
  - [Español](https://github.com/Team-Resurgent/Modxo/blob/main/README%20ES-MX.md)
  
 
