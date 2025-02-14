@@ -116,8 +116,8 @@ Los siguientes pasos solo son necesarios sí desea actualizar PrometheOS con act
 
 
 ### Docker
-#### Setup
-Build your base docker image with
+#### Configuración
+Construya su imagen base de docker con
 ```
 docker build -t modxo-builder .
 ```
