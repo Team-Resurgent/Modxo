@@ -1,6 +1,6 @@
 # Pautas de marca
 
-Los proyecos derivados deben incluir los logos apropiados de Modxo y Team Resurgent.
+Los proyectos derivados deben incluir los logos apropiados de Modxo y Team Resurgent.
 
 
 ## Logo horizontal de Modxo (PNG)
