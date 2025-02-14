@@ -33,9 +33,9 @@ File: [Descargar logo del team resurgent](branding/team-resurgent.png)
 
 <img src="branding/team-resurgent.png" height="176">
 
-## Team Resurgent Logo (SVG)
+## Logo del Team Resurgent (SVG)
 
-File: [Download Team Resurgent Logo](branding/team-resurgent.svg)
+File: [Descargar logo del team resurgent](branding/team-resurgent.svg)
 
 <img src="branding/team-resurgent.svg" height="176">
 
