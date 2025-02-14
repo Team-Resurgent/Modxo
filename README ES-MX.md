@@ -146,8 +146,8 @@ MODXO_PINOUT=rp2040_zero BUILD_TYPE=Release docker compose run --rm builder
 CLEAN MODXO_PINOUT=yd_rp2040 docker compose run --rm builder
 ```
 
-#### Packing Bios locally
-Place your bios file named `bios.bin` in this directory or place any bios files (regardless of their name) in the bios directory
+#### Empaquetando Bios localmente
+Coloque su archivo de bios nombrada `bios.bin` en este directorio o coloque cualquier archivo de bios (sin importar su nombre) en el directorio de bios
 ```
 docker compose run --rm bios2uf2
 ```
