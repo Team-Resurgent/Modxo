@@ -4,6 +4,12 @@
 [![.NET](https://github.com/Team-Resurgent/Modxo/actions/workflows/BundleModxo.yml/badge.svg)](https://github.com/Team-Resurgent/Modxo/actions/workflows/BundleModxo.yml)
 [![Discord](https://img.shields.io/badge/chat-on%20discord-7289da.svg?logo=discord)](https://discord.gg/VcdSfajQGK)
 
+# Translated versions
+*Note: some translations could be outdated and may take a while to be updated than english version.
+
+ - [Español](https://github.com/Team-Resurgent/Modxo/blob/main/README%20ES-MX.md)
+ - [English](https://github.com/Team-Resurgent)
+
 # Modxo
 
 Modxo (pronnounced "Modsho") is an RP2040 firmware that converts a Raspberry Pi Pico (or similar RP2040-based device) into an Original Xbox-compatible LPC peripheral device. 
