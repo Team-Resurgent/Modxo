@@ -93,26 +93,26 @@ Los siguientes pasos solo son necesarios sí desea actualizar PrometheOS con act
 
 ---
 
-## Firmware Build Instructions
+## Instrucciones de compilación del firmware
 
 ### Windows
-1.- Download and Install [Visual Studio Code](https://code.visualstudio.com/download)
+1.- Descargue e instale  [Visual Studio Code](https://code.visualstudio.com/download)
 
-2.- Install extension: "Raspberry Pi Pico"
+2.- Instale la extensión: "Raspberry Pi Pico"
 
 ![Pico Extension](images/extension.png)
 
-3.- Ensure SDK 2.0.0 selected as below...
+3.- Asegurese de de el SDK 2.0.0 esté seleccionado...
 
 ![SDK 2.0.0](images/sdk.png)
 
-4.- Go to Raspberry Pi Pico Tab and click "Configure CMake"
+4.- Vaya a la pestanaña Raspberry Pi Pico y haga click en "Configure CMake"
 
-5.- Go to Run and Debug Tab and select Build for your board
+5.- Vaya a la pestala ejecutar y depurar y seleccione Compilar para su placa
 
-6.- Click "Start Debugging" (Green arrow)
+6.- Haga click en "Start Debugging" (felcha verde)
 
-7.- UF2 File will be generated on Build folder
+7.- El archivo UF2 se generará en la carpeta Build
 
 
 ### Docker
