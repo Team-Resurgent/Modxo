@@ -1,6 +1,7 @@
-# Branding Guidelines
+# Pautas de marca
 
-Derivitive projects should include the appropriate Modxo and Team Resurgent logos.
+Los proyecos derivados deben incluir los logos apropiados de Modxo y Team Resurgent.
+
 
 ## Modxo Horizontal Logo (PNG)
 
