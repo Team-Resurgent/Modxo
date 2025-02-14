@@ -160,25 +160,24 @@ docker compose run --rm bios2uf2
 ## Notas
  * Actualmete, Modxo usa el ID 0xAF. Idealmente cualquier hardware derivado con cambios significativos debería usar un ID diferente. Esto es para que un software como PrometheOS puedan apuntar a sus caracterisiticas de forma adecuada.
 
-## Attribution Requirement
+## Requerimientos para atribuciones
 
-     a) **Attribution:**  
-       If you distribute or modify this work, you must provide proper 
-       attribution to the original authors. This includes:
-       - Mentioning the original project name: `Modxo`.
-       - Listing the original authors: `Shalx / Team Resurgent`.
-       - Including a link to the original project repository: 
-           `https://github.com/Team-Resurgent/Modxo`.
-       - Clearly stating any modifications made.
+     a) **Atribuciones:**  
+       Sí distribuye o modifica este trabajo, debes proporcionar la
+       a atribución adecuada a los autores originales. Esto incluye:
+       - Mencionar el nombre original del proyecto: `Modxo`.
+       - Listar los autores originales: `Shalx / Team Resurgent`.
+       - Incluir el enlace (link) al repositorio original del proyecto:
+            `https://github.com/Team-Resurgent/Modxo`.
+       - Declarar claramente cualquier modificación realizada.
 
-    b) **Logo and Branding:**  
-       Any derivative work or distribution must include the logos provided by
-       the original authors in accordance with the branding guidelines. The 
-       logos must be displayed prominently in any interface or documentation 
-       where the original project is referenced or attributed.
+    b) **Logo y marca:**  
+       Cualquier derivado del trabajo o distribución debe incluir los logos proporcionado por
+       los autores originales de acuerdo con las pautas de marca. Los 
+       logos deben ser mostrados de manera destacada en cualquier interfaz o documentación
+       donde se haga referenia o atribuya al proyecto original.
 
-    c) **Branding Guidelines:**  
-       You can find the logos and detailed branding guidelines in the 
-       `BRANDING.md` file provided with this project. The logos must not be 
-       altered in any way that would distort or misrepresent the original 
-       branding.
+    c) **Lineamientos de marca**  
+       Puede encontrar los logos y los Lineamientos de marca detallados en el 
+       archivo `BRANDING.md` proporcoinado con este proyecto. Los logos no deben ser
+       aleterado de ninguna forma que distorciono o tergiverse la marca original.
