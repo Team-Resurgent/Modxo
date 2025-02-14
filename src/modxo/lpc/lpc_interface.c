@@ -261,6 +261,10 @@ void lpc_interface_set_callback(LPC_OP_TYPE op, lpc_handler_cback cback)
 
 void lpc_interface_start_sm()
 {
+    if(!pio_can_add_program(_pio, &lpc_read_request_program))
+        pio_remove_program(_pio, &lpc_read_request_program, offset);
+
+    offset = pio_add_program(_pio, &lpc_read_request_program);
     pio_set_sm_mask_enabled(_pio, 15, false); // Disable All State Machines
     pio_custom_init(_pio, LPC_OP_MEM_READ, offset, _disable_internal_flash);
     pio_custom_init(_pio, LPC_OP_MEM_WRITE, offset, _disable_internal_flash);
@@ -287,23 +291,6 @@ void lpc_interface_init(void)
     _pio = pio0;
 
     pio_claim_sm_mask(_pio, 15);
-
-    if (pio_can_add_program(_pio, &lpc_read_request_program))
-    {
-        offset = pio_add_program(_pio, &lpc_read_request_program);
-    }
-    else
-    {
-        while (true)
-        {
-            gpio_put(PICO_DEFAULT_LED_PIN, 1);
-            sleep_ms(250);
-            printf("Error: pio program can not be loaded\n");
-            gpio_put(PICO_DEFAULT_LED_PIN, 0);
-            sleep_ms(250);
-        }
-    }
-
     lpc_gpio_init(_pio);
 
     gpio_init(GPIO_D0);
