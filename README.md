@@ -10,6 +10,7 @@
 
  - [English](https://github.com/Team-Resurgent/Modxo)
  - [Español](https://github.com/Team-Resurgent/Modxo/blob/main/README%20ES-MX.md)
+ - More translations coming soon
  
 
 # Modxo
