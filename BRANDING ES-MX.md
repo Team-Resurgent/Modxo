@@ -39,20 +39,20 @@ File: [Descargar logo del team resurgent](branding/team-resurgent.svg)
 
 <img src="branding/team-resurgent.svg" height="176">
 
-## Silk Sceen Images
+## Imagenes de serigrafía
 
-File: [Download Modxo Horizontal Logo Silkscreen](branding/modxo-horizontal-silk.png)
+File: [Descargar Logo horizontal de Moxo en serigrafía](branding/modxo-horizontal-silk.png)
 
 <img src="branding/modxo-horizontal-silk.png" height="176">
 
-File: [Download Modxo Horizontal Logo Inverted Silkscreen](branding/modxo-horizontal-inverted-silk.png)
+File: [Descargar logo horizontal de Moxo en serigrafía invertida](branding/modxo-horizontal-inverted-silk.png)
 
 <img src="branding/modxo-horizontal-inverted-silk.png" height="176">
 
-File: [Download Modxo Vertical Logo Silkscreen](branding/modxo-vertical-silk.png)
+File: [Descargar logo vertical de Modxo en serigrafía](branding/modxo-vertical-silk.png)
 
 <img src="branding/modxo-vertical-silk.png" height="176">
 
-File: [Download Modxo Vertical Logo Inverted Silkscreen](branding/modxo-vertical-inverted-silk.png)
+File: [Descargar logo vertical de Modxo en serigrafía invertida](branding/modxo-vertical-inverted-silk.png)
 
 <img src="branding/modxo-vertical-inverted-silk.png" height="176">
