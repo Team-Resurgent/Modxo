@@ -27,9 +27,9 @@ File: [Descargar logo vertical de Modxo](branding/Modxo-vertical.SVG)
 
 <img src="branding/Modxo-vertical.svg" height="176">
 
-## Team Resurgent Logo (PNG)
+## Logo del Team Resurgent (PNG)
 
-File: [Download Team Resurgent Logo](branding/team-resurgent.png)
+File: [Descargar logo del team resurgent](branding/team-resurgent.png)
 
 <img src="branding/team-resurgent.png" height="176">
 
