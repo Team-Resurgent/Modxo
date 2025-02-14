@@ -3,9 +3,9 @@
 Los proyecos derivados deben incluir los logos apropiados de Modxo y Team Resurgent.
 
 
-## Modxo Horizontal Logo (PNG)
+## Logo horizontal de Modxo (PNG)
 
-File: [Download Modxo Horizontal Logo](branding/Modxo-horizontal.png)
+File: [Descargar logo horizontal de Modxo](branding/Modxo-horizontal.png)
 
 <img src="branding/Modxo-horizontal.png" height="176">
 
