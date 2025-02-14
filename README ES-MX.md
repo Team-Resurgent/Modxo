@@ -122,23 +122,23 @@ Construya su imagen base de docker con
 docker build -t modxo-builder .
 ```
 
-#### Firmware Build
+#### Compilación de Firmware
 ```
 docker compose run --rm builder
 ```
 
-Output will be `out/modxo_[pinout].uf2`
+La salidad será `out/modxo_[pinout].uf2`
 
-There are also some extra parameters that can be passed to the build script:
+También hay algunos parámetros extra que se pueden pasar al script de compilación:
 
-- MODXO_PINOUT=`official_pico` | `yd_rp2040` | `rp2040_zero` | `xiao_rp2040` - Default is `official_pico`.
+- MODXO_PINOUT=`official_pico` | `yd_rp2040` | `rp2040_zero` | `xiao_rp2040` - El valor predeterminado es `official_pico`.
 
-- CLEAN=`y`: triggers a clean build. Default is disabled.
+- CLEAN=`y`: inicia una compiliación limpia. El valor predeterminado es desactivado.
 
-- BUILD_TYPE=`Release` | `Debug` - Default is `Debug`.
+- BUILD_TYPE=`Release` | `Debug` - El valor predeterminado es `Debug`.
 
 
-_Examples:_
+_Ejemplos:_
 ```
 MODXO_PINOUT=rp2040_zero BUILD_TYPE=Release docker compose run --rm builder
 ```
