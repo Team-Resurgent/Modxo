@@ -5,6 +5,7 @@
 [![Discord](https://img.shields.io/badge/chat-on%20discord-7289da.svg?logo=discord)](https://discord.gg/VcdSfajQGK)
 
 # Translated versions
+
 *Note: some translations could be outdated and may take a while to be updated than english version.
 
  - [English](https://github.com/Team-Resurgent/Modxo)
