@@ -157,8 +157,8 @@ docker compose run --rm bios2uf2
 ## Errores conocidos
  * Windbg aveces se bloquea cuando se conecte al puerto serial de Modxo SuperIO's
 
-## Notes
- * Currently, Modxo uses the ID 0xAF. Any derivative hardware with significant changes should ideally use a different ID. This is so that software like PrometheOS can target features appropriately.
+## Notas
+ * Actualmete, Modxo usa el ID 0xAF. Idealmente cualquier hardware derivado con cambios significativos debería usar un ID diferente. Esto es para que un software como PrometheOS puedan apuntar a sus caracterisiticas de forma adecuada.
 
 ## Attribution Requirement
 
