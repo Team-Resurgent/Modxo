@@ -179,5 +179,5 @@ docker compose run --rm bios2uf2
 
     c) **Lineamientos de marca**  
        Puede encontrar los logos y los Lineamientos de marca detallados en el 
-       archivo `BRANDING.md` proporcoinado con este proyecto. Los logos no deben ser
+       archivo `BRANDING ES-MX.md` proporcoinado con este proyecto. Los logos no deben ser
        aleterado de ninguna forma que distorciono o tergiverse la marca original.
