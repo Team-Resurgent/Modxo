@@ -15,9 +15,9 @@ File: [Descargar logo horizontal de Modxo](branding/Modxo-horizontal.SVG)
 
 <img src="branding/Modxo-horizontal.svg" height="176">
 
-## Modxo Vertical Logo (PNG)
+## Logo vertical de Modxo (PNG)
 
-File: [Download Modxo Vertical Logo](branding/Modxo-vertical.png)
+File: [Descargar logo vertical de Modxo](branding/Modxo-vertical.png)
 
 <img src="branding/Modxo-vertical.png" height="176">
 
