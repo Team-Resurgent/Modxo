@@ -91,17 +91,17 @@ void software_reset()
 
 void modxo_low_power_mode()
 {
+    // Modxo sleep
+    set_sys_clock_khz(SYS_FREQ_DEFAULT, true);
+
     // Modxo reset
     if(!tud_cdc_connected())
         software_reset();
-
-    // Modxo sleep
-    set_sys_clock_khz(SYS_FREQ_DEFAULT, true);
 }
 
 void modxo_reset()
 {
-    lpc_interface_reset();
+    //lpc_interface_reset();
 #ifndef DEBUG_SUPERIO_DISABLED
     lpc47m152_reset();
 #endif
