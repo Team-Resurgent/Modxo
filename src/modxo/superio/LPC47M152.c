@@ -51,70 +51,64 @@ static struct
 
 static void lpc47m152_write_handler(uint16_t address, uint8_t *data)
 {
-    if(modxo_pc_connected)
+    switch (address)
     {
-        switch (address)
+    case 0x002E:
+        if (lpc47m152_regs.config_mode == false)
         {
-        case 0x002E:
-            if (lpc47m152_regs.config_mode == false)
+            if (*data == ENTER_CONFIGURATION_MODE_VALUE)
             {
-                if (*data == ENTER_CONFIGURATION_MODE_VALUE)
-                {
-                    lpc47m152_regs.config_mode = true;
-                }
+                lpc47m152_regs.config_mode = true;
+            }
+        }
+        else
+        {
+            if (*data == EXIT_CONFIGURATION_MODE_VALUE)
+            {
+                lpc47m152_regs.config_mode = false;
+                uart_16550_reset();
             }
             else
             {
-                if (*data == EXIT_CONFIGURATION_MODE_VALUE)
-                {
-                    lpc47m152_regs.config_mode = false;
-                    uart_16550_reset();
-                }
-                else
-                {
-                    lpc47m152_regs.index_port = *data;
-                }
+                lpc47m152_regs.index_port = *data;
             }
-            break;
-
-        case 0x002F:
-            // Not used
-            /*          if(lpc47m152_regs.config_mode == true)
-                        {
-                            switch(lpc47m152_regs.index_port)
-                            {
-
-                            }
-                        }
-            */
-            break;
         }
+        break;
+
+    case 0x002F:
+        // Not used
+        /*          if(lpc47m152_regs.config_mode == true)
+                    {
+                        switch(lpc47m152_regs.index_port)
+                        {
+
+                        }
+                    }
+        */
+        break;
     }
 }
 
 static void lpc47m152_read_handler(uint16_t address, uint8_t *data)
 {
-    if(modxo_pc_connected)
+    if (lpc47m152_regs.config_mode)
     {
-        if (lpc47m152_regs.config_mode)
+        switch (address)
         {
-            switch (address)
+        case 0x2E:
+            *data = lpc47m152_regs.index_port;
+            break;
+        case 0x2F:
+            switch (lpc47m152_regs.index_port)
             {
-            case 0x2E:
-                *data = lpc47m152_regs.index_port;
+            case 0x26:
+                *data = tud_cdc_connected() ? CONFIG_ADDRESS_L : 0xff;
                 break;
-            case 0x2F:
-                switch (lpc47m152_regs.index_port)
-                {
-                case 0x26:
-                    *data = CONFIG_ADDRESS_L;
-                    break;
-                case 0x27:
-                    *data = CONFIG_ADDRESS_H;
-                    break;
-                }
+            case 0x27:
+                *data = tud_cdc_connected() ? CONFIG_ADDRESS_H : 0xff;
                 break;
             }
+            break;
         }
     }
 }

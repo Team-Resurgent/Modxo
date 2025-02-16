@@ -48,11 +48,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "tusb.h"
 
 extern uint8_t current_led_color;
-bool modxo_pc_connected = false;
 
 void modxo_poll_core1()
 {
-    modxo_pc_connected = tud_cdc_connected();
     modxo_ports_poll();
     config_poll();
 }
@@ -110,7 +108,6 @@ void modxo_reset()
 
 void modxo_init(void)
 {
-    modxo_pc_connected = tud_cdc_connected();
     config_nvm_init();
     flashrom_init();
     lpc_interface_init();
