@@ -16,14 +16,14 @@
 
 # Modxo
 
-Modxo (pronunciado "Modsho") es un firmware RP2040 que convierte una Raspberry Pi Pico (o cualquier dispositivo similar basado en  RP2040) en un dispositivo LPC compatible con la Xbox original.
+Modxo (pronunciado "Modsho") es un firmware de RP2040/RP2350 que convierte una Raspberry Pi Pico (o cualquier dispositivo similar basado en  RP2040/RP2350) en un periférico LPC compatible con la Xbox original.
 
 
-Modxo puede ser usado para cargar una imagen de BIOS de XBOX Original desde el puerto LPC, asi como para interconectar software compatible con la XBOX con dispositivos periféricos como pantallas HD44480 o LEDs RGB direccionables. 
+Modxo puede ser usado para cargar una imagen de BIOS de XBOX Original desde el puerto LPC, asi como para interconectar software de XBOX compatible con dispositivos periféricos como pantallas HD44480 o LEDs RGB direccionables. 
 
-Modxo *no es un modchip*. Mientras que los modchips tradicionales dependen de hardware obsoleto, como chips de almacenamiento flash LPC o costosos circuitos integrados programables, Modxo es la primer implementación de un dispotivo perférico definido completamente por software de un dispositivo periférico LPC. Es un software de código abierto, mayormente escrito en C, desarrollado usando el SDK oficial de Raspberry Pi Pico y diseñado para correr en hardware basado en el procesador RP2040.
+Modxo *no es un modchip*. Mientras que los modchips tradicionales dependen de hardware obsoleto, como chips de memoria flash LPC o costosos circuitos integrados programables, Modxo es la primer implementación de un dispotivo perférico completamente por software de un dispositivo periférico LPC. Es software de código abierto, mayormente escrito en C, desarrollado usando el SDK oficial de Raspberry Pi Pico y diseñado para correr en hardware basado en el procesador RP2040/RP2350.
 
-No necesita ningún hardware especializado ni herramientas complicadas para cargar Modxo en un dispositivo compatible -- en la mayoría de los casos, basta con un cable USB. Y la instalación funciona de forma muy similar a los dispositivos antiguos -- todo lo que necesita para la instalación es un dispositivo compatible con el procesador RP2040, algunas resistencias, cable y equipo básico de soldadura. Existen PCBs personlizados que simplifican aún más el proceso de instalación.
+No necesita ningún hardware especializado ni herramientas complicadas para cargar Modxo en un dispositivo compatible -- en la mayoría de los casos, basta con un cable USB. Y la instalación funciona de forma muy similar a los dispositivos antiguos -- todo lo que necesita para la instalación es un dispositivo compatible con el procesador RP2040/RP2350, algunas resistencias, cable y equipo básico de soldadura. Existen PCBs personlizados que simplifican aún más el proceso de instalación.
 
 ## Cómo instalar
 ### Requisitos
