@@ -1,4 +1,3 @@
-
 function downloadFile(bytestream, filename){
 	var blob;
   
@@ -27,8 +26,7 @@ class Block{
     this.bytes = data;
   }
 
-  encode(blockno, numblocks){
-    var familyId = 0xe48bff56;
+  encode(blockno, numblocks, familyId=0xe48bff59){
     var flags = 0x2000;       //withFamilyId flag
     var little_endian = true;
     var array= new ArrayBuffer(512);
@@ -97,7 +95,21 @@ function get_uf2_blocks_from_file(filedata, flashrom_address){
 }
 
 function write_uf2_file(data, outputfilename, flashrom_address, mask_address){
+  var e = document.getElementById("FamilyID");
+  var value = e.value;
+  var familyId = 0xe48bff59;
+  outputfilename = outputfilename.replace(/\.[^/.]+$/, '');
 
+  switch(value){
+    case "0":
+      outputfilename+="_pico.uf2";
+      familyId = 0xe48bff56;
+      break;
+    case "1":
+      outputfilename+="_pico2.uf2";
+      familyId = 0xe48bff59;
+      break;
+  }
     var romaddr_mask = get_flash_address_mask(data.byteLength)
     var headerblocks = get_uf2_romaddr_mask_block(mask_address,romaddr_mask);
     var datablocks = get_uf2_blocks_from_file(data, flashrom_address);
@@ -110,7 +122,7 @@ function write_uf2_file(data, outputfilename, flashrom_address, mask_address){
 
     bytestream= new Uint8Array(uf2blocks.length*512);
     for(i =0;i<uf2blocks.length;i++){
-      blockdata = uf2blocks[i].encode(i,uf2blocks.length);
+      blockdata = uf2blocks[i].encode(i,uf2blocks.length, familyId);
       bytestream.set(blockdata,i*512);
     }
 
@@ -119,7 +131,7 @@ function write_uf2_file(data, outputfilename, flashrom_address, mask_address){
 
 
 function packBios(inputBuffer,filename) {
-  write_uf2_file(inputBuffer, filename+".uf2", 0x10040000, 0x1003F000);
+  write_uf2_file(inputBuffer, filename, 0x10040000, 0x1003F000);
 }
 
 function dropHandler(ev) {

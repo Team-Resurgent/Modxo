@@ -15,6 +15,13 @@
             <img src="./img/logo.png" />
             <h1>Modxo BIOS Packer</h1>
         </header>
+        <div>
+            <label for="FamilyID">Board Type: </label>
+            <select id="FamilyID" name="FamilyID">
+                <option value="1">Pico2</option>
+                <option value="0">Pico</option>
+            </select>
+        </div>
         <div 
             id="drop_zone" 
             ondrop="dropHandler(event);"
