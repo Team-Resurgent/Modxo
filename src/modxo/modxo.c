@@ -44,26 +44,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ws2812/ws2812.h"
 #include "legacy_display/legacy_display.h"
 #include "hardware/watchdog.h"
+#include "hardware/clocks.h"
+#include "tusb.h"
 
 extern uint8_t current_led_color;
-
-static void modxo_lpcmem_init()
-{
-    flashrom_init();
-}
-
-static void modxo_lpcio_init()
-{
-#ifndef DEBUG_SUPERIO_DISABLED
-    lpc47m152_init();
-    uart_16550_init();
-#endif
-    
-    data_store_init();
-    ws2812_init();
-    legacy_display_init();
-    modxo_ports_init();
-}
 
 void modxo_poll_core1()
 {
@@ -86,8 +70,7 @@ void modxo_lpc_reset_off()
     ws2812_set_color(LedColorOff);
     current_led_color = color;
 
-    // Reset State Machines
-    lpc_interface_start_sm();
+    modxo_reset();
 }
 
 void modxo_lpc_reset_on()
@@ -107,15 +90,33 @@ void software_reset()
 void modxo_low_power_mode()
 {
     // Modxo sleep
+    set_sys_clock_khz(SYS_FREQ_DEFAULT, true);
 
     // Modxo reset
-    software_reset();
+    if(!tud_cdc_connected())
+        software_reset();
 }
 
-void modxo_init()
+void modxo_reset()
+{
+    //lpc_interface_reset();
+#ifndef DEBUG_SUPERIO_DISABLED
+    lpc47m152_reset();
+#endif
+    modxo_ports_reset();
+}
+
+void modxo_init(void)
 {
     config_nvm_init();
+    flashrom_init();
     lpc_interface_init();
-    modxo_lpcmem_init();
-    modxo_lpcio_init();
+#ifndef DEBUG_SUPERIO_DISABLED
+    lpc47m152_init();
+    uart_16550_init();
+#endif
+    data_store_init();
+    ws2812_init();
+    legacy_display_init();
+    modxo_ports_init();
 }

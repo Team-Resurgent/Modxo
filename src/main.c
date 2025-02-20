@@ -35,10 +35,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "hardware/gpio.h"
 #include "tusb.h"
 
+#include "modxo/flashrom/flashrom.h"
 #include "modxo/modxo.h"
 #include "modxo_pinout.h"
-
-#define SYS_FREQ_IN_KHZ (266 * 1000)
 
 bool reset_pin = false;
 bool modxo_active = false;
@@ -83,15 +82,18 @@ void reset_pin_rising()
 
 void pin_3_3v_falling()
 {
+    modxo_active = false;
     modxo_low_power_mode();
+    gpio_set_irq_enabled(LPC_ON, GPIO_IRQ_LEVEL_HIGH, true);
 }
 
 void pin_3_3v_high()
 {
-    gpio_set_irq_enabled(LPC_ON, GPIO_IRQ_LEVEL_HIGH, false);
     set_sys_clock_khz(SYS_FREQ_IN_KHZ, true);
+    gpio_set_irq_enabled(LPC_ON, GPIO_IRQ_LEVEL_HIGH, false);
     init_status_led();
-    modxo_init();
+    flashrom_reset();
+    modxo_reset();
     modxo_active = true;
 }
 
@@ -112,15 +114,11 @@ void core0_irq_handler(uint gpio, uint32_t event)
         pin_3_3v_falling();
     }
 
+    // Use LEVEL_HIGH because rising edge triggers too early after power-up (~500us)
     if (gpio == LPC_ON && (event & GPIO_IRQ_LEVEL_HIGH) != 0)
     {
         pin_3_3v_high();
     }
-}
-
-void xbox_shutdown()
-{
-    multicore_reset_core1();
 }
 
 void modxo_init_pin_irq(uint pin, uint32_t event)
@@ -142,16 +140,18 @@ void modxo_init_interrupts()
 
 int main(void)
 {
+    set_sys_clock_khz(SYS_FREQ_IN_KHZ, true);
     stdio_init_all();
 
 #ifdef START_DELAY
     sleep_ms(2000);
 #endif
 
-    modxo_init_interrupts();
-
     multicore_reset_core1();
     multicore_launch_core1(core1_main);
 
+    modxo_init();
+    set_sys_clock_khz(SYS_FREQ_DEFAULT, true);
+    modxo_init_interrupts();
     core0_main(); // Infinite loop
 }

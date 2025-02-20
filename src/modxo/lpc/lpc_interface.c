@@ -60,6 +60,7 @@ typedef struct
 
 static void io_write_hdlr(uint32_t address, uint8_t *data);
 static void io_read_hdlr(uint32_t address, uint8_t *data);
+static void gpio_set_max_drivestrength(io_rw_32 gpio, uint32_t strength);
 
 LPC_SM_HANDLER lpc_handlers[LPC_OP_TOTAL] = {
     [LPC_OP_IO_READ] = {.nibbles_read = 4, .cyctype_dir = 0, .handler = io_read_hdlr, .address_len = 16},
@@ -118,8 +119,10 @@ static void lpc_gpio_init(PIO pio)
     pio_gpio_init(pio, LPC_CLK);
     gpio_disable_pulls(LPC_CLK);
 
-    pio_gpio_init(pio, LPC_LFRAME);
     gpio_disable_pulls(LPC_LFRAME);
+    gpio_set_oeover(LPC_LFRAME, 1);
+    gpio_set_outover(LPC_LFRAME, 2);
+    pio_gpio_init(pio, LPC_LFRAME);
 }
 
 static void gpio_set_max_drivestrength(io_rw_32 gpio, uint32_t strength)
@@ -258,6 +261,7 @@ void lpc_interface_set_callback(LPC_OP_TYPE op, lpc_handler_cback cback)
 
 void lpc_interface_start_sm()
 {
+
     pio_set_sm_mask_enabled(_pio, 15, false); // Disable All State Machines
     pio_custom_init(_pio, LPC_OP_MEM_READ, offset, _disable_internal_flash);
     pio_custom_init(_pio, LPC_OP_MEM_WRITE, offset, _disable_internal_flash);
@@ -273,28 +277,22 @@ void lpc_interface_start_sm()
     enable_pio_interrupts();
 }
 
-void lpc_interface_init()
+void lpc_interface_reset(void)
+{
+    lpc_interface_start_sm();
+}
+
+void lpc_interface_init(void)
 {
 
     _pio = pio0;
 
     pio_claim_sm_mask(_pio, 15);
 
-    if (pio_can_add_program(_pio, &lpc_read_request_program))
-    {
-        offset = pio_add_program(_pio, &lpc_read_request_program);
-    }
-    else
-    {
-        while (true)
-        {
-            gpio_put(PICO_DEFAULT_LED_PIN, 1);
-            sleep_ms(250);
-            printf("Error: pio program can not be loaded\n");
-            gpio_put(PICO_DEFAULT_LED_PIN, 0);
-            sleep_ms(250);
-        }
-    }
+    if(!pio_can_add_program(_pio, &lpc_read_request_program))
+        pio_remove_program(_pio, &lpc_read_request_program, offset);
+
+    offset = pio_add_program(_pio, &lpc_read_request_program);
 
     lpc_gpio_init(_pio);
 
@@ -316,7 +314,7 @@ void lpc_interface_init()
     gpio_set_max_drivestrength(LPC_LFRAME, PADS_BANK0_GPIO0_DRIVE_VALUE_12MA);
     gpio_set_max_drivestrength(GPIO_D0, PADS_BANK0_GPIO0_DRIVE_VALUE_12MA);
 
-    lpc_interface_start_sm();
+    lpc_interface_reset();
 }
 
 bool lpc_interface_add_io_handler(uint16_t port_base, uint16_t mask, SUPERIO_PORT_CALLBACK_T read_cback, SUPERIO_PORT_CALLBACK_T write_cback)

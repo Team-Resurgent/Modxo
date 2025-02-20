@@ -11,6 +11,7 @@ Copyright (c) 2024, Shalx <Alejandro L. Huitron shalxmva@gmail.com>
 
 #define MODXO_BANK_BOOTLOADER 0x01
 
+void flashrom_reset(void);
 bool flashrom_init(void);
 void flashrom_set_mmc(uint8_t);
 uint8_t flashrom_get_mmc(void);

@@ -12,5 +12,5 @@ void config_set_reg_sel( NVM_REGISTER_SEL reg);
 NVM_REGISTER_SEL config_get_reg_sel(void);
 void config_set_value(uint8_t value);
 uint8_t config_get_value(void);
-
+void config_nvm_reset(void);
 void config_nvm_init(void);

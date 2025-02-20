@@ -6,4 +6,5 @@ Copyright (c) 2024, Shalx <Alejandro L. Huitron shalxmva@gmail.com>
 */
 #pragma once
 
+void lpc47m152_reset(void);
 void lpc47m152_init(void);

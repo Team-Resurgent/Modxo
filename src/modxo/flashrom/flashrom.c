@@ -101,9 +101,14 @@ uint8_t flashrom_get_mmc(void)
     return mmc_register;
 }
 
-bool flashrom_init(void)
+void flashrom_reset(void)
 {
     flashrom_set_mmc(MODXO_BANK_BOOTLOADER);
+}
+
+bool flashrom_init(void)
+{
+    flashrom_reset();
     lpc_interface_set_callback(LPC_OP_MEM_READ, flashrom_memread_handler);
     lpc_interface_set_callback(LPC_OP_MEM_WRITE, flashrom_memwrite_handler);
 

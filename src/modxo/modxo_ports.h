@@ -71,4 +71,5 @@ int modxo_ports_get_program_sector();
 void modxo_ports_erase_done(void);
 void modxo_ports_program_done(void);
 void modxo_ports_poll(void);
-void modxo_ports_init();
+void modxo_ports_reset(void);
+void modxo_ports_init(void);
