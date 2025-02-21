@@ -7,7 +7,7 @@
 
 # Versiones traducidas
 
-*Nota: algunas traducciones pueden estár desactualizadas, y pueden tardar un poco en actualizarse en comparación con la versión en inglés.
+*Nota: algunas traducciones pueden estár desactualizadas, y puede tardar un poco en actualizarse en comparación con la versión en inglés.
 
  - [English](https://github.com/Team-Resurgent/Modxo)
  - [Español](https://github.com/Team-Resurgent/Modxo/blob/main/README%20ES-MX.md)
@@ -16,7 +16,7 @@
 
 # Modxo
 
-Modxo (pronunciado "Modsho") es un firmware de RP2040/RP2350 que convierte una Raspberry Pi Pico (o cualquier dispositivo similar basado en  RP2040/RP2350) en un periférico LPC compatible con la Xbox original.
+Modxo (pronunciado "Modsho") es un firmware para RP2040/RP2350 que convierte una Raspberry Pi Pico (o cualquier dispositivo similar basado en  RP2040/RP2350) en un periférico LPC compatible con la Xbox original.
 
 
 Modxo puede ser usado para cargar una imagen de BIOS de XBOX Original desde el puerto LPC, asi como para interconectar software de XBOX compatible con dispositivos periféricos como pantallas HD44480 o LEDs RGB direccionables. 
@@ -116,11 +116,11 @@ Los siguientes pasos solo son necesarios sí desea actualizar PrometheOS con act
 
 ![SDK 2.0.0](images/sdk.png)
 
-4.- Vaya a la pestanaña Raspberry Pi Pico y haga click en "Configure CMake"
+4.- Ir a la pestanaña Raspberry Pi Pico y haga click en "Configure CMake"
 
-5.- Vaya a la pestala ejecutar y depurar y seleccione Compilar para su placa
+5.- Ir a la pestaña ejecutar y depurar y seleccione Compilar para su placa
 
-6.- Haga click en "Start Debugging" (felcha verde)
+6.- Haga click en "Start Debugging" (flecha verde)
 
 7.- El archivo UF2 se generará en la carpeta Build
 
