@@ -3,6 +3,16 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://github.com/Team-Resurgent/Repackinator/blob/main/LICENSE.md)
 [![.NET](https://github.com/Team-Resurgent/Modxo/actions/workflows/BundleModxo.yml/badge.svg)](https://github.com/Team-Resurgent/Modxo/actions/workflows/BundleModxo.yml)
 [![Discord](https://img.shields.io/badge/chat-on%20discord-7289da.svg?logo=discord)](https://discord.gg/VcdSfajQGK)
+<!--Translated by: Emmanuelito18-->
+
+# Translated versions
+
+*Note: some translations could be outdated and may take a while to be updated than english version.
+
+ - [English](https://github.com/Team-Resurgent/Modxo)
+ - [Español](https://github.com/Team-Resurgent/Modxo/blob/main/README%20ES-MX.md)
+ - More translations coming soon
+ 
 
 # Modxo
 
