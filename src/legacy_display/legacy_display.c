@@ -25,16 +25,17 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#include "legacy_display.h"
+#include <legacy_display.h>
 
-#include "../modxo_queue.h"
-#include "../modxo_ports.h"
+#include <modxo.h>
+#include <modxo/modxo_queue.h>
+#include <modxo/modxo_ports.h>
 
 #include <pico.h>
 #include <pico/stdlib.h>
 #include "pico/multicore.h"
 #include "pico/binary_info.h"
-#include "../config/config_nvm.h"
+#include <modxo/config_nvm.h>
 
 #include <modxo_pinout.h>
 
@@ -72,7 +73,7 @@ void legacy_display_data(uint8_t *data)
     __sev();
 }
 
-void legacy_display_poll()
+static void legacy_display_poll()
 {
     MODXO_QUEUE_ITEM_T _item;
     if (modxo_queue_remove(&private_data.queue, &_item))
@@ -192,10 +193,21 @@ void legacy_display_set_i2c_prefix(uint8_t prefix)
     private_data.i2c_prefix = prefix;
 }
 
-void legacy_display_init()
+static void legacy_display_init()
 {
     modxo_queue_init(&private_data.queue, (void *)private_data.buffer, sizeof(private_data.buffer[0]), LCD_QUEUE_BUFFER_LEN);
     legacy_display_set_clk(100);
     legacy_display_set_spi_mode(3);
     legacy_display_set_spi(0);
 }
+
+
+MODXO_TASK legacy_display_hdlr = {
+    .init = legacy_display_init,
+    .reset = NULL,
+    .core0_poll = legacy_display_poll,
+    .core1_poll = NULL,
+    .low_power_mode = NULL,
+    .lpc_reset_off = NULL,
+    .lpc_reset_on = NULL,
+};

@@ -35,9 +35,20 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "hardware/gpio.h"
 #include "tusb.h"
 
-#include "modxo/flashrom/flashrom.h"
-#include "modxo/modxo.h"
+#include <flashrom.h>
+#include <modxo.h>
 #include "modxo_pinout.h"
+#include <data_store.h>
+#include <ws2812.h>
+#include <legacy_display.h>
+#include <lpc47m152.h>
+#include <uart_16550.h>
+
+nvm_register_t* nvm_registers[] = {
+    &ws2812_nvm,
+};
+
+uint8_t nvm_registers_count = sizeof(nvm_registers) / sizeof(nvm_registers[0]);
 
 bool reset_pin = false;
 bool modxo_active = false;
@@ -92,7 +103,6 @@ void pin_3_3v_high()
     set_sys_clock_khz(SYS_FREQ_IN_KHZ, true);
     gpio_set_irq_enabled(LPC_ON, GPIO_IRQ_LEVEL_HIGH, false);
     init_status_led();
-    flashrom_reset();
     modxo_reset();
     modxo_active = true;
 }
@@ -138,6 +148,16 @@ void modxo_init_interrupts()
     irq_set_enabled(IO_IRQ_BANK0, true);
 }
 
+void register_handlers()
+{
+    modxo_register_handler(&ws2812_hdlr);
+    modxo_register_handler(&data_store_handler);
+    modxo_register_handler(&legacy_display_hdlr);
+    modxo_register_handler(&LPC47M152_hdlr);
+    modxo_register_handler(&uart_16550_hdlr);
+    modxo_register_handler(&flashrom_hdlr);
+}
+
 int main(void)
 {
     set_sys_clock_khz(SYS_FREQ_IN_KHZ, true);
@@ -150,6 +170,7 @@ int main(void)
     multicore_reset_core1();
     multicore_launch_core1(core1_main);
 
+    register_handlers();
     modxo_init();
     set_sys_clock_khz(SYS_FREQ_DEFAULT, true);
     modxo_init_interrupts();

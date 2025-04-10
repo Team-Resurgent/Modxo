@@ -38,6 +38,14 @@
     "raspberry-pi-pico.ninjaPath": "${HOME}/.pico-sdk/ninja/v1.12.1/ninja",
     "raspberry-pi-pico.python3Path": "${HOME}/.pico-sdk/python/3.12.1/python.exe",
     "files.associations": {
-        "*.in": "cpp"
+        "*.in": "cpp",
+        "config_nvm.h": "c",
+        "lpc47m152.h": "c",
+        "ws2812.h": "c",
+        "flashrom.h": "c",
+        "lpc_regs.h": "c",
+        "modxo.h": "c",
+        "math.h": "c",
+        "modxo_pinout.h": "c"
     }
 }

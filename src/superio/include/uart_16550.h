@@ -6,6 +6,6 @@ Copyright (c) 2024, Shalx <Alejandro L. Huitron shalxmva@gmail.com>
 */
 #pragma once
 
-void uart_16550_init(void);
-void uart_16550_reset(void);
+#include <modxo.h>
+extern MODXO_TASK uart_16550_hdlr;
 

@@ -33,37 +33,27 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <hardware/regs/addressmap.h>
 #include <hardware/sync.h>
 
-#include "../lpc/lpc_interface.h"
-#include "config_nvm.h"
-#include "../modxo_ports.h"
-#include "../modxo_debug.h"
+#include <modxo/lpc_interface.h>
+#include <modxo/config_nvm.h>
 #include <string.h>
 
 #define NVM_FLASH_OFFSET 0x3D000
 #define NVM_FLASH_SECTORS 2
 #define NVM_FLASH_SECTOR_SIZE 4096
+
+
 #define NVM_PAGE_SIZE 256
 #define NVM_TOTAL_PAGES ( (NVM_FLASH_SECTORS*NVM_FLASH_SECTOR_SIZE) / NVM_PAGE_SIZE )
 
-
-
-typedef struct{
-    MODXO_CONFIG params;
-    uint8_t dummy[NVM_PAGE_SIZE - 3 - sizeof(MODXO_CONFIG)];
+typedef struct
+{
+    uint8_t data[NVM_PAGE_SIZE - 2];
     uint16_t crc;
-}NVM_PAGE;
+} NVM_PAGE;
 
 static bool save_config=false;
-MODXO_CONFIG config={0};
 static NVM_PAGE* nvm_pages= (NVM_PAGE*)(NVM_FLASH_OFFSET + XIP_BASE);
 
-static MODXO_CONFIG default_nvm_parameters = {
-            .rgb_status_pf = RGB_STATUS_PIXEL_FORMAT,
-            .rgb_strip_pf[0]  = STRIP1_PIXEL_FORMAT,
-            .rgb_strip_pf[1]  = STRIP2_PIXEL_FORMAT,
-            .rgb_strip_pf[2]  = STRIP3_PIXEL_FORMAT,
-            .rgb_strip_pf[3]  = STRIP4_PIXEL_FORMAT,
-        };
 
 static uint16_t crc_ccitt_false[] = {
     0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5, 0x60c6, 0x70e7,
@@ -99,6 +89,9 @@ static uint16_t crc_ccitt_false[] = {
     0xef1f, 0xff3e, 0xcf5d, 0xdf7c, 0xaf9b, 0xbfba, 0x8fd9, 0x9ff8,
     0x6e17, 0x7e36, 0x4e55, 0x5e74, 0x2e93, 0x3eb2, 0x0ed1, 0x1ef0,
 };
+
+
+
 
 static uint16_t calc_crc(const void* data, uint16_t len) {
     uint16_t calc = 0xFFFF;
@@ -141,13 +134,7 @@ static bool is_sector_empty(uint8_t sectorno){
     return is_empty;
 }
 
-static void prepare_nvm_page(NVM_PAGE* page, MODXO_CONFIG* pars){
-    memset(&page->params, 0xFF, sizeof(NVM_PAGE));
-    memcpy(&page->params, pars, sizeof(MODXO_CONFIG));
-    uint16_t crc = calc_crc((uint8_t*)page,sizeof(NVM_PAGE)-2);
 
-    page->crc = (crc<<8) | (crc>>8); //CRC must be stored as big endian
-}
 
 static bool is_page_valid(uint8_t page_no){
     bool is_valid = false;
@@ -195,17 +182,45 @@ static void program_nvm_page(uint8_t number, NVM_PAGE* buffer){
     flash_range_program(flash_offset, (void*)buffer, NVM_PAGE_SIZE);
 }
 
+static void prepare_nvm_page(NVM_PAGE* page)
+{
+    uint8_t *dst = page->data;
+    memset(dst, 0xFF, sizeof(NVM_PAGE));
 
+    for(int i = 1; i < nvm_registers_count; i++){
+        memcpy(dst, nvm_registers[i]->data, nvm_registers[i]->size);
+        dst += nvm_registers[i]->size;
+    }
+    
+    uint16_t crc = calc_crc((uint8_t*)page,sizeof(NVM_PAGE)-2);
+    page->crc = (crc<<8) | (crc>>8); //CRC must be stored as big endian
+}
 
-static void nvm_save_page(int page_no, MODXO_CONFIG* pars){
+static void load_nvm_defaults()
+{
+    for(int i = 1; i < nvm_registers_count; i++){
+        memcpy(nvm_registers[i]->data, nvm_registers[i]->default_value, nvm_registers[i]->size);
+    }
+}
+
+static void load_nvm_values(int page_no){
+    NVM_PAGE* page = &nvm_pages[page_no];
+    uint8_t *src = page->data;
+    
+    for(int i = 1; i < nvm_registers_count; i++){
+        memcpy(nvm_registers[i]->data, src, nvm_registers[i]->size);
+        src += nvm_registers[i]->size;
+    }
+}
+
+static void nvm_save_page(int page_no){
     NVM_PAGE page;
     uint32_t ints;
     
-    //sleep_ms(2000);
     if(page_no == -1){
         page_no = 0;
         
-        prepare_nvm_page(&page, pars);
+        prepare_nvm_page(nvm_pages);
 
         ints = save_and_disable_interrupts();
         if(!is_sector_empty(0)){
@@ -219,7 +234,7 @@ static void nvm_save_page(int page_no, MODXO_CONFIG* pars){
         program_nvm_page(page_no,&page);
         restore_interrupts (ints);
     } else {
-        prepare_nvm_page(&page, pars);
+        prepare_nvm_page(&nvm_pages[page_no]);
         ints = save_and_disable_interrupts();
         program_nvm_page(page_no, &page);
         restore_interrupts (ints);
@@ -241,22 +256,26 @@ void config_poll()
         page_no = look_last_config();
         page_no = look_next_empty_page(page_no);
 
-        nvm_save_page(page_no, &config);
+        nvm_save_page(page_no);
         save_config=false;
     }
 }
 
 void config_retrieve_parameters(){
     int page_no = look_last_config();
-    if(page_no == -1){
+    if(page_no == -1)
+    {
         
         if(is_sector_empty(0)){
            page_no = 0; 
         }
         
-        nvm_save_page(page_no, &default_nvm_parameters);//if page_no = -1, 
-        page_no=0;
+        load_nvm_defaults();
+        nvm_save_page(page_no);
     }
-    
-    memcpy(&config, &nvm_pages[page_no].params, sizeof(MODXO_CONFIG));
+    else
+    {
+        load_nvm_values(page_no);
+    }
 }
+

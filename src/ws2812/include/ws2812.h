@@ -5,7 +5,8 @@ BSD 2-Clause License
 Copyright (c) 2024, Shalx <Alejandro L. Huitron shalxmva@gmail.com>
 */
 #pragma once
-
+#include <modxo.h>
+#include <modxo/config_nvm.h>
 typedef enum
 { 
 	LedColorOff = 0,
@@ -30,7 +31,5 @@ typedef enum
 } PIXEL_FORMAT_TYPE;
 
 
-void ws2812_init();
-void ws2812_poll();
-void ws2812_update_pixels();
-void ws2812_set_color(uint8_t color);
+extern MODXO_TASK ws2812_hdlr;
+extern nvm_register_t ws2812_nvm;

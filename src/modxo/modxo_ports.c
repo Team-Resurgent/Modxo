@@ -32,11 +32,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <hardware/structs/bus_ctrl.h>
 #include <hardware/flash.h>
 
-#include "lpc/lpc_interface.h"
-#include "legacy_display/legacy_display.h"
+#include <modxo/lpc_interface.h>
+#include "legacy_display.h"
+#include <flashrom.h>
 
-#include "modxo_ports.h"
-#include "flashrom/flashrom.h" // Delete
+#include <modxo/modxo_ports.h>
 #include "pico/multicore.h"
 
 #define STORAGE_CMD_TOTAL_BYTES 64

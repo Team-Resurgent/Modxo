@@ -27,7 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 ////////////////////////////   LOG SECTION   //////////////////////////
-#include "lpc_log.h"
+#include <modxo/lpc_log.h>
 
 #include "pico/stdlib.h"
 #define LOG_SIZE 1024

@@ -34,11 +34,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "pico/multicore.h"
 #include "hardware/structs/padsbank0.h"
 #include "hardware/structs/bus_ctrl.h"
-#include "lpc_interface.h"
-#include "modxo_pinout.h"
+#include <modxo/lpc_interface.h>
+#include <modxo_pinout.h>
 
-#include "lpc_comm.pio.h"
-#include "lpc_log.h"
+#include <lpc_comm.pio.h>
+#include <modxo/lpc_log.h>
 
 void start_mem_read_sm(void);
 
@@ -314,7 +314,7 @@ void lpc_interface_init(void)
     gpio_set_max_drivestrength(LPC_LFRAME, PADS_BANK0_GPIO0_DRIVE_VALUE_12MA);
     gpio_set_max_drivestrength(GPIO_D0, PADS_BANK0_GPIO0_DRIVE_VALUE_12MA);
 
-    lpc_interface_reset();
+    lpc_interface_start_sm();
 }
 
 bool lpc_interface_add_io_handler(uint16_t port_base, uint16_t mask, SUPERIO_PORT_CALLBACK_T read_cback, SUPERIO_PORT_CALLBACK_T write_cback)
@@ -345,3 +345,10 @@ void lpc_interface_poll()
         }
     }
 }
+
+MODXO_TASK lpc_interface_hdlr = {
+    .init = lpc_interface_init,
+    .reset = NULL,
+    .core0_poll = lpc_interface_poll,
+    .core1_poll = NULL,
+};

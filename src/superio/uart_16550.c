@@ -26,55 +26,71 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include "pico/stdlib.h"
-#include "hardware/pio.h"
-#include "hardware/clocks.h"
+#include "hardware/dma.h"
+#include "hardware/irq.h"
+#include "pico/multicore.h"
+#include "hardware/structs/bus_ctrl.h"
 
-#include "../lpc/lpc_interface.h"
-#include "../lpc/lpc_regs.h"
-#include "../modxo_ports.h"
-#include "math.h"
+#include <modxo.h>
+#include <modxo/lpc_interface.h>
+#include "tusb.h"
 
-#define DATA_STORE_PORT_BASE MODXO_REGISTER_VOLATILE_CONFIG_SEL
-#define DATA_STORE_ADDRESS_MASK 0xFFFE
-#define DATA_STORE_COMMAND_PORT DATA_STORE_PORT_BASE
-#define DATA_STORE_DATA_PORT DATA_STORE_PORT_BASE + 1
-
-uint8_t data_store_cmd;
-uint8_t data_store_buffer[256];
-
-static void lpc_port_read(uint16_t address, uint8_t *data)
+static void uart_16550_port_write(uint16_t address, uint8_t *data)
 {
-    if (address == DATA_STORE_DATA_PORT)
-    {
-        *data = data_store_buffer[data_store_cmd];
+    if(tud_cdc_connected()) {
+        // UART Ports
+        if ((address == 0x3F8))
+        {
+            tud_cdc_write(data, 1);
+            tud_cdc_write_flush();
+        }
     }
 }
 
-static void lpc_port_write(uint16_t address, uint8_t *data)
+static void uart_16550_port_read(uint16_t address, uint8_t *data)
 {
-    switch (address)
+    // UART Ports
+    if (tud_cdc_connected())
+    { // If usb serial port is open
+        if (address == 0x3FD)
+        {
+            *data = (tud_cdc_write_available() ? 0x20 : 0x00) | (tud_cdc_available() ? 0x01 : 0x00);
+        }
+
+        if (address == 0x3F8)
+        {
+            tud_cdc_read(data, 1);
+        }
+    }
+    else
     {
-    case DATA_STORE_COMMAND_PORT:
-        data_store_cmd = *data;
-        break;
-    case DATA_STORE_DATA_PORT:
-        data_store_buffer[data_store_cmd] = *data;
-        break;
+        if (address == 0x3FD)
+        {
+            *data = 0xff; // prevents potential busy-wait infinite loop in kernel
+        }
+        else
+        {
+            *data = 0;
+        }
     }
 }
 
-void data_store_reset(void)
+static void uart_16550_reset(void)
 {
-    data_store_cmd = 0;
-    memset(data_store_buffer, 0, sizeof(data_store_buffer));
+    if(tud_cdc_connected())
+    {
+        tud_cdc_write_clear();
+        tud_cdc_read_flush();
+    }
 }
 
-void data_store_init()
+static void uart_16550_init(void)
 {
-    data_store_reset();
-    lpc_interface_add_io_handler(DATA_STORE_PORT_BASE, DATA_STORE_ADDRESS_MASK, lpc_port_read, lpc_port_write);
+    lpc_interface_add_io_handler(0x03F8, 0xFFF8, uart_16550_port_read, uart_16550_port_write); // 16550 Uart port emulation
 }
+
+MODXO_TASK uart_16550_hdlr = {
+    .init = uart_16550_init,
+    .reset = uart_16550_reset,
+};

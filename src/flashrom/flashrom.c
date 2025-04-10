@@ -31,9 +31,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "hardware/irq.h"
 #include "pico/multicore.h"
 #include "hardware/structs/bus_ctrl.h"
-#include "../lpc/lpc_interface.h"
+#include <modxo/lpc_interface.h>
+#include <modxo.h>
 
-#include "flashrom.h"
+#include <flashrom.h>
 #include <hardware/sync.h>
 #include <hardware/flash.h>
 
@@ -101,16 +102,25 @@ uint8_t flashrom_get_mmc(void)
     return mmc_register;
 }
 
-void flashrom_reset(void)
+static void flashrom_reset(void)
 {
     flashrom_set_mmc(MODXO_BANK_BOOTLOADER);
 }
 
-bool flashrom_init(void)
+static void flashrom_init(void)
 {
     flashrom_reset();
     lpc_interface_set_callback(LPC_OP_MEM_READ, flashrom_memread_handler);
     lpc_interface_set_callback(LPC_OP_MEM_WRITE, flashrom_memwrite_handler);
-
-    return (flash_rom_mask != 0xFFFFFFFF);
 }
+
+MODXO_TASK flashrom_hdlr = {
+    .init = flashrom_init,
+    .reset = flashrom_reset,
+    .core0_poll = NULL,
+    .core1_poll = NULL,
+    .lpc_reset_on = NULL,
+    .lpc_reset_off = NULL,
+    .low_power_mode = NULL,
+    .lpc_reset_on = NULL,
+};

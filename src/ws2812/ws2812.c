@@ -34,13 +34,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "hardware/clocks.h"
 #include <hardware/sync.h>
 #include "ws2812.pio.h"
-#include "ws2812.h"
-#include "../config/config_nvm.h"
+#include <ws2812.h>
+#include <modxo/config_nvm.h>
 
-#include "../lpc/lpc_interface.h"
-#include "../lpc/lpc_regs.h"
-#include "../modxo_ports.h"
-#include "math.h"
+#include <modxo/lpc_interface.h>
+#include <modxo/lpc_regs.h>
+#include <modxo.h>
+#include <modxo/modxo_ports.h>
+#include <math.h>
 #include <modxo_pinout.h>
 
 #define WS2812_PORT_BASE MODXO_REGISTER_LED_COMMAND
@@ -100,6 +101,30 @@ typedef struct
     uint8_t gpio_pin;
 } LED_STRIP;
 
+typedef struct{
+    PIXEL_FORMAT_TYPE rgb_status_pf;
+    PIXEL_FORMAT_TYPE rgb_strip_pf[4];
+}NVM_CONFIG;
+
+typedef enum {
+    NVM_REGISTER_NONE               =  0,
+    NVM_REGISTER_RGB_STATUS_PF      =  1,
+    NVM_REGISTER_RGB_STRIP1_PF      =  2,
+    NVM_REGISTER_RGB_STRIP2_PF      =  3,
+    NVM_REGISTER_RGB_STRIP3_PF      =  4,
+    NVM_REGISTER_RGB_STRIP4_PF      =  5,
+} NVM_REGISTER_SEL;
+
+static NVM_CONFIG nvm_config;
+
+static const NVM_CONFIG default_nvm_parameters = {
+            .rgb_status_pf = RGB_STATUS_PIXEL_FORMAT,
+            .rgb_strip_pf[0]  = STRIP1_PIXEL_FORMAT,
+            .rgb_strip_pf[1]  = STRIP2_PIXEL_FORMAT,
+            .rgb_strip_pf[2]  = STRIP3_PIXEL_FORMAT,
+            .rgb_strip_pf[3]  = STRIP4_PIXEL_FORMAT,
+        };
+
 uint8_t selected_strip;
 bool updating_strips;
 
@@ -127,6 +152,9 @@ LED_STRIP strips[MAX_STRIPS] = {
     {
         .gpio_pin = LED_STRIP4,
     }};
+
+static void ws2812_update_pixels(void);
+static void ws2812_set_color(uint8_t color);
 
 static RGB_COLOR hsv2rgb(HSV_COLOR hsv)
 {
@@ -289,7 +317,7 @@ static RGB_COLOR traslate_rgb2color(uint32_t rgb_value)
 static uint32_t inline get_next_pixel_value(uint8_t strip)
 {
     uint8_t display_led_no = strips[strip].next_led_to_display;
-    PIXEL_FORMAT_TYPE pixel_format = (display_led_no == 0 && strip == 0) ? config.rgb_status_pf: config.rgb_strip_pf[strip];
+    PIXEL_FORMAT_TYPE pixel_format = (display_led_no == 0 && strip == 0) ? nvm_config.rgb_status_pf: nvm_config.rgb_strip_pf[strip];
     uint32_t display_color_value = traslate_pixel(strips[strip].pixels[display_led_no], pixel_format);
     return display_color_value;
 }
@@ -415,14 +443,6 @@ static void write_pixel_effect(Effect_t effect)
     }
 }
 
-static void lpc_port_read(uint16_t address, uint8_t *data)
-{
-    if (address == WS2812_COMMAND_PORT)
-    {
-        *data = are_all_strips_updated() ? 1 : 0;
-    }
-}
-
 static void select_command(uint8_t cmd)
 {
     // Clear regs
@@ -482,6 +502,119 @@ static void send_data(uint8_t data)
     }
 }
 
+
+static NVM_REGISTER_SEL reg_sel = NVM_REGISTER_NONE;
+
+void config_set_reg_sel(NVM_REGISTER_SEL reg)
+{
+    reg_sel = reg;
+}
+
+NVM_REGISTER_SEL config_get_reg_sel(void)
+{
+    return reg_sel;
+}
+
+void config_set_value(uint8_t value)
+{
+    bool save = false;
+    bool update_pixels = false;
+
+    switch (reg_sel)
+    {
+    case NVM_REGISTER_RGB_STATUS_PF:
+        if (nvm_config.rgb_status_pf != value)
+        {
+            save = true;
+            update_pixels = true;
+        }
+        nvm_config.rgb_status_pf = value;
+        break;
+    case NVM_REGISTER_RGB_STRIP1_PF:
+        if (nvm_config.rgb_strip_pf[0] != value)
+        {
+            save = true;
+            update_pixels = true;
+        }
+        nvm_config.rgb_strip_pf[0] = value;
+        break;
+    case NVM_REGISTER_RGB_STRIP2_PF:
+        if (nvm_config.rgb_strip_pf[1] != value)
+        {
+            save = true;
+            update_pixels = true;
+        }
+        nvm_config.rgb_strip_pf[1] = value;
+        break;
+    case NVM_REGISTER_RGB_STRIP3_PF:
+        if (nvm_config.rgb_strip_pf[2] != value)
+        {
+            save = true;
+            update_pixels = true;
+        }
+        nvm_config.rgb_strip_pf[2] = value;
+        break;
+    case NVM_REGISTER_RGB_STRIP4_PF:
+        if (nvm_config.rgb_strip_pf[3] != value)
+        {
+            save = true;
+            update_pixels = true;
+        }
+        nvm_config.rgb_strip_pf[3] = value;
+        break;
+    default:
+        break;
+    }
+
+    if (save)
+    {
+        config_save_parameters();
+    }
+
+    if (update_pixels)
+    {
+        ws2812_update_pixels();
+    }
+}
+
+uint8_t config_get_value(void)
+{
+    uint8_t value = 0;
+    switch (reg_sel)
+    {
+    case NVM_REGISTER_RGB_STATUS_PF:
+        value = nvm_config.rgb_status_pf;
+        break;
+    case NVM_REGISTER_RGB_STRIP1_PF:
+        value = nvm_config.rgb_strip_pf[0];
+        break;
+    case NVM_REGISTER_RGB_STRIP2_PF:
+        value = nvm_config.rgb_strip_pf[1];
+        break;
+    case NVM_REGISTER_RGB_STRIP3_PF:
+        value = nvm_config.rgb_strip_pf[2];
+        break;
+    case NVM_REGISTER_RGB_STRIP4_PF:
+        value = nvm_config.rgb_strip_pf[3];
+        break;
+    default:
+        break;
+    }
+
+    return value;
+}
+
+//* LPC interface functions */
+static void lpc_port_read(uint16_t address, uint8_t *data)
+{
+    if (address == WS2812_COMMAND_PORT)
+    {
+        *data = are_all_strips_updated() ? 1 : 0;
+    }
+}
+
+
+
 static void lpc_port_write(uint16_t address, uint8_t *data)
 {
     switch (address)
@@ -495,8 +628,50 @@ static void lpc_port_write(uint16_t address, uint8_t *data)
     }
 }
 
+static void lpc_reset_off(void)
+{
+    uint8_t color = current_led_color;
+    ws2812_set_color(LedColorOff);
+    current_led_color = color;
+}
+
+static void lpc_reset_on(void)
+{
+    ws2812_set_color(current_led_color);
+}
+
+
+static void config_read_hdlr(uint16_t address, uint8_t *data)
+{
+    switch (address)
+    {
+    case MODXO_REGISTER_NVM_CONFIG_SEL:
+        *data = config_get_reg_sel();
+        break;
+    case MODXO_REGISTER_NVM_CONFIG_VAL:
+        *data = config_get_value();
+        break;
+    default:
+        *data = 0;
+        break;
+    }
+}
+
+static void config_write_hdlr(uint16_t address, uint8_t *data)
+{
+    switch (address)
+    {
+    case MODXO_REGISTER_NVM_CONFIG_SEL:
+        config_set_reg_sel(*data);
+        break;
+    case MODXO_REGISTER_NVM_CONFIG_VAL:
+        config_set_value(*data);
+        break;
+    }
+}
+
 // Update LEDs on main loop
-void ws2812_poll()
+static void ws2812_poll()
 {
     if (updating_strips)
     {
@@ -520,7 +695,7 @@ void ws2812_poll()
     }
 }
 
-void ws2812_update_pixels()
+static void ws2812_update_pixels(void)
 {
     for (uint i = 0; i < 4; i++)
     {
@@ -530,7 +705,7 @@ void ws2812_update_pixels()
     __sev();
 }
 
-void ws2812_set_color(uint8_t color) {
+static void ws2812_set_color(uint8_t color) {
     current_led_color = color;
 
     select_command(CMD_SELECT_STRIP);
@@ -547,7 +722,7 @@ void ws2812_set_color(uint8_t color) {
     select_command(CMD_UPDATE_STRIPS);
 }
 
-void ws2812_init()
+static void ws2812_init()
 {
     selected_strip = 0;
     updating_strips = false;
@@ -586,6 +761,24 @@ void ws2812_init()
     }
 
     lpc_interface_add_io_handler(WS2812_PORT_BASE, WS2812_ADDRESS_MASK, lpc_port_read, lpc_port_write);
+    lpc_interface_add_io_handler(MODXO_REGISTER_NVM_CONFIG_SEL, 0xFFFE, config_read_hdlr, config_write_hdlr);
 
     ws2812_update_pixels();
 }
+
+
+MODXO_TASK ws2812_hdlr = {
+    .init = ws2812_init,
+    .reset = ws2812_update_pixels,
+    .core0_poll = ws2812_poll,
+    .core1_poll = NULL,
+    .lpc_reset_on = lpc_reset_on,
+    .lpc_reset_off = lpc_reset_off,
+    .low_power_mode = NULL,
+};
+
+nvm_register_t ws2812_nvm={
+    .data = &nvm_config,
+    .default_value = &default_nvm_parameters,
+    .size = sizeof(nvm_config),
+};

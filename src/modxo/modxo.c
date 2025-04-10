@@ -30,52 +30,47 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <pico.h>
 #include <hardware/sync.h>
 
-#include "modxo.h"
-#include "modxo_ports.h"
-#include "modxo_debug.h"
-#include "lpc/lpc_interface.h"
-#include "lpc/lpc_log.h"
-#include "flashrom/flashrom.h"
-#include "data_store/data_store.h"
-#include "config/config_lpc.h"
-#include "config/config_nvm.h"
-#include "superio/LPC47M152.h"
-#include "superio/uart_16550.h"
-#include "ws2812/ws2812.h"
-#include "legacy_display/legacy_display.h"
+#include <modxo.h>
+#include <modxo/modxo_ports.h>
+#include "modxo/modxo_debug.h"
+#include "modxo/lpc_interface.h"
+#include "modxo/lpc_log.h"
 #include "hardware/watchdog.h"
 #include "hardware/clocks.h"
 #include "tusb.h"
 
+#define RUN_MODXO_HANDLERS(func) \
+    {for(int i = 0; i < handler_count; i++) \
+        if(modxo_handlers[i] != NULL && modxo_handlers[i]->func != NULL) \
+            modxo_handlers[i]->func();}
+
 extern uint8_t current_led_color;
+static MODXO_TASK* modxo_handlers[15] = {NULL};
+static uint8_t handler_count = 0;
 
 void modxo_poll_core1()
 {
     modxo_ports_poll();
-    config_poll();
+    RUN_MODXO_HANDLERS(core1_poll);
 }
 
 void modxo_poll_core0()
 {
-    legacy_display_poll();
 #ifdef LPC_LOGGING
     lpc_interface_poll();
 #endif
-    ws2812_poll();
+    RUN_MODXO_HANDLERS(core0_poll);
 }
 
 void modxo_lpc_reset_off()
 {
-    LedColorEnum color = current_led_color;
-    ws2812_set_color(LedColorOff);
-    current_led_color = color;
-
+    RUN_MODXO_HANDLERS(lpc_reset_off);
     modxo_reset();
 }
 
 void modxo_lpc_reset_on()
 {
-    ws2812_set_color(current_led_color);
+    RUN_MODXO_HANDLERS(lpc_reset_on);
 }
 
 void software_reset()
@@ -100,23 +95,22 @@ void modxo_low_power_mode()
 void modxo_reset()
 {
     //lpc_interface_reset();
-#ifndef DEBUG_SUPERIO_DISABLED
-    lpc47m152_reset();
-#endif
-    modxo_ports_reset();
+    RUN_MODXO_HANDLERS(reset);
 }
 
 void modxo_init(void)
 {
-    config_nvm_init();
-    flashrom_init();
-    lpc_interface_init();
-#ifndef DEBUG_SUPERIO_DISABLED
-    lpc47m152_init();
-    uart_16550_init();
-#endif
-    data_store_init();
-    ws2812_init();
-    legacy_display_init();
-    modxo_ports_init();
+    modxo_register_handler(&lpc_interface_hdlr);
+    RUN_MODXO_HANDLERS(init);
+}
+
+void modxo_register_handler(void* handler)
+{
+    MODXO_TASK* modxo_handler = (MODXO_TASK*)handler;
+
+    if(modxo_handler == NULL)
+        return;
+    
+    modxo_handlers[handler_count] = modxo_handler;
+    handler_count++;
 }

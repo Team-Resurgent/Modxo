@@ -27,7 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 ////////////////////////////   LOG SECTION   //////////////////////////
-#include "lpc_regs.h"
+#include <modxo/lpc_regs.h>
 #include <string.h>
 
 void lpc_reg_write(REG_T* reg, uint8_t data){

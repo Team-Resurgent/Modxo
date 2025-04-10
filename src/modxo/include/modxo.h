@@ -16,7 +16,17 @@ Copyright (c) 2024, Shalx <Alejandro L. Huitron shalxmva@gmail.com>
 	#define SYS_FREQ_IN_KHZ (266 * 1000)
 #endif
 
+typedef struct {
+	void (*init)(void);
+	void (*reset)(void);
+	void (*core0_poll)(void);
+	void (*core1_poll)(void);
+	void (*lpc_reset_on)(void);
+	void (*lpc_reset_off)(void);
+	void (*low_power_mode)(void);
+}MODXO_TASK;
 
+void modxo_register_handler(void* handler);
 void modxo_reset(void);
 void modxo_init(void);
 void modxo_poll_core1(void);

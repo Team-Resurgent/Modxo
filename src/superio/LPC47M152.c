@@ -31,10 +31,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "hardware/irq.h"
 #include "pico/multicore.h"
 #include "hardware/structs/bus_ctrl.h"
-#include "../modxo_debug.h"
+#include <modxo/modxo_debug.h>
 
-#include "../lpc/lpc_interface.h"
-#include "uart_16550.h"
+#include <modxo/lpc_interface.h>
+#include <uart_16550.h>
 #include "tusb.h"
 
 #define ENTER_CONFIGURATION_MODE_VALUE 0x55
@@ -66,7 +66,7 @@ static void lpc47m152_write_handler(uint16_t address, uint8_t *data)
             if (*data == EXIT_CONFIGURATION_MODE_VALUE)
             {
                 lpc47m152_regs.config_mode = false;
-                uart_16550_reset();
+                uart_16550_hdlr.reset();
             }
             else
             {
@@ -113,15 +113,20 @@ static void lpc47m152_read_handler(uint16_t address, uint8_t *data)
     }
 }
 
-void lpc47m152_reset(void) {
+static void lpc47m152_reset(void) {
     lpc47m152_regs.config_mode = false;
     lpc47m152_regs.index_port = 0;
     lpc47m152_regs.device_id = 0;
-    uart_16550_reset();
+    uart_16550_hdlr.reset();
 }
 
-void lpc47m152_init(void)
+static void lpc47m152_init(void)
 {
     lpc47m152_reset();
     lpc_interface_add_io_handler(0x002E, 0xFFFE, lpc47m152_read_handler, lpc47m152_write_handler); // LPC47M152(superio) port emulation
 }
+
+MODXO_TASK LPC47M152_hdlr = {
+    .init = lpc47m152_init,
+    .reset = lpc47m152_reset,
+};

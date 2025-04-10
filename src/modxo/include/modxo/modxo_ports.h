@@ -7,7 +7,7 @@ Copyright (c) 2024, Shalx <Alejandro L. Huitron shalxmva@gmail.com>
 #pragma once
 
 #include "modxo_queue.h"
-#include "legacy_display/legacy_display.h"
+#include <legacy_display.h>
 
 #include <modxo_pinout.h>
 
