@@ -59,13 +59,16 @@ pico_sdk_init()
 add_executable(${PROJECT_NAME})
 pico_set_binary_type(${PROJECT_NAME} copy_to_ram)
 
-target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/src/modxo)
-add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/src/ws2812)
-add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/src/superio)
-add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/src/flashrom)
-add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/src/legacy_display)
-add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/src/data_store)
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
+add_subdirectory(modxo)
+
+file(GLOB dirs LIST_DIRECTORIES true modxo_modules/*)
+foreach(subdir ${dirs})
+    IF(IS_DIRECTORY ${subdir} AND EXISTS ${subdir}/CMakeLists.txt)
+        add_subdirectory(${subdir})
+    endif()
+endforeach()
 
 #Source files
 target_sources(${PROJECT_NAME} PRIVATE
@@ -75,18 +78,15 @@ target_sources(${PROJECT_NAME} PRIVATE
 # Link to pico_stdlib (gpio, time, etc. functions)
 target_link_libraries(${PROJECT_NAME} PRIVATE
     pico_stdlib
-    hardware_pio
-    hardware_dma
     pico_multicore
-    hardware_i2c
-    hardware_spi
-    hardware_flash
+    modxo
+    ws2812
+    legacy_display
+    superio
+    flashrom
 )
 
 set(PICO_DEFAULT_BINARY_TYPE copy_to_ram)
-
-pico_enable_stdio_usb(${PROJECT_NAME} 1)
-pico_enable_stdio_uart(${PROJECT_NAME} 0)
 
 # Create map/bin/hex/uf2 files
 pico_add_extra_outputs(${PROJECT_NAME})

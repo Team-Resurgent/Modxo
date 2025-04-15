@@ -27,9 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include <stdio.h>
 #include "pico/stdlib.h"
-#include "hardware/dma.h"
 #include "hardware/irq.h"
-#include "pico/multicore.h"
 #include "hardware/structs/bus_ctrl.h"
 #include <modxo/lpc_interface.h>
 #include <modxo.h>
@@ -38,6 +36,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <hardware/sync.h>
 #include <hardware/flash.h>
 
+#define MODXO_BANK_BOOTLOADER 0x01
+#define STORAGE_CMD_TOTAL_BYTES 64
+
+
+
+#define MODXO_REGISTER_BANKING   0xDEAA
+#define MODXO_REGISTER_SIZE      0xDEAB
+#define MODXO_REGISTER_MEM_ERASE 0xDEAC
+#define MODXO_REGISTER_MEM_FLUSH 0xDEAE
+
+
 #define FLASH_WRITE_PAGE_SIZE 4096
 #define FLASH_START_ADDRESS ((uint8_t *)0x10000000)
 static uint32_t flash_rom_mask;
@@ -45,6 +54,89 @@ static uint8_t mmc_register;
 static uint8_t *flash_rom_data;
 
 static uint8_t flash_write_buffer[FLASH_WRITE_PAGE_SIZE];
+
+
+enum
+{
+    WAIT_PASSWORD,
+    SECTOR_NUMBER,
+    SECTOR_ERASING
+} erase_password;
+
+static int _erase_sector_number = -1;
+static int _program_sector_number = -1;
+uint8_t password_index = 0;
+uint8_t flash_size = 0;
+
+char password_sequence[] = "DIE";
+
+static void set_mmc(uint8_t);
+static uint8_t get_mmc(void);
+static void erase_sector(uint8_t sectorn);
+static void program_sector(uint8_t sectorn);
+static uint8_t get_flash_size(void);
+static void reset(void);
+
+
+
+static void write_handler(uint16_t address, uint8_t *data)
+{
+    switch (address)
+    {
+    // Memory Management Controller Registers
+    case MODXO_REGISTER_BANKING:
+        set_mmc(*data);
+        break;
+
+    // Sector Erase
+    case MODXO_REGISTER_MEM_ERASE:
+        if (password_sequence[password_index] == 0)
+        {
+            _erase_sector_number = *data;
+            password_index = 0;
+            __sev();
+        }
+        else if (password_sequence[password_index] == *data)
+        {
+            password_index++;
+        }
+        else
+        {
+            password_index = 0;
+        }
+
+        break;
+
+    // Sector Flush
+    case MODXO_REGISTER_MEM_FLUSH:
+        _program_sector_number = *data;
+        __sev();
+        break;
+
+    }
+}
+
+static void read_handler(uint16_t address, uint8_t *data)
+{
+    switch (address)
+    {
+    // Memory Management Controller Registers
+    case MODXO_REGISTER_BANKING:
+        *data = get_mmc();
+        break;
+    case MODXO_REGISTER_SIZE:
+        *data = get_flash_size();
+        break;
+    case  MODXO_REGISTER_MEM_ERASE:
+        // Is Erasing
+        *data = _erase_sector_number < 0 ? false : true;
+        break;
+    case MODXO_REGISTER_MEM_FLUSH:
+        // Is Programming
+        *data = _program_sector_number < 0 ? false : true;
+        break;
+    }  
+}
 
 static void flashrom_memread_handler(uint32_t address, uint8_t *data)
 {
@@ -57,7 +149,27 @@ static void flashrom_memwrite_handler(uint32_t address, uint8_t *data)
     flash_write_buffer[address & (FLASH_WRITE_PAGE_SIZE - 1)] = *data;
 }
 
-void flashrom_program_sector(uint8_t sector_number)
+static void reset(void)
+{
+    set_mmc(MODXO_BANK_BOOTLOADER);
+    _erase_sector_number = -1;
+    _program_sector_number = -1;
+    erase_password = WAIT_PASSWORD;
+    password_index = 0;
+}
+
+static void init(void)
+{
+    reset();
+    lpc_interface_set_callback(LPC_OP_MEM_READ, flashrom_memread_handler);
+    lpc_interface_set_callback(LPC_OP_MEM_WRITE, flashrom_memwrite_handler);
+
+    lpc_interface_add_io_handler(MODXO_REGISTER_BANKING, 0xFFFE, read_handler, write_handler);
+    lpc_interface_add_io_handler(MODXO_REGISTER_MEM_ERASE, 0xFFFF, read_handler, write_handler);
+    lpc_interface_add_io_handler(MODXO_REGISTER_MEM_FLUSH, 0xFFFF, read_handler, write_handler);
+}
+
+static void program_sector(uint8_t sector_number)
 {
     uint32_t flash_offset;
     uint32_t ints = save_and_disable_interrupts(); // Add this
@@ -69,7 +181,7 @@ void flashrom_program_sector(uint8_t sector_number)
     restore_interrupts(ints); // Add this
 }
 
-void flashrom_erase_sector(uint8_t sector_number)
+static void erase_sector(uint8_t sector_number)
 {
     uint32_t flash_offset;
     uint32_t ints = save_and_disable_interrupts(); // Add this
@@ -81,7 +193,7 @@ void flashrom_erase_sector(uint8_t sector_number)
     restore_interrupts(ints); // Add this
 }
 
-void flashrom_set_mmc(uint8_t data)
+static void set_mmc(uint8_t data)
 {
     mmc_register = data;
     uint8_t size = (data >> 6);
@@ -97,28 +209,45 @@ void flashrom_set_mmc(uint8_t data)
     flash_rom_data = FLASH_START_ADDRESS + bank_size * bank_number;
 }
 
-uint8_t flashrom_get_mmc(void)
+static uint8_t get_mmc(void)
 {
     return mmc_register;
 }
 
-static void flashrom_reset(void)
+static uint8_t get_flash_size(void)
 {
-    flashrom_set_mmc(MODXO_BANK_BOOTLOADER);
+    if (flash_size == 0)
+    {
+        uint8_t txbuf[STORAGE_CMD_TOTAL_BYTES] = {0x9f};
+        uint8_t rxbuf[STORAGE_CMD_TOTAL_BYTES] = {0};
+        flash_do_cmd(txbuf, rxbuf, STORAGE_CMD_TOTAL_BYTES);
+        flash_size = 1 << (rxbuf[3] - 20);
+    }
+    return flash_size;
 }
 
-static void flashrom_init(void)
+static void core1_poll(void)
 {
-    flashrom_reset();
-    lpc_interface_set_callback(LPC_OP_MEM_READ, flashrom_memread_handler);
-    lpc_interface_set_callback(LPC_OP_MEM_WRITE, flashrom_memwrite_handler);
+    uint32_t val;
+    if (_erase_sector_number >= 0)
+    {
+        erase_sector(_erase_sector_number);
+        _erase_sector_number = -1;
+    }
+
+    if (_program_sector_number >= 0)
+    {
+        program_sector(_program_sector_number);
+        _program_sector_number = -1;
+    }
 }
+
 
 MODXO_TASK flashrom_hdlr = {
-    .init = flashrom_init,
-    .reset = flashrom_reset,
+    .init = init,
+    .reset = reset,
     .core0_poll = NULL,
-    .core1_poll = NULL,
+    .core1_poll = core1_poll,
     .lpc_reset_on = NULL,
     .lpc_reset_off = NULL,
     .low_power_mode = NULL,

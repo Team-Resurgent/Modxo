@@ -28,27 +28,26 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdio.h>
 #include <string.h>
-#include "pico/stdlib.h"
-#include "pico/multicore.h"
-#include "hardware/clocks.h"
-#include "hardware/dma.h"
-#include "hardware/gpio.h"
-#include "tusb.h"
+#include <pico/stdlib.h>
+#include <pico/multicore.h>
+#include <hardware/clocks.h>
+#include <hardware/gpio.h>
 
 #include <flashrom.h>
 #include <modxo.h>
-#include "modxo_pinout.h"
-#include <data_store.h>
+#include <modxo_pinout.h>
 #include <ws2812.h>
 #include <legacy_display.h>
 #include <lpc47m152.h>
 #include <uart_16550.h>
 
+// Modxo nvm contents
 nvm_register_t* nvm_registers[] = {
     &ws2812_nvm,
 };
 
 uint8_t nvm_registers_count = sizeof(nvm_registers) / sizeof(nvm_registers[0]);
+
 
 bool reset_pin = false;
 bool modxo_active = false;
@@ -151,7 +150,6 @@ void modxo_init_interrupts()
 void register_handlers()
 {
     modxo_register_handler(&ws2812_hdlr);
-    modxo_register_handler(&data_store_handler);
     modxo_register_handler(&legacy_display_hdlr);
     modxo_register_handler(&LPC47M152_hdlr);
     modxo_register_handler(&uart_16550_hdlr);

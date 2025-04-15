@@ -35,9 +35,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "modxo/modxo_debug.h"
 #include "modxo/lpc_interface.h"
 #include "modxo/lpc_log.h"
+#include <modxo/data_store.h>
 #include "hardware/watchdog.h"
 #include "hardware/clocks.h"
-#include "tusb.h"
 
 #define RUN_MODXO_HANDLERS(func) \
     {for(int i = 0; i < handler_count; i++) \
@@ -48,9 +48,29 @@ extern uint8_t current_led_color;
 static MODXO_TASK* modxo_handlers[15] = {NULL};
 static uint8_t handler_count = 0;
 
+bool (*modxo_debug_sp_connected)(void);
+
+static void read_handler(uint16_t address, uint8_t *data)
+{
+    switch (address)
+    {
+    case MODXO_REGISTER_CHIP_ID:
+        *data = 0xAF;
+        break;
+    case MODXO_REGISTER_VARIANT_ID:
+        *data = (uint8_t)MODXO_VARIANT;
+        break;
+    }
+}
+
+static void modxo_ports_init(void)
+{
+    lpc_interface_add_io_handler(MODXO_REGISTER_CHIP_ID, 0xFFFF, read_handler, NULL);
+    lpc_interface_add_io_handler(MODXO_REGISTER_VARIANT_ID, 0xFFFF, read_handler, NULL);
+}
+
 void modxo_poll_core1()
 {
-    modxo_ports_poll();
     RUN_MODXO_HANDLERS(core1_poll);
 }
 
@@ -88,19 +108,20 @@ void modxo_low_power_mode()
     set_sys_clock_khz(SYS_FREQ_DEFAULT, true);
 
     // Modxo reset
-    if(!tud_cdc_connected())
+    if(!modxo_debug_sp_connected || !modxo_debug_sp_connected())
         software_reset();
 }
 
 void modxo_reset()
 {
-    //lpc_interface_reset();
     RUN_MODXO_HANDLERS(reset);
 }
 
 void modxo_init(void)
 {
+    modxo_ports_init();
     modxo_register_handler(&lpc_interface_hdlr);
+    modxo_register_handler(&data_store_handler);
     RUN_MODXO_HANDLERS(init);
 }
 

@@ -27,7 +27,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include <stdio.h>
 #include "pico/stdlib.h"
-#include "hardware/dma.h"
 #include "hardware/irq.h"
 #include "pico/multicore.h"
 #include "hardware/structs/bus_ctrl.h"
@@ -113,6 +112,11 @@ static void lpc47m152_read_handler(uint16_t address, uint8_t *data)
     }
 }
 
+static bool superio_connected(void)
+{
+    return tud_cdc_connected();
+}
+
 static void lpc47m152_reset(void) {
     lpc47m152_regs.config_mode = false;
     lpc47m152_regs.index_port = 0;
@@ -122,6 +126,7 @@ static void lpc47m152_reset(void) {
 
 static void lpc47m152_init(void)
 {
+    modxo_debug_sp_connected = superio_connected;
     lpc47m152_reset();
     lpc_interface_add_io_handler(0x002E, 0xFFFE, lpc47m152_read_handler, lpc47m152_write_handler); // LPC47M152(superio) port emulation
 }

@@ -5,8 +5,8 @@ BSD 2-Clause License
 Copyright (c) 2024, Shalx <Alejandro L. Huitron shalxmva@gmail.com>
 */
 #pragma once
-
-#include "hardware/pio.h"
+#include <stdbool.h>
+#include <stdint.h>
 
 #if PICO_RP2350
 	#define SYS_FREQ_DEFAULT (150 * 1000)
@@ -26,6 +26,7 @@ typedef struct {
 	void (*low_power_mode)(void);
 }MODXO_TASK;
 
+extern bool (*modxo_debug_sp_connected)(void);
 void modxo_register_handler(void* handler);
 void modxo_reset(void);
 void modxo_init(void);

@@ -30,6 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <modxo.h>
 #include <modxo/modxo_queue.h>
 #include <modxo/modxo_ports.h>
+#include <modxo/lpc_interface.h>
 
 #include <pico.h>
 #include <pico/stdlib.h>
@@ -41,6 +42,34 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define LCD_QUEUE_BUFFER_LEN 1024
 #define LCD_TIMEOUT_US 100
+
+#define MODXO_REGISTER_LCD_COMMAND 0xDEA8
+#define MODXO_REGISTER_LCD_DATA 0xDEA9
+
+#define MODXO_LCD_SET_SPI 0
+#define MODXO_LCD_SET_I2C 1
+#define MODXO_LCD_REMOVE_I2C_PREFIX 2
+#define MODXO_LCD_SET_I2C_PREFIX 3
+#define MODXO_LCD_SET_CLK 4
+#define MODXO_LCD_SET_SPI_MODE 5
+
+
+static uint8_t cmd_byte_idx; // Index Byte Read
+
+typedef union
+{
+    struct
+    {
+        uint8_t cmd;
+        uint8_t param1;
+        uint8_t param2;
+        uint8_t param3;
+    };
+    uint8_t bytes[4];
+    uint32_t raw;
+} MODXO_LCD_CMD;
+
+MODXO_LCD_CMD command_buffer;
 
 static struct
 {
@@ -193,18 +222,73 @@ void legacy_display_set_i2c_prefix(uint8_t prefix)
     private_data.i2c_prefix = prefix;
 }
 
+static void write_handler(uint16_t address, uint8_t *data)
+{
+    switch (address)
+    {
+
+    case MODXO_REGISTER_LCD_DATA: 
+        legacy_display_data(data);
+        cmd_byte_idx = 0;
+        break;
+    case MODXO_REGISTER_LCD_COMMAND: 
+        command_buffer.bytes[cmd_byte_idx] = *data;
+        cmd_byte_idx++;
+        if (cmd_byte_idx == 1)
+        {
+            switch (command_buffer.cmd)
+            {
+            case MODXO_LCD_SET_SPI:
+            case MODXO_LCD_SET_I2C:
+            case MODXO_LCD_SET_I2C_PREFIX:
+            case MODXO_LCD_SET_CLK:
+            case MODXO_LCD_SET_SPI_MODE:
+                break;
+            default:
+                legacy_display_command(command_buffer.raw);
+                cmd_byte_idx = 0;
+            }
+        }
+        else
+        {
+            switch (command_buffer.cmd)
+            {
+            case MODXO_LCD_SET_I2C:
+            case MODXO_LCD_SET_I2C_PREFIX:
+                if (cmd_byte_idx == 2)
+                {
+                    legacy_display_command(command_buffer.raw);
+                    cmd_byte_idx = 0;
+                }
+                break;
+            default:
+                cmd_byte_idx = 0;
+            }
+        }
+        break;
+    }
+}
+
+
+static void reset(void)
+{
+    cmd_byte_idx = 0;
+}
+
 static void legacy_display_init()
 {
     modxo_queue_init(&private_data.queue, (void *)private_data.buffer, sizeof(private_data.buffer[0]), LCD_QUEUE_BUFFER_LEN);
     legacy_display_set_clk(100);
     legacy_display_set_spi_mode(3);
     legacy_display_set_spi(0);
+    
+    lpc_interface_add_io_handler(MODXO_REGISTER_LCD_COMMAND, 0xFFFE, NULL, write_handler);
 }
 
 
 MODXO_TASK legacy_display_hdlr = {
     .init = legacy_display_init,
-    .reset = NULL,
+    .reset = reset,
     .core0_poll = legacy_display_poll,
     .core1_poll = NULL,
     .low_power_mode = NULL,
