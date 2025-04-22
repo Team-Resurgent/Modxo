@@ -83,9 +83,4 @@ static void data_store_init()
 MODXO_TASK data_store_handler = {
     .init = data_store_init,
     .reset = data_store_reset,
-    .core0_poll = NULL,
-    .core1_poll = NULL,
-    .lpc_reset_on = NULL,
-    .lpc_reset_off = NULL,
-    .low_power_mode = NULL,
 };

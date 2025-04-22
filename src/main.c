@@ -93,7 +93,7 @@ void reset_pin_rising()
 void pin_3_3v_falling()
 {
     modxo_active = false;
-    modxo_low_power_mode();
+    modxo_shutdown();
     gpio_set_irq_enabled(LPC_ON, GPIO_IRQ_LEVEL_HIGH, true);
 }
 

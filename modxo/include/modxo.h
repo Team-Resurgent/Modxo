@@ -23,7 +23,7 @@ typedef struct {
 	void (*core1_poll)(void);
 	void (*lpc_reset_on)(void);
 	void (*lpc_reset_off)(void);
-	void (*low_power_mode)(void);
+	void (*shutdown)(void);
 }MODXO_TASK;
 
 extern bool (*modxo_debug_sp_connected)(void);
@@ -34,6 +34,6 @@ void modxo_poll_core1(void);
 void modxo_poll_core0(void);
 void modxo_lpc_reset_off(void);
 void modxo_lpc_reset_on(void);
-void modxo_low_power_mode(void);
+void modxo_shutdown(void);
 void modxo_enable_lpm(bool enable);
 

@@ -246,10 +246,5 @@ static void core1_poll(void)
 MODXO_TASK flashrom_hdlr = {
     .init = init,
     .reset = reset,
-    .core0_poll = NULL,
-    .core1_poll = core1_poll,
-    .lpc_reset_on = NULL,
-    .lpc_reset_off = NULL,
-    .low_power_mode = NULL,
-    .lpc_reset_on = NULL,
+    .core1_poll = core1_poll
 };

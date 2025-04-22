@@ -102,8 +102,9 @@ void software_reset()
     while(1);
 }
 
-void modxo_low_power_mode()
+void modxo_shutdown()
 {
+    RUN_MODXO_HANDLERS(shutdown);
     // Modxo sleep
     set_sys_clock_khz(SYS_FREQ_DEFAULT, true);
 

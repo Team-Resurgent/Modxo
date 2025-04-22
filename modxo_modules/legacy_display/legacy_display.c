@@ -289,9 +289,5 @@ static void legacy_display_init()
 MODXO_TASK legacy_display_hdlr = {
     .init = legacy_display_init,
     .reset = reset,
-    .core0_poll = legacy_display_poll,
-    .core1_poll = NULL,
-    .low_power_mode = NULL,
-    .lpc_reset_off = NULL,
-    .lpc_reset_on = NULL,
+    .core0_poll = legacy_display_poll
 };
