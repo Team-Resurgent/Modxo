@@ -65,7 +65,7 @@ static void lpc47m152_write_handler(uint16_t address, uint8_t *data)
             if (*data == EXIT_CONFIGURATION_MODE_VALUE)
             {
                 lpc47m152_regs.config_mode = false;
-                uart_16550_hdlr.reset();
+                uart_16550_hdlr.powerup();
             }
             else
             {
@@ -117,21 +117,21 @@ static bool superio_connected(void)
     return tud_cdc_connected();
 }
 
-static void lpc47m152_reset(void) {
+static void powerup(void) {
     lpc47m152_regs.config_mode = false;
     lpc47m152_regs.index_port = 0;
     lpc47m152_regs.device_id = 0;
-    uart_16550_hdlr.reset();
+    uart_16550_hdlr.powerup();
 }
 
 static void lpc47m152_init(void)
 {
     modxo_debug_sp_connected = superio_connected;
-    lpc47m152_reset();
+    powerup();
     lpc_interface_add_io_handler(0x002E, 0xFFFE, lpc47m152_read_handler, lpc47m152_write_handler); // LPC47M152(superio) port emulation
 }
 
 MODXO_TASK LPC47M152_hdlr = {
     .init = lpc47m152_init,
-    .reset = lpc47m152_reset,
+    .powerup = powerup,
 };

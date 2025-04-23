@@ -85,7 +85,6 @@ void modxo_poll_core0()
 void modxo_lpc_reset_off()
 {
     RUN_MODXO_HANDLERS(lpc_reset_off);
-    modxo_reset();
 }
 
 void modxo_lpc_reset_on()
@@ -115,7 +114,7 @@ void modxo_shutdown()
 
 void modxo_reset()
 {
-    RUN_MODXO_HANDLERS(reset);
+    RUN_MODXO_HANDLERS(powerup);//Modxo after LPC 3.3v  goes high (When usb is connected)
 }
 
 void modxo_init(void)
