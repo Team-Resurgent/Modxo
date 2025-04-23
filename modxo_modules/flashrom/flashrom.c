@@ -158,6 +158,16 @@ static void reset(void)
     password_index = 0;
 }
 
+static void dummy_read_handler(uint16_t address, uint8_t *data)
+{
+    *data = 0xFF;
+}
+
+static void dummy_write_handler(uint16_t address, uint8_t *data)
+{
+    // Do nothing
+}
+
 static void init(void)
 {
     reset();
@@ -167,6 +177,7 @@ static void init(void)
     lpc_interface_add_io_handler(MODXO_REGISTER_BANKING, 0xFFFE, read_handler, write_handler);
     lpc_interface_add_io_handler(MODXO_REGISTER_MEM_ERASE, 0xFFFF, read_handler, write_handler);
     lpc_interface_add_io_handler(MODXO_REGISTER_MEM_FLUSH, 0xFFFF, read_handler, write_handler);
+    lpc_interface_add_io_handler(0x1900, 0xFFF0, dummy_read_handler, dummy_write_handler);
 }
 
 static void program_sector(uint8_t sector_number)
