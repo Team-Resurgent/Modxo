@@ -40,9 +40,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "hardware/clocks.h"
 
 #define RUN_MODXO_HANDLERS(func) \
-    {for(int i = 0; i < handler_count; i++) \
-        if(modxo_handlers[i] != NULL && modxo_handlers[i]->func != NULL) \
-            modxo_handlers[i]->func();}
+    {for(int _modxo_handler_idx = 0; _modxo_handler_idx < handler_count; _modxo_handler_idx++) \
+        if(modxo_handlers[_modxo_handler_idx] != NULL && modxo_handlers[_modxo_handler_idx]->func != NULL) \
+            modxo_handlers[_modxo_handler_idx]->func();}
 
 extern uint8_t current_led_color;
 static MODXO_TASK* modxo_handlers[15] = {NULL};
@@ -119,10 +119,8 @@ void modxo_reset()
 
 void modxo_init(void)
 {
-    modxo_ports_init();
-    modxo_register_handler(&lpc_interface_hdlr);
-    modxo_register_handler(&data_store_handler);
     RUN_MODXO_HANDLERS(init);
+    modxo_ports_init();
 }
 
 void modxo_register_handler(MODXO_TASK* handler)

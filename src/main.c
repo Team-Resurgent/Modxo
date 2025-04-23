@@ -40,6 +40,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <legacy_display.h>
 #include <lpc47m152.h>
 #include <uart_16550.h>
+#include <modxo/lpc_interface.h>
+#include <modxo/data_store.h>
 
 // Modxo nvm contents
 nvm_register_t* nvm_registers[] = {
@@ -149,11 +151,13 @@ void modxo_init_interrupts()
 
 void register_handlers()
 {
-    modxo_register_handler(&ws2812_hdlr);
-    modxo_register_handler(&legacy_display_hdlr);
+    modxo_register_handler(&flashrom_hdlr);
+    modxo_register_handler(&lpc_interface_hdlr);
     modxo_register_handler(&LPC47M152_hdlr);
     modxo_register_handler(&uart_16550_hdlr);
-    modxo_register_handler(&flashrom_hdlr);
+    modxo_register_handler(&data_store_handler);
+    modxo_register_handler(&ws2812_hdlr);
+    modxo_register_handler(&legacy_display_hdlr);
 }
 
 int main(void)
@@ -165,12 +169,11 @@ int main(void)
     sleep_ms(2000);
 #endif
 
-    modxo_init();
-    register_handlers();
-    
     multicore_reset_core1();
     multicore_launch_core1(core1_main);
 
+    register_handlers();
+    modxo_init();
     set_sys_clock_khz(SYS_FREQ_DEFAULT, true);
     modxo_init_interrupts();
     core0_main(); // Infinite loop
