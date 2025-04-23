@@ -50,13 +50,13 @@ uint8_t nvm_registers_count = sizeof(nvm_registers) / sizeof(nvm_registers[0]);
 
 
 bool reset_pin = false;
-bool modxo_active = false;
+bool xbox_active = false;
 
 void core1_main()
 {
     while (true)
     {
-        if(modxo_active) {
+        if(xbox_active) {
             modxo_poll_core1();
         }
         __wfe();
@@ -67,7 +67,7 @@ void core0_main()
 {
     while (true)
     {
-        if(modxo_active) {
+        if(xbox_active) {
             modxo_poll_core0();
         }
         __wfe();
@@ -92,7 +92,7 @@ void reset_pin_rising()
 
 void pin_3_3v_falling()
 {
-    modxo_active = false;
+    xbox_active = false;
     modxo_shutdown();
     gpio_set_irq_enabled(LPC_ON, GPIO_IRQ_LEVEL_HIGH, true);
 }
@@ -103,7 +103,7 @@ void pin_3_3v_high()
     gpio_set_irq_enabled(LPC_ON, GPIO_IRQ_LEVEL_HIGH, false);
     init_status_led();
     modxo_reset();
-    modxo_active = true;
+    xbox_active = true;
 }
 
 void core0_irq_handler(uint gpio, uint32_t event)

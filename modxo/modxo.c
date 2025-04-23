@@ -126,13 +126,11 @@ void modxo_init(void)
     RUN_MODXO_HANDLERS(init);
 }
 
-void modxo_register_handler(void* handler)
+void modxo_register_handler(MODXO_TASK* handler)
 {
-    MODXO_TASK* modxo_handler = (MODXO_TASK*)handler;
-
-    if(modxo_handler == NULL)
+    if(handler == NULL)
         return;
-    
-    modxo_handlers[handler_count] = modxo_handler;
+
+    modxo_handlers[handler_count] = handler;
     handler_count++;
 }

@@ -27,7 +27,7 @@ typedef struct {
 }MODXO_TASK;
 
 extern bool (*modxo_debug_sp_connected)(void);
-void modxo_register_handler(void* handler);
+void modxo_register_handler(MODXO_TASK* handler);
 void modxo_reset(void);
 void modxo_init(void);
 void modxo_poll_core1(void);
