@@ -216,8 +216,19 @@ void modxo_ports_reset(void)
     cmd_byte_idx = 0;
 }
 
+static void dummy_read_handler(uint16_t address, uint8_t *data)
+{
+    *data = 0xFF;
+}
+
+static void dummy_write_handler(uint16_t address, uint8_t *data)
+{
+    // Do nothing
+}
+
 void modxo_ports_init(void)
 {
     lpc_interface_add_io_handler(MODXO_REGISTER_LCD_COMMAND, 0xFFF8, read_handler, write_handler);
+    lpc_interface_add_io_handler(0x1900, 0xFFF0, dummy_read_handler, dummy_write_handler);
     modxo_ports_reset();
 }
