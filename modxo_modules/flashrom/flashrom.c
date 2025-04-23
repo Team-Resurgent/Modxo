@@ -149,7 +149,7 @@ static void flashrom_memwrite_handler(uint32_t address, uint8_t *data)
     flash_write_buffer[address & (FLASH_WRITE_PAGE_SIZE - 1)] = *data;
 }
 
-static void reset(void)
+static void powerup(void)
 {
     set_mmc(MODXO_BANK_BOOTLOADER);
     _erase_sector_number = -1;
@@ -170,7 +170,7 @@ static void dummy_write_handler(uint16_t address, uint8_t *data)
 
 static void init(void)
 {
-    reset();
+    powerup();
     lpc_interface_set_callback(LPC_OP_MEM_READ, flashrom_memread_handler);
     lpc_interface_set_callback(LPC_OP_MEM_WRITE, flashrom_memwrite_handler);
 
@@ -256,6 +256,6 @@ static void core1_poll(void)
 
 MODXO_TASK flashrom_hdlr = {
     .init = init,
-    .reset = reset,
+    .powerup = powerup,
     .core1_poll = core1_poll
 };

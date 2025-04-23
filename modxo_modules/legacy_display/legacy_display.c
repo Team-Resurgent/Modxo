@@ -270,12 +270,12 @@ static void write_handler(uint16_t address, uint8_t *data)
 }
 
 
-static void reset(void)
+static void powerup(void)
 {
     cmd_byte_idx = 0;
 }
 
-static void legacy_display_init()
+static void init()
 {
     modxo_queue_init(&private_data.queue, (void *)private_data.buffer, sizeof(private_data.buffer[0]), LCD_QUEUE_BUFFER_LEN);
     legacy_display_set_clk(100);
@@ -287,7 +287,7 @@ static void legacy_display_init()
 
 
 MODXO_TASK legacy_display_hdlr = {
-    .init = legacy_display_init,
-    .reset = reset,
+    .init = init,
+    .powerup = powerup,
     .core0_poll = legacy_display_poll
 };

@@ -18,7 +18,7 @@ Copyright (c) 2024, Shalx <Alejandro L. Huitron shalxmva@gmail.com>
 
 typedef struct {
 	void (*init)(void);
-	void (*reset)(void);
+	void (*powerup)(void);
 	void (*core0_poll)(void);
 	void (*core1_poll)(void);
 	void (*lpc_reset_on)(void);

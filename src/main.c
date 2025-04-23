@@ -165,11 +165,12 @@ int main(void)
     sleep_ms(2000);
 #endif
 
+    modxo_init();
+    register_handlers();
+    
     multicore_reset_core1();
     multicore_launch_core1(core1_main);
 
-    register_handlers();
-    modxo_init();
     set_sys_clock_khz(SYS_FREQ_DEFAULT, true);
     modxo_init_interrupts();
     core0_main(); // Infinite loop

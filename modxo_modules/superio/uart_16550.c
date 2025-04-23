@@ -75,7 +75,7 @@ static void uart_16550_port_read(uint16_t address, uint8_t *data)
     }
 }
 
-static void uart_16550_reset(void)
+static void powerup(void)
 {
     if(tud_cdc_connected())
     {
@@ -91,5 +91,5 @@ static void uart_16550_init(void)
 
 MODXO_TASK uart_16550_hdlr = {
     .init = uart_16550_init,
-    .reset = uart_16550_reset,
+    .powerup = powerup,
 };
