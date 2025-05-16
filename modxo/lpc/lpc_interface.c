@@ -99,6 +99,9 @@ static void io_sm_hdlr(LPC_OP_TYPE sm, uint32_t address, uint8_t *data)
         {
             if (sm == LPC_OP_IO_READ && io_hdlr_table[tidx].read_cback) io_hdlr_table[tidx].read_cback(address, data);
             else if (sm == LPC_OP_IO_WRITE && io_hdlr_table[tidx].write_cback) io_hdlr_table[tidx].write_cback(address, data);
+
+            io_hdlr_last = tidx;
+            return;
         }
 
         tidx++;
@@ -124,6 +127,9 @@ static void mem_sm_hdlr(LPC_OP_TYPE sm, uint32_t address, uint8_t * data)
         {
             if (sm == LPC_OP_MEM_READ && mem_hdlr_table[tmdx].read_cback) mem_hdlr_table[tmdx].read_cback(address, data);
             else if (sm == LPC_OP_MEM_WRITE && mem_hdlr_table[tmdx].write_cback) mem_hdlr_table[tmdx].write_cback(address, data);
+
+            mem_hdlr_last = tmdx;
+            return;
         }
 
         tmdx++;
