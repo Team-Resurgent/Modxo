@@ -45,7 +45,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <modxo_pinout.h>
 
 #define WS2812_PORT_BASE MODXO_REGISTER_LED_COMMAND
-#define WS2812_ADDRESS_MASK 0xFFFE
 #define WS2812_COMMAND_PORT WS2812_PORT_BASE
 #define WS2812_DATA_PORT WS2812_PORT_BASE + 1
 
@@ -760,8 +759,8 @@ static void ws2812_init()
         }
     }
 
-    lpc_interface_add_io_handler(WS2812_PORT_BASE, WS2812_ADDRESS_MASK, lpc_port_read, lpc_port_write);
-    lpc_interface_add_io_handler(MODXO_REGISTER_NVM_CONFIG_SEL, 0xFFFE, config_read_hdlr, config_write_hdlr);
+    lpc_interface_add_io_handler(WS2812_COMMAND_PORT, WS2812_DATA_PORT, lpc_port_read, lpc_port_write);
+    lpc_interface_add_io_handler(MODXO_REGISTER_NVM_CONFIG_SEL, MODXO_REGISTER_NVM_CONFIG_SEL + 1, config_read_hdlr, config_write_hdlr);
 
     ws2812_update_pixels();
 }

@@ -38,33 +38,41 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <lpc_comm.pio.h>
 #include <modxo/lpc_log.h>
 
-void start_mem_read_sm(void);
+typedef void (*lpc_handler)(LPC_OP_TYPE sm, uint32_t address, uint8_t *data);
 
 typedef struct
 {
     uint32_t nibbles_read;
-    lpc_handler_cback handler;
+    lpc_handler handler;
     uint8_t cyctype_dir;
     uint8_t address_len;
 } LPC_SM_HANDLER;
 
 typedef struct
 {
-    uint16_t port_base;
-    uint16_t mask;
-    SUPERIO_PORT_CALLBACK_T read_cback;
-    SUPERIO_PORT_CALLBACK_T write_cback;
-} SUPERIO_PORT_HANDLER_T;
+    uint16_t addr_start;
+    uint16_t addr_end;
+    lpc_io_handler_cback read_cback;
+    lpc_io_handler_cback write_cback;
+} lpc_io_handler;
 
-static void io_write_hdlr(uint32_t address, uint8_t *data);
-static void io_read_hdlr(uint32_t address, uint8_t *data);
+typedef struct
+{
+    uint32_t addr_start;
+    uint32_t addr_end;
+    lpc_mem_handler_cback read_cback;
+    lpc_mem_handler_cback write_cback;
+} lpc_mem_handler;
+
+static void io_sm_hdlr(LPC_OP_TYPE sm, uint32_t address, uint8_t *data);
+static void mem_sm_hdlr(LPC_OP_TYPE sm, uint32_t address, uint8_t *data);
 static void gpio_set_max_drivestrength(io_rw_32 gpio, uint32_t strength);
 
 LPC_SM_HANDLER lpc_handlers[LPC_OP_TOTAL] = {
-    [LPC_OP_IO_READ] = {.nibbles_read = 4, .cyctype_dir = 0, .handler = io_read_hdlr, .address_len = 16},
-    [LPC_OP_IO_WRITE] = {.nibbles_read = 6, .cyctype_dir = 2, .handler = io_write_hdlr, .address_len = 16},
-    [LPC_OP_MEM_READ] = {.nibbles_read = 8, .cyctype_dir = 4, .handler = NULL, .address_len = 32},
-    [LPC_OP_MEM_WRITE] = {.nibbles_read = 10, .cyctype_dir = 6, .handler = NULL, .address_len = 32},
+    [LPC_OP_IO_READ] = {.nibbles_read = 4, .cyctype_dir = 0, .handler = io_sm_hdlr, .address_len = 16},
+    [LPC_OP_IO_WRITE] = {.nibbles_read = 6, .cyctype_dir = 2, .handler = io_sm_hdlr, .address_len = 16},
+    [LPC_OP_MEM_READ] = {.nibbles_read = 8, .cyctype_dir = 4, .handler = mem_sm_hdlr, .address_len = 32},
+    [LPC_OP_MEM_WRITE] = {.nibbles_read = 10, .cyctype_dir = 6, .handler = mem_sm_hdlr, .address_len = 32},
 }; // 4 SM per PIO
 
 static const char *LPC_OP_STRINGS[LPC_OP_TOTAL] = {
@@ -74,28 +82,34 @@ static const char *LPC_OP_STRINGS[LPC_OP_TOTAL] = {
     [LPC_OP_MEM_READ] = "MEM_READ ",
 };
 
-#define SUPERIO_HANDLER_MAX_ENTRIES 32
-static SUPERIO_PORT_HANDLER_T hdlr_table[SUPERIO_HANDLER_MAX_ENTRIES];
-static uint8_t total_entries = 0;
+#define IO_HANDLER_MAX_ENTRIES 32
+static lpc_io_handler io_hdlr_table[IO_HANDLER_MAX_ENTRIES];
+static uint8_t io_hdlr_count = 0;
 
-static void io_write_hdlr(uint32_t address, uint8_t *data)
+static void io_sm_hdlr(LPC_OP_TYPE sm, uint32_t address, uint8_t *data)
 {
-    for (uint8_t tidx = 0; tidx < total_entries; tidx++)
+    for (uint8_t tidx = 0; tidx < io_hdlr_count; tidx++)
     {
-        if ((address & hdlr_table[tidx].mask) == hdlr_table[tidx].port_base)
+        if (address >= io_hdlr_table[tidx].addr_start && address <= io_hdlr_table[tidx].addr_end)
         {
-            hdlr_table[tidx].write_cback(address, data);
+            if (sm == LPC_OP_IO_READ && io_hdlr_table[tidx].read_cback) io_hdlr_table[tidx].read_cback(address, data);
+            else if (sm == LPC_OP_IO_WRITE && io_hdlr_table[tidx].write_cback) io_hdlr_table[tidx].write_cback(address, data);
         }
     }
 }
 
-static void io_read_hdlr(uint32_t address, uint8_t *data)
+#define MEM_HANDLER_MAX_ENTRIES 32
+static lpc_mem_handler mem_hdlr_table[MEM_HANDLER_MAX_ENTRIES];
+static uint8_t mem_hdlr_count = 0;
+
+static void mem_sm_hdlr(LPC_OP_TYPE sm, uint32_t address, uint8_t * data)
 {
-    for (uint8_t tidx = 0; tidx < total_entries; tidx++)
+    for (uint8_t tmdx = 0; tmdx < mem_hdlr_count; tmdx++)
     {
-        if ((address & hdlr_table[tidx].mask) == hdlr_table[tidx].port_base)
+        if (address >= mem_hdlr_table[tmdx].addr_start && address <= mem_hdlr_table[tmdx].addr_end)
         {
-            hdlr_table[tidx].read_cback(address, data);
+            if (sm == LPC_OP_MEM_READ && mem_hdlr_table[tmdx].read_cback) mem_hdlr_table[tmdx].read_cback(address, data);
+            else if (sm == LPC_OP_MEM_WRITE && mem_hdlr_table[tmdx].write_cback) mem_hdlr_table[tmdx].write_cback(address, data);
         }
     }
 }
@@ -131,7 +145,7 @@ static void gpio_set_max_drivestrength(io_rw_32 gpio, uint32_t strength)
         PADS_BANK0_GPIO0_DRIVE_BITS);
 }
 
-static void pio_custom_init(PIO pio, uint sm, uint offset, bool lframe_cancel)
+static void pio_custom_init(PIO pio, LPC_OP_TYPE sm, uint offset, bool lframe_cancel)
 {
     lpc_read_request_init(pio, sm, offset, lpc_handlers[sm].address_len, lframe_cancel);
 
@@ -144,7 +158,7 @@ static void pio_custom_init(PIO pio, uint sm, uint offset, bool lframe_cancel)
     pio_sm_exec(pio, sm, pio_encode_jmp(offset));
 }
 
-static void lpc_read_handler(uint8_t sm)
+static void lpc_read_handler(LPC_OP_TYPE sm)
 {
     register uint32_t address, shifted, pushed;
     uint8_t result_data;
@@ -152,7 +166,7 @@ static void lpc_read_handler(uint8_t sm)
     pushed = _pio->rxf[sm];
 
     if (lpc_handlers[sm].handler)
-        lpc_handlers[sm].handler(address, &result_data);
+        lpc_handlers[sm].handler(sm, address, &result_data);
 
     shifted = 0xF000;
     shifted |= (result_data << 4);
@@ -172,7 +186,7 @@ static void lpc_read_handler(uint8_t sm)
     pio_interrupt_clear(_pio, sm);
 }
 
-static void lpc_write_handler(uint8_t sm)
+static void lpc_write_handler(LPC_OP_TYPE sm)
 {
     register uint32_t address, shifted, swaped_value;
 
@@ -184,7 +198,7 @@ static void lpc_write_handler(uint8_t sm)
     result_data = (uint8_t)swaped_value;
 
     if (lpc_handlers[sm].handler)
-        lpc_handlers[sm].handler(address, &result_data);
+        lpc_handlers[sm].handler(sm, address, &result_data);
 
     shifted = 0xFFF0;
     _pio->txf[sm] = shifted;
@@ -252,11 +266,6 @@ void lpc_interface_disable_onboard_flash(bool disable)
     }
 }
 
-void lpc_interface_set_callback(LPC_OP_TYPE op, lpc_handler_cback cback)
-{
-    lpc_handlers[op].handler = cback;
-}
-
 void lpc_interface_start_sm()
 {
 
@@ -315,17 +324,34 @@ void lpc_interface_init(void)
     lpc_interface_start_sm();
 }
 
-bool lpc_interface_add_io_handler(uint16_t port_base, uint16_t mask, SUPERIO_PORT_CALLBACK_T read_cback, SUPERIO_PORT_CALLBACK_T write_cback)
+bool lpc_interface_add_io_handler(uint16_t addr_start, uint16_t addr_end, lpc_io_handler_cback read_cback, lpc_io_handler_cback write_cback)
 {
-    if (total_entries >= SUPERIO_HANDLER_MAX_ENTRIES)
-        return false;
+    if (io_hdlr_count >= IO_HANDLER_MAX_ENTRIES) return false;
+    if (addr_end > addr_start) return false;
 
-    hdlr_table[total_entries].port_base = port_base;
-    hdlr_table[total_entries].mask = mask;
-    hdlr_table[total_entries].read_cback = read_cback;
-    hdlr_table[total_entries].write_cback = write_cback;
+    io_hdlr_table[io_hdlr_count].addr_start = addr_start;
+    io_hdlr_table[io_hdlr_count].addr_end = addr_end;
+    io_hdlr_table[io_hdlr_count].read_cback = read_cback;
+    io_hdlr_table[io_hdlr_count].write_cback = write_cback;
 
-    total_entries++;
+    io_hdlr_count++;
+
+    return true;
+}
+
+bool lpc_interface_add_mem_handler(uint32_t addr_start, uint32_t addr_end, lpc_mem_handler_cback read_cback, lpc_mem_handler_cback write_cback)
+{
+    if (mem_hdlr_count >= MEM_HANDLER_MAX_ENTRIES) return false;
+    if (addr_end > addr_start) return false;
+
+    mem_hdlr_table[mem_hdlr_count].addr_start = addr_start;
+    mem_hdlr_table[mem_hdlr_count].addr_end = addr_end;
+    mem_hdlr_table[mem_hdlr_count].read_cback = read_cback;
+    mem_hdlr_table[mem_hdlr_count].write_cback = write_cback;
+
+    mem_hdlr_count++;
+
+    return true;
 }
 
 void lpc_interface_poll()
