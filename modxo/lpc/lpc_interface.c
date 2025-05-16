@@ -85,33 +85,51 @@ static const char *LPC_OP_STRINGS[LPC_OP_TOTAL] = {
 #define IO_HANDLER_MAX_ENTRIES 32
 static lpc_io_handler io_hdlr_table[IO_HANDLER_MAX_ENTRIES];
 static uint8_t io_hdlr_count = 0;
+static uint8_t io_hdlr_last = 0; // Every time an I/O handler is accessed it's cached here since subsiquent read/writes are likely to be the same handler
 
 static void io_sm_hdlr(LPC_OP_TYPE sm, uint32_t address, uint8_t *data)
 {
-    for (uint8_t tidx = 0; tidx < io_hdlr_count; tidx++)
+    if (!io_hdlr_count) return;
+
+    // Start checking from the last handler accessed since subsequent read/writes are likely to be the same handler
+    uint8_t tidx = io_hdlr_last;
+    do
     {
         if (address >= io_hdlr_table[tidx].addr_start && address <= io_hdlr_table[tidx].addr_end)
         {
             if (sm == LPC_OP_IO_READ && io_hdlr_table[tidx].read_cback) io_hdlr_table[tidx].read_cback(address, data);
             else if (sm == LPC_OP_IO_WRITE && io_hdlr_table[tidx].write_cback) io_hdlr_table[tidx].write_cback(address, data);
         }
+
+        tidx++;
+        if (tidx >= io_hdlr_count) tidx = 0;
     }
+    while(tidx != io_hdlr_last);
 }
 
 #define MEM_HANDLER_MAX_ENTRIES 32
 static lpc_mem_handler mem_hdlr_table[MEM_HANDLER_MAX_ENTRIES];
 static uint8_t mem_hdlr_count = 0;
+static uint8_t mem_hdlr_last = 0;
 
 static void mem_sm_hdlr(LPC_OP_TYPE sm, uint32_t address, uint8_t * data)
 {
-    for (uint8_t tmdx = 0; tmdx < mem_hdlr_count; tmdx++)
+    if (!mem_hdlr_count) return;
+
+    // Start checking from the last handler accessed since subsequent read/writes are likely to be the same handler
+    uint8_t tmdx = mem_hdlr_last;
+    do
     {
         if (address >= mem_hdlr_table[tmdx].addr_start && address <= mem_hdlr_table[tmdx].addr_end)
         {
             if (sm == LPC_OP_MEM_READ && mem_hdlr_table[tmdx].read_cback) mem_hdlr_table[tmdx].read_cback(address, data);
             else if (sm == LPC_OP_MEM_WRITE && mem_hdlr_table[tmdx].write_cback) mem_hdlr_table[tmdx].write_cback(address, data);
         }
+
+        tmdx++;
+        if (tmdx >= mem_hdlr_count) tmdx = 0;
     }
+    while (tmdx != mem_hdlr_last);
 }
 
 // PIO
