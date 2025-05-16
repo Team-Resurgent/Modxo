@@ -19,13 +19,13 @@ typedef enum
     LPC_OP_TOTAL = 4
 } LPC_OP_TYPE;
 
-typedef void (*lpc_handler_cback)(uint32_t address, uint8_t *data);
-typedef void (*SUPERIO_PORT_CALLBACK_T)(uint16_t address, uint8_t *data);
+typedef void (*lpc_io_handler_cback)(uint16_t address, uint8_t *data);
+typedef void (*lpc_mem_handler_cback)(uint32_t address, uint8_t *data);
 
-void lpc_interface_set_callback(LPC_OP_TYPE op, lpc_handler_cback cback);
 void lpc_interface_disable_onboard_flash(bool disable);
 void lpc_interface_start_sm(void);
-bool lpc_interface_add_io_handler(uint16_t port_base, uint16_t mask, SUPERIO_PORT_CALLBACK_T read_cback, SUPERIO_PORT_CALLBACK_T write_cback);
+bool lpc_interface_add_io_handler(uint16_t addr_start, uint16_t addr_end, lpc_io_handler_cback read_cback, lpc_io_handler_cback write_cback);
+bool lpc_interface_add_mem_handler(uint32_t addr_start, uint32_t addr_end, lpc_mem_handler_cback read_cback, lpc_mem_handler_cback write_cback);
 
 extern MODXO_TASK lpc_interface_hdlr;
 #endif

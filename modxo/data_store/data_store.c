@@ -77,7 +77,7 @@ static void powerup(void)
 static void init()
 {
     powerup();
-    lpc_interface_add_io_handler(DATA_STORE_PORT_BASE, DATA_STORE_ADDRESS_MASK, lpc_port_read, lpc_port_write);
+    lpc_interface_add_io_handler(DATA_STORE_COMMAND_PORT, DATA_STORE_DATA_PORT, lpc_port_read, lpc_port_write);
 }
 
 MODXO_TASK data_store_handler = {

@@ -128,7 +128,7 @@ static void lpc47m152_init(void)
 {
     modxo_debug_sp_connected = superio_connected;
     powerup();
-    lpc_interface_add_io_handler(0x002E, 0xFFFE, lpc47m152_read_handler, lpc47m152_write_handler); // LPC47M152(superio) port emulation
+    lpc_interface_add_io_handler(0x002E, 0x002F, lpc47m152_read_handler, lpc47m152_write_handler); // LPC47M152(superio) port emulation
 }
 
 MODXO_TASK LPC47M152_hdlr = {
