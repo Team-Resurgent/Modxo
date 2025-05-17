@@ -75,9 +75,19 @@ target_sources(${PROJECT_NAME} PRIVATE
     src/main.c
 )
 
+# Make sure TinyUSB can find tusb_config.h
+target_include_directories(${PROJECT_NAME} PRIVATE
+    src/modxo/usb/
+)
+
 # Link to pico_stdlib (gpio, time, etc. functions)
 target_link_libraries(${PROJECT_NAME} PRIVATE
     pico_stdlib
+    pico_unique_id
+    tinyusb_device
+    tinyusb_board
+    hardware_pio
+    hardware_dma
     pico_multicore
     modxo
     ws2812

@@ -37,6 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <lpc_comm.pio.h>
 #include <modxo/lpc_log.h>
+#include <tusb.h>
 
 typedef void (*lpc_handler)(LPC_OP_TYPE sm, uint32_t address, uint8_t *data);
 
@@ -290,7 +291,7 @@ void lpc_interface_disable_onboard_flash(bool disable)
     }
 }
 
-void lpc_interface_start_sm()
+void lpc_interface_start_sm(void)
 {
 
     pio_set_sm_mask_enabled(_pio, 15, false); // Disable All State Machines
@@ -378,7 +379,7 @@ bool lpc_interface_add_mem_handler(uint32_t addr_start, uint32_t addr_end, lpc_m
     return true;
 }
 
-void lpc_interface_poll()
+void lpc_interface_poll(void)
 {
     log_entry entry;
     while (lpclog_dequeue(&entry))
