@@ -35,58 +35,83 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <modxo/lpc_interface.h>
 #include "tusb.h"
 
-static void uart_16550_port_write(uint16_t address, uint8_t *data)
+#define UART_ADDR_MASK      0xFF00
+
+#define UART_1_ADDR_START   0x3F8
+#define UART_1_ADDR_END     0x3FF
+#define UART_1_ITF          1
+
+#define UART_2_ADDR_START   0x2F8
+#define UART_2_ADDR_END     0x2FF
+#define UART_2_ITF          2
+
+static void uart_16550_port_read(uint8_t itf, uint8_t port, uint8_t *data)
 {
-    if(tud_cdc_connected()) {
-        // UART Ports
-        if ((address == 0x3F8))
-        {
-            tud_cdc_write(data, 1);
-            tud_cdc_write_flush();
-        }
+    switch (port)
+    {
+    case 0xFD:
+        *data = tud_cdc_n_connected(itf)
+            ? (tud_cdc_n_write_available(itf) ? 0x20 : 0x00) | (tud_cdc_n_available(itf) ? 0x01 : 0x00)
+            : 0xFF; // prevents potential busy-wait infinite loop in kernel
+        break;
+    case 0xF8:
+        if (tud_cdc_n_connected(itf)) tud_cdc_n_read(itf, data, 1);
+        else *data = 0;
+        break;
     }
 }
 
-static void uart_16550_port_read(uint16_t address, uint8_t *data)
+static void uart_16550_port_write(uint8_t itf, uint8_t port, uint8_t *data)
 {
-    // UART Ports
-    if (tud_cdc_connected())
-    { // If usb serial port is open
-        if (address == 0x3FD)
-        {
-            *data = (tud_cdc_write_available() ? 0x20 : 0x00) | (tud_cdc_available() ? 0x01 : 0x00);
-        }
-
-        if (address == 0x3F8)
-        {
-            tud_cdc_read(data, 1);
-        }
-    }
-    else
+    switch (port)
     {
-        if (address == 0x3FD)
+    case 0xF8:
+        if (tud_cdc_n_connected(itf))
         {
-            *data = 0xff; // prevents potential busy-wait infinite loop in kernel
+            tud_cdc_n_write(itf, data, 1);
+            tud_cdc_n_write_flush(itf);
         }
-        else
-        {
-            *data = 0;
-        }
+        break;
+    }
+}
+
+static void lpc_io_read(uint16_t address, uint8_t * data)
+{
+    switch (address & UART_ADDR_MASK)
+    {
+    case UART_1_ADDR_START & UART_ADDR_MASK: uart_16550_port_read(UART_1_ITF, (uint8_t)address, data); break;
+    case UART_2_ADDR_START & UART_ADDR_MASK: uart_16550_port_read(UART_2_ITF, (uint8_t)address, data); break;
+    }
+}
+
+static void lpc_io_write(uint16_t address, uint8_t * data)
+{
+    switch (address & UART_ADDR_MASK)
+    {
+    case UART_1_ADDR_START & UART_ADDR_MASK: uart_16550_port_write(UART_1_ITF, (uint8_t)address, data); break;
+    case UART_2_ADDR_START & UART_ADDR_MASK: uart_16550_port_write(UART_2_ITF, (uint8_t)address, data); break;
     }
 }
 
 static void powerup(void)
 {
-    if(tud_cdc_connected())
+    if(tud_cdc_n_connected(1))
     {
-        tud_cdc_write_clear();
-        tud_cdc_read_flush();
+        tud_cdc_n_write_clear(1);
+        tud_cdc_n_read_flush(1);
+    }
+
+    if(tud_cdc_n_connected(2))
+    {
+        tud_cdc_n_write_clear(2);
+        tud_cdc_n_read_flush(2);
     }
 }
 
 static void uart_16550_init(void)
 {
-    lpc_interface_add_io_handler(0x03F8, 0x03FF, uart_16550_port_read, uart_16550_port_write); // 16550 Uart port emulation
+    lpc_interface_add_io_handler(UART_1_ADDR_START, UART_1_ADDR_END, lpc_io_read, lpc_io_write); // 16550 Uart 1 port emulation
+    lpc_interface_add_io_handler(UART_2_ADDR_START, UART_2_ADDR_END, lpc_io_read, lpc_io_write); // 16550 Uart 2 port emulation
 }
 
 MODXO_TASK uart_16550_hdlr = {

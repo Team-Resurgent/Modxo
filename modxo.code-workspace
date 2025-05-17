@@ -53,7 +53,17 @@
 			"legacy_display.h": "c",
 			"lpc_interface.h": "c",
 			"watchdog.h": "c",
-			"data_store.h": "c"
+			"data_store.h": "c",
+			"pio.h": "c",
+			"modxo_pinout.h": "c",
+			"cstdlib": "c",
+			"stdbool.h": "c",
+			"stdio_usb.h": "c",
+			"driver.h": "c",
+			"printf.h": "c",
+			"stdio.h": "c",
+			"tusb.h": "c",
+			"msc_interface.h": "c"
 		}
 	}
 }

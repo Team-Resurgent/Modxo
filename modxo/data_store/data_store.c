@@ -38,46 +38,92 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <modxo.h>
 #include <modxo/modxo_ports.h>
 #include "math.h"
+#include "msc_interface.h"
 
 #define DATA_STORE_PORT_BASE MODXO_REGISTER_VOLATILE_CONFIG_SEL
-#define DATA_STORE_ADDRESS_MASK 0xFFFE
 #define DATA_STORE_COMMAND_PORT DATA_STORE_PORT_BASE
 #define DATA_STORE_DATA_PORT DATA_STORE_PORT_BASE + 1
 
-uint8_t data_store_cmd;
-uint8_t data_store_buffer[256];
+#define DATA_STORE_ADDR_START   0xFF800000
+#define DATA_STORE_ADDR_END     0xFF8FFFFF
+#define DATA_STORE_ADDR_MASK    0x1FFF // 8KB is the smallest size Windows can mount
 
-static void lpc_port_read(uint16_t address, uint8_t *data)
+static uint8_t io_buffer[256];
+static uint8_t io_buffer_pos;
+
+#define MEM_BUFFER_SIZE (DATA_STORE_ADDR_MASK + 1) // 8K
+static uint8_t mem_buffer[MEM_BUFFER_SIZE];
+
+static void lpc_io_read(uint16_t address, uint8_t *data)
 {
     if (address == DATA_STORE_DATA_PORT)
     {
-        *data = data_store_buffer[data_store_cmd];
+        *data = io_buffer[io_buffer_pos];
     }
 }
 
-static void lpc_port_write(uint16_t address, uint8_t *data)
+static void lpc_io_write(uint16_t address, uint8_t *data)
 {
     switch (address)
     {
     case DATA_STORE_COMMAND_PORT:
-        data_store_cmd = *data;
+        io_buffer_pos = *data;
         break;
     case DATA_STORE_DATA_PORT:
-        data_store_buffer[data_store_cmd] = *data;
+        io_buffer[io_buffer_pos] = *data;
         break;
     }
 }
 
-static void powerup(void)
+static void lpc_mem_read(uint32_t address, uint8_t *data)
 {
-    data_store_cmd = 0;
-    memset(data_store_buffer, 0, sizeof(data_store_buffer));
+    *data = mem_buffer[address & DATA_STORE_ADDR_MASK];
 }
 
-static void init()
+static void lpc_mem_write(uint32_t address, uint8_t *data)
+{
+    mem_buffer[address & DATA_STORE_ADDR_MASK] = *data;
+}
+
+static int32_t msc_read(uint32_t block, uint32_t offset, uint8_t *data, uint32_t size)
+{
+    uint32_t address = block * MSC_DEFAULT_BLOCK_SIZE + offset;
+    if (address >= MEM_BUFFER_SIZE) return -1;
+
+    // Don't overshoot the end of the buffer
+    int32_t consumed = address + size > MEM_BUFFER_SIZE ? MEM_BUFFER_SIZE - address : size;
+
+    memcpy(data, mem_buffer + address, consumed);
+
+    return consumed;
+}
+
+static int32_t msc_write(uint32_t block, uint32_t offset, uint8_t *data, uint32_t size)
+{
+    uint32_t address = block * MSC_DEFAULT_BLOCK_SIZE + offset;
+    if (address >= MEM_BUFFER_SIZE) return -1;
+
+    // Don't overshoot the end of the buffer
+    int32_t consumed = address + size > MEM_BUFFER_SIZE ? MEM_BUFFER_SIZE - address : size;
+
+    memcpy(mem_buffer + address, data, consumed);
+
+    return consumed;
+}
+
+static void powerup(void)
+{
+    io_buffer_pos = 0;
+    memset(io_buffer, 0, sizeof(io_buffer));
+    memset(mem_buffer, 0 , sizeof(mem_buffer));
+}
+
+static void init(void)
 {
     powerup();
-    lpc_interface_add_io_handler(DATA_STORE_COMMAND_PORT, DATA_STORE_DATA_PORT, lpc_port_read, lpc_port_write);
+    lpc_interface_add_io_handler(DATA_STORE_COMMAND_PORT, DATA_STORE_DATA_PORT, lpc_io_read, lpc_io_write);
+    lpc_interface_add_mem_handler(DATA_STORE_ADDR_START, DATA_STORE_ADDR_END, lpc_mem_read, lpc_mem_write);
+    msc_interface_add_handler(MEM_BUFFER_SIZE / MSC_DEFAULT_BLOCK_SIZE, MSC_DEFAULT_BLOCK_SIZE, "Mailbox", msc_read, msc_write);
 }
 
 MODXO_TASK data_store_handler = {

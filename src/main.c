@@ -43,6 +43,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <modxo/lpc_interface.h>
 #include <modxo/data_store.h>
 
+#include <bsp/board_api.h>
+#include <tusb.h>
+
 // Modxo nvm contents
 nvm_register_t* nvm_registers[] = {
     &ws2812_nvm,
@@ -163,6 +166,15 @@ void register_handlers()
 int main(void)
 {
     set_sys_clock_khz(SYS_FREQ_IN_KHZ, true);
+
+    board_init();
+
+    tud_init(BOARD_TUD_RHPORT);
+
+    if (board_init_after_tusb) {
+        board_init_after_tusb();
+    }
+
     stdio_init_all();
 
 #ifdef START_DELAY
