@@ -63,7 +63,12 @@
 			"printf.h": "c",
 			"stdio.h": "c",
 			"tusb.h": "c",
-			"msc_interface.h": "c"
+			"msc_interface.h": "c",
+			"tusb_common.h": "c",
+			"osal.h": "c",
+			"flashrom.h": "c",
+			"modxo_debug.h": "c",
+			"modxo_ports.h": "c"
 		}
 	}
 }

@@ -36,6 +36,18 @@
 #define USB_PID           (0x4000 | _PID_MAP(CDC, 0) | _PID_MAP(MSC, 1) | _PID_MAP(HID, 2) | \
                            _PID_MAP(MIDI, 3) | _PID_MAP(VENDOR, 4) )
 
+// String Descriptor Index
+enum {
+    STRID_LANGID,
+    STRID_MANUFACTURER,
+    STRID_PRODUCT,
+    STRID_SERIAL,
+    STRID_CDC_0,
+    STRID_CDC_1,
+    STRID_CDC_2,
+    STRID_MSC_0,
+};
+
 //--------------------------------------------------------------------+
 // Device Descriptors
 //--------------------------------------------------------------------+
@@ -51,11 +63,11 @@ tusb_desc_device_t const desc_device =
 
     .idVendor           = 0xCafe,
     .idProduct          = USB_PID,
-    .bcdDevice          = 0x0100,
+    .bcdDevice          = 0x0200,
 
-    .iManufacturer      = 0x01,
-    .iProduct           = 0x02,
-    .iSerialNumber      = 0x03,
+    .iManufacturer      = STRID_MANUFACTURER,
+    .iProduct           = STRID_PRODUCT,
+    .iSerialNumber      = STRID_SERIAL,
 
     .bNumConfigurations = 0x01
 };
@@ -83,7 +95,7 @@ enum
     ITF_NUM_TOTAL
 };
 
-#define CONFIG_TOTAL_LEN    (TUD_CONFIG_DESC_LEN + TUD_MSC_DESC_LEN)
+#define CONFIG_TOTAL_LEN    (TUD_CONFIG_DESC_LEN + (TUD_CDC_DESC_LEN * CFG_TUD_CDC) + (TUD_MSC_DESC_LEN * CFG_TUD_MSC))
 
 #if defined(TUD_ENDPOINT_ONE_DIRECTION_ONLY)
     // MCUs that don't support a same endpoint number with different direction IN and OUT defined in tusb_mcu.h
@@ -177,24 +189,17 @@ uint8_t const * tud_descriptor_configuration_cb(uint8_t index)
 // String Descriptors
 //--------------------------------------------------------------------+
 
-// String Descriptor Index
-enum {
-    STRID_LANGID = 0,
-    STRID_MANUFACTURER,
-    STRID_PRODUCT,
-    STRID_SERIAL,
-};
-
 // array of pointer to string descriptors
 char const *string_desc_arr[] =
 {
     (const char[]) { 0x09, 0x04 },  // 0: is supported language is English (0x0409)
     "Team Resurgent",               // 1: Manufacturer
     "ModXo",                        // 2: Product
-    "Debug Port",                   // 3: Debug serial port
-    "SuperIO Port 0",               // 4: SuperIO serial port 0
-    "SuperIO Port 1",               // 5: SuperIO serial port 1
-    "Storage",                      // 6: PC/XBOX Storage (Mailbox)
+    NULL,                           // 3: Board Serial Number
+    "Debug Port",                   // 4: Debug serial port
+    "SuperIO Port 0",               // 5: SuperIO serial port 0
+    "SuperIO Port 1",               // 6: SuperIO serial port 1
+    "Storage",                      // 7: PC/XBOX Storage (Mailbox)
 };
 
 static uint16_t _desc_str[32 + 1];

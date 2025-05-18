@@ -11,12 +11,12 @@ typedef struct
 {
     uint32_t block_count;
     uint32_t block_size;
-    char * product_str;
+    const char * product_str;
     msc_handler_cback read_cback;
     msc_handler_cback write_cback;
 } msc_handler;
 
-#define MSC_HANDLER_MAX_ENTRIES 32
+#define MSC_HANDLER_MAX_ENTRIES 16 // This is the maximum number of allowed LUNs
 static msc_handler msc_hdlr_table[MSC_HANDLER_MAX_ENTRIES];
 static uint8_t msc_hdlr_count = 0;
 
@@ -27,14 +27,14 @@ uint8_t tud_msc_get_maxlun_cb(void)
 }
 
 const char * vid = "ModXo";
-char * pid = "Mass Storage";
+const char * pid = "Mass Storage";
 const char * rev = "1.0";
 
 // Invoked when received SCSI_CMD_INQUIRY
 // Application fill vendor id, product id and revision with string up to 8, 16, 4 characters respectively
 void tud_msc_inquiry_cb(uint8_t lun, uint8_t vendor_id[8], uint8_t product_id[16], uint8_t product_rev[4])
 {
-    char * product_str = pid;
+    const char * product_str = pid;
     if (lun < msc_hdlr_count && msc_hdlr_table[lun].product_str)
     {
         product_str = msc_hdlr_table[lun].product_str;
@@ -132,7 +132,7 @@ int32_t tud_msc_scsi_cb(uint8_t lun, uint8_t const scsi_cmd[16], void* buffer, u
     return -1;
 }
 
-bool msc_interface_add_handler(uint32_t block_count, uint32_t block_size, char * product_str, msc_handler_cback read_cback, msc_handler_cback write_cback)
+bool msc_interface_add_handler(uint32_t block_count, uint32_t block_size, const char * product_str, msc_handler_cback read_cback, msc_handler_cback write_cback)
 {
     if (msc_hdlr_count >= MSC_HANDLER_MAX_ENTRIES) return false;
 
