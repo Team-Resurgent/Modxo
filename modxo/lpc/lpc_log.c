@@ -57,7 +57,6 @@ void lpclog_enqueue(log_entry item)
 
 bool lpclog_dequeue(log_entry *out)
 {
-
 	if (queue.front != queue.rear)
 	{
 		queue.front = (queue.front + 1) % LOG_SIZE;

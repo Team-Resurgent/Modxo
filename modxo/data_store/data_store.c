@@ -122,7 +122,7 @@ static void init(void)
 {
     powerup();
     lpc_interface_add_io_handler(DATA_STORE_COMMAND_PORT, DATA_STORE_DATA_PORT, lpc_io_read, lpc_io_write);
-    lpc_interface_add_mem_handler(DATA_STORE_ADDR_START, DATA_STORE_ADDR_END, lpc_mem_read, lpc_mem_write);
+    //lpc_interface_add_mem_handler(DATA_STORE_ADDR_START, DATA_STORE_ADDR_END, lpc_mem_read, lpc_mem_write);
     msc_interface_add_handler(MEM_BUFFER_SIZE / MSC_DEFAULT_BLOCK_SIZE, MSC_DEFAULT_BLOCK_SIZE, "Mailbox", msc_read, msc_write);
 }
 
