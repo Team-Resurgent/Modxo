@@ -69,7 +69,10 @@
 			"flashrom.h": "c",
 			"modxo_debug.h": "c",
 			"modxo_ports.h": "c",
-			"stdlib.h": "c"
+			"stdlib.h": "c",
+			"flash.h": "c",
+			"board_api.h": "c",
+			"ws2812.h": "c"
 		}
 	}
 }

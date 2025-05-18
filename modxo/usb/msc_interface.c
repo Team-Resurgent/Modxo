@@ -4,8 +4,8 @@ BSD 2-Clause License
 
 Copyright (c) 2024, QuantX <Sam Deutsch>
 */
-#include "msc_interface.h"
-#include "tusb.h"
+#include <tusb.h>
+#include <modxo/msc_interface.h>
 
 typedef struct
 {

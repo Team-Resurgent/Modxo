@@ -37,8 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <modxo/lpc_regs.h>
 #include <modxo.h>
 #include <modxo/modxo_ports.h>
-#include "math.h"
-#include "msc_interface.h"
+#include <modxo/msc_interface.h>
 
 #define DATA_STORE_PORT_BASE MODXO_REGISTER_VOLATILE_CONFIG_SEL
 #define DATA_STORE_COMMAND_PORT DATA_STORE_PORT_BASE

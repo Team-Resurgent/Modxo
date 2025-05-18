@@ -65,8 +65,8 @@ static void read_handler(uint16_t address, uint8_t *data)
 
 static void modxo_ports_init(void)
 {
-    lpc_interface_add_io_handler(MODXO_REGISTER_CHIP_ID, 0xFFFF, read_handler, NULL);
-    lpc_interface_add_io_handler(MODXO_REGISTER_VARIANT_ID, 0xFFFF, read_handler, NULL);
+    lpc_interface_add_io_handler(MODXO_REGISTER_CHIP_ID, MODXO_REGISTER_CHIP_ID, read_handler, NULL);
+    lpc_interface_add_io_handler(MODXO_REGISTER_VARIANT_ID, MODXO_REGISTER_VARIANT_ID, read_handler, NULL);
 }
 
 void modxo_poll_core1()
@@ -76,9 +76,6 @@ void modxo_poll_core1()
 
 void modxo_poll_core0()
 {
-#ifdef LPC_LOGGING
-    lpc_interface_poll();
-#endif
     RUN_MODXO_HANDLERS(core0_poll);
 }
 

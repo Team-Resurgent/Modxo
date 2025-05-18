@@ -32,6 +32,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <pico/multicore.h>
 #include <hardware/clocks.h>
 #include <hardware/gpio.h>
+#include <bsp/board_api.h>
+#include <tusb.h>
 
 #include <flashrom.h>
 #include <modxo.h>
@@ -43,8 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <modxo/lpc_interface.h>
 #include <modxo/data_store.h>
 
-#include <bsp/board_api.h>
-#include <tusb.h>
+
 
 // Modxo nvm contents
 nvm_register_t* nvm_registers[] = {
