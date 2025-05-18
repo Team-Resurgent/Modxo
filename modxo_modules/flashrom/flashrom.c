@@ -171,13 +171,12 @@ static void dummy_write_handler(uint16_t address, uint8_t *data)
 static void init(void)
 {
     powerup();
-    lpc_interface_set_callback(LPC_OP_MEM_READ, flashrom_memread_handler);
-    lpc_interface_set_callback(LPC_OP_MEM_WRITE, flashrom_memwrite_handler);
+    lpc_interface_add_mem_handler(0, 0xFFFFFFFF, flashrom_memread_handler, flashrom_memwrite_handler);
 
-    lpc_interface_add_io_handler(MODXO_REGISTER_BANKING, 0xFFFE, read_handler, write_handler);
-    lpc_interface_add_io_handler(MODXO_REGISTER_MEM_ERASE, 0xFFFF, read_handler, write_handler);
-    lpc_interface_add_io_handler(MODXO_REGISTER_MEM_FLUSH, 0xFFFF, read_handler, write_handler);
-    lpc_interface_add_io_handler(0x1900, 0xFFF0, dummy_read_handler, dummy_write_handler);
+    lpc_interface_add_io_handler(MODXO_REGISTER_BANKING, MODXO_REGISTER_BANKING + 1, read_handler, write_handler);
+    lpc_interface_add_io_handler(MODXO_REGISTER_MEM_ERASE, MODXO_REGISTER_MEM_ERASE, read_handler, write_handler);
+    lpc_interface_add_io_handler(MODXO_REGISTER_MEM_FLUSH, MODXO_REGISTER_MEM_FLUSH, read_handler, write_handler);
+    lpc_interface_add_io_handler(0x1900, 0x190F, dummy_read_handler, dummy_write_handler);
 }
 
 static void program_sector(uint8_t sector_number)
