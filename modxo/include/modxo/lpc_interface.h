@@ -24,8 +24,9 @@ typedef void (*lpc_mem_handler_cback)(uint32_t address, uint8_t *data);
 
 void lpc_interface_disable_onboard_flash(bool disable);
 void lpc_interface_start_sm(void);
-bool lpc_interface_add_io_handler(uint16_t addr_start, uint16_t addr_end, lpc_io_handler_cback read_cback, lpc_io_handler_cback write_cback);
-bool lpc_interface_add_mem_handler(uint32_t addr_start, uint32_t addr_end, lpc_mem_handler_cback read_cback, lpc_mem_handler_cback write_cback);
+int lpc_interface_add_io_handler(uint16_t addr_start, uint16_t addr_end, lpc_io_handler_cback read_cback, lpc_io_handler_cback write_cback);
+bool lpc_interface_io_set_addr(unsigned int hdlr_idx, uint16_t addr_start, uint16_t addr_end);
+int lpc_interface_add_mem_handler(uint32_t addr_start, uint32_t addr_end, lpc_mem_handler_cback read_cback, lpc_mem_handler_cback write_cback);
 
 extern MODXO_TASK lpc_interface_hdlr;
 #endif

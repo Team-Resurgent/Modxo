@@ -113,7 +113,8 @@ bool flashrom_init(void)
 {
     flashrom_reset();
 
-    lpc_interface_add_mem_handler(FLASH_XADDR_START, FLASH_XADDR_END, flashrom_memread_handler, flashrom_memwrite_handler);
+    //lpc_interface_add_mem_handler(FLASH_XADDR_START, FLASH_XADDR_END, flashrom_memread_handler, flashrom_memwrite_handler);
+    lpc_interface_add_mem_handler(0, 0xFFFFFFFF, flashrom_memread_handler, flashrom_memwrite_handler);
 
     return (flash_rom_mask != 0xFFFFFFFF);
 }

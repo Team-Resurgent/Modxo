@@ -316,7 +316,6 @@ void lpc_interface_reset(void)
 
 void lpc_interface_init(void)
 {
-
     _pio = pio0;
 
     pio_claim_sm_mask(_pio, 15);
@@ -349,34 +348,41 @@ void lpc_interface_init(void)
     lpc_interface_start_sm();
 }
 
-bool lpc_interface_add_io_handler(uint16_t addr_start, uint16_t addr_end, lpc_io_handler_cback read_cback, lpc_io_handler_cback write_cback)
+int lpc_interface_add_io_handler(uint16_t addr_start, uint16_t addr_end, lpc_io_handler_cback read_cback, lpc_io_handler_cback write_cback)
 {
-    if (io_hdlr_count >= IO_HANDLER_MAX_ENTRIES) return false;
-    if (addr_end > addr_start) return false;
+    if (io_hdlr_count >= IO_HANDLER_MAX_ENTRIES) return -1;
+    if (addr_end > addr_start) return -1;
 
     io_hdlr_table[io_hdlr_count].addr_start = addr_start;
     io_hdlr_table[io_hdlr_count].addr_end = addr_end;
     io_hdlr_table[io_hdlr_count].read_cback = read_cback;
     io_hdlr_table[io_hdlr_count].write_cback = write_cback;
 
-    io_hdlr_count++;
+    return io_hdlr_count++;
+}
+
+bool lpc_interface_io_set_addr(unsigned int hdlr_idx, uint16_t addr_start, uint16_t addr_end)
+{
+    if (hdlr_idx >= io_hdlr_count) return false;
+    if (addr_end > addr_start) return false;
+
+    io_hdlr_table[hdlr_idx].addr_start = addr_start;
+    io_hdlr_table[hdlr_idx].addr_end = addr_end;
 
     return true;
 }
 
-bool lpc_interface_add_mem_handler(uint32_t addr_start, uint32_t addr_end, lpc_mem_handler_cback read_cback, lpc_mem_handler_cback write_cback)
+int lpc_interface_add_mem_handler(uint32_t addr_start, uint32_t addr_end, lpc_mem_handler_cback read_cback, lpc_mem_handler_cback write_cback)
 {
-    if (mem_hdlr_count >= MEM_HANDLER_MAX_ENTRIES) return false;
-    if (addr_end > addr_start) return false;
+    if (mem_hdlr_count >= MEM_HANDLER_MAX_ENTRIES) return -1;
+    if (addr_end > addr_start) return -1;
 
     mem_hdlr_table[mem_hdlr_count].addr_start = addr_start;
     mem_hdlr_table[mem_hdlr_count].addr_end = addr_end;
     mem_hdlr_table[mem_hdlr_count].read_cback = read_cback;
     mem_hdlr_table[mem_hdlr_count].write_cback = write_cback;
 
-    mem_hdlr_count++;
-
-    return true;
+    return mem_hdlr_count++;
 }
 
 void lpc_interface_poll(void)

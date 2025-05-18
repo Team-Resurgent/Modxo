@@ -68,7 +68,8 @@
 			"osal.h": "c",
 			"flashrom.h": "c",
 			"modxo_debug.h": "c",
-			"modxo_ports.h": "c"
+			"modxo_ports.h": "c",
+			"stdlib.h": "c"
 		}
 	}
 }
