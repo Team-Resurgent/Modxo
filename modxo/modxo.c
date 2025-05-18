@@ -76,6 +76,9 @@ void modxo_poll_core1()
 
 void modxo_poll_core0()
 {
+#ifdef LPC_LOGGING
+    lpc_interface_poll();
+#endif
     RUN_MODXO_HANDLERS(core0_poll);
 }
 
