@@ -38,7 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <modxo_pinout.h>
 #include <ws2812.h>
 #include <legacy_display.h>
-#include <lpc47m152.h>
+#include <LPC47M152.h>
 #include <uart_16550.h>
 #include <modxo/lpc_interface.h>
 #include <modxo/data_store.h>
