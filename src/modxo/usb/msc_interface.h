@@ -15,4 +15,4 @@ Copyright (c) 2024, QuantX <Sam Deutsch>
 
 typedef int32_t (*msc_handler_cback)(uint32_t block, uint32_t offset, uint8_t *data, uint32_t size);
 
-bool msc_interface_add_handler(uint32_t block_count, uint32_t block_size, char * product_str, msc_handler_cback read_cback, msc_handler_cback write_cback);
+bool msc_interface_add_handler(uint32_t block_count, uint32_t block_size, const char * product_str, msc_handler_cback read_cback, msc_handler_cback write_cback);

@@ -72,6 +72,7 @@ void core0_main()
 {
     while (true)
     {
+        tud_task();
         if(xbox_active) {
             modxo_poll_core0();
         }
