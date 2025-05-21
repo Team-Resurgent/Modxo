@@ -759,8 +759,8 @@ static void ws2812_init()
         }
     }
 
-    lpc_interface_add_io_handler(WS2812_COMMAND_PORT, WS2812_DATA_PORT, lpc_port_read, lpc_port_write);
-    lpc_interface_add_io_handler(MODXO_REGISTER_NVM_CONFIG_SEL, MODXO_REGISTER_NVM_CONFIG_SEL + 1, config_read_hdlr, config_write_hdlr);
+    lpc_interface_io_add_handler(WS2812_COMMAND_PORT, WS2812_DATA_PORT, lpc_port_read, lpc_port_write);
+    lpc_interface_io_add_handler(MODXO_REGISTER_NVM_CONFIG_SEL, MODXO_REGISTER_NVM_CONFIG_SEL + 1, config_read_hdlr, config_write_hdlr);
 
     ws2812_update_pixels();
 }

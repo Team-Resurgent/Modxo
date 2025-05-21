@@ -51,7 +51,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define FLASH_START_ADDRESS ((uint8_t *)0x10000000)
 static uint32_t flash_rom_mask;
 static uint8_t mmc_register;
-static uint8_t *flash_rom_data;
+static uint8_t * flash_rom_data = NULL;
 
 static uint8_t flash_write_buffer[FLASH_WRITE_PAGE_SIZE];
 
@@ -76,8 +76,6 @@ static void erase_sector(uint8_t sectorn);
 static void program_sector(uint8_t sectorn);
 static uint8_t get_flash_size(void);
 static void reset(void);
-
-
 
 static void write_handler(uint16_t address, uint8_t *data)
 {
@@ -138,19 +136,23 @@ static void read_handler(uint16_t address, uint8_t *data)
     }  
 }
 
-static void flashrom_memread_handler(uint32_t address, uint8_t *data)
+static void flashrom_memread_handler(LPC_OP_TYPE sm, uint32_t address, uint8_t *data)
 {
     register uint32_t mem_data;
     *data = flash_rom_data[address & flash_rom_mask];
 }
 
-static void flashrom_memwrite_handler(uint32_t address, uint8_t *data)
+static void flashrom_memwrite_handler(LPC_OP_TYPE sm, uint32_t address, uint8_t *data)
 {
     flash_write_buffer[address & (FLASH_WRITE_PAGE_SIZE - 1)] = *data;
 }
 
 static void powerup(void)
 {
+    if (flash_rom_data)
+        lpc_interface_mem_global_read_handler(flash_rom_data, flash_rom_mask);
+    lpc_interface_mem_global_write_handler(flash_write_buffer, FLASH_WRITE_PAGE_SIZE - 1);
+
     set_mmc(MODXO_BANK_BOOTLOADER);
     _erase_sector_number = -1;
     _program_sector_number = -1;
@@ -171,12 +173,11 @@ static void dummy_write_handler(uint16_t address, uint8_t *data)
 static void init(void)
 {
     powerup();
-    lpc_interface_add_mem_handler(0, 0xFFFFFFFF, flashrom_memread_handler, flashrom_memwrite_handler);
 
-    lpc_interface_add_io_handler(MODXO_REGISTER_BANKING, MODXO_REGISTER_BANKING + 1, read_handler, write_handler);
-    lpc_interface_add_io_handler(MODXO_REGISTER_MEM_ERASE, MODXO_REGISTER_MEM_ERASE, read_handler, write_handler);
-    lpc_interface_add_io_handler(MODXO_REGISTER_MEM_FLUSH, MODXO_REGISTER_MEM_FLUSH, read_handler, write_handler);
-    lpc_interface_add_io_handler(0x1900, 0x190F, dummy_read_handler, dummy_write_handler);
+    lpc_interface_io_add_handler(MODXO_REGISTER_BANKING, MODXO_REGISTER_BANKING + 1, read_handler, write_handler);
+    lpc_interface_io_add_handler(MODXO_REGISTER_MEM_ERASE, MODXO_REGISTER_MEM_ERASE, read_handler, write_handler);
+    lpc_interface_io_add_handler(MODXO_REGISTER_MEM_FLUSH, MODXO_REGISTER_MEM_FLUSH, read_handler, write_handler);
+    lpc_interface_io_add_handler(0x1900, 0x190F, dummy_read_handler, dummy_write_handler);
 }
 
 static void program_sector(uint8_t sector_number)
@@ -217,6 +218,8 @@ static void set_mmc(uint8_t data)
     uint8_t bank_number = data & 0x3F;
     flash_rom_mask = bank_size - 1;
     flash_rom_data = FLASH_START_ADDRESS + bank_size * bank_number;
+
+    lpc_interface_mem_global_read_handler(flash_rom_data, flash_rom_mask);
 }
 
 static uint8_t get_mmc(void)

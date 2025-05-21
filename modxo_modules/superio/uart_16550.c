@@ -110,8 +110,8 @@ static void powerup(void)
 
 static void uart_16550_init(void)
 {
-    lpc_interface_add_io_handler(UART_1_ADDR_START, UART_1_ADDR_END, lpc_io_read, lpc_io_write); // 16550 Uart 1 port emulation
-    lpc_interface_add_io_handler(UART_2_ADDR_START, UART_2_ADDR_END, lpc_io_read, lpc_io_write); // 16550 Uart 2 port emulation
+    lpc_interface_io_add_handler(UART_1_ADDR_START, UART_1_ADDR_END, lpc_io_read, lpc_io_write); // 16550 Uart 1 port emulation
+    lpc_interface_io_add_handler(UART_2_ADDR_START, UART_2_ADDR_END, lpc_io_read, lpc_io_write); // 16550 Uart 2 port emulation
 }
 
 MODXO_TASK uart_16550_hdlr = {
