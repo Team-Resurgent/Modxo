@@ -287,12 +287,17 @@ static void lpc_interface_poll(void)
     {
         if (entry.cyc_type == LPC_OP_IO_READ || entry.cyc_type == LPC_OP_IO_WRITE)
         {
-            printf("\nLPC_LOG: %s [0x%04X] data:[%02X]", LPC_OP_STRINGS[entry.cyc_type], entry.address, entry.data);
+            printf("LPC_LOG: %s [0x%04X] data:[%02X]\n", LPC_OP_STRINGS[entry.cyc_type], entry.address, entry.data);
         }
         else
         {
-            printf("\nLPC_LOG: %s [0x%08X] data:[%02X]", LPC_OP_STRINGS[entry.cyc_type], entry.address, entry.data);
+            printf("LPC_LOG: %s [0x%08X] data:[%02X]\n", LPC_OP_STRINGS[entry.cyc_type], entry.address, entry.data);
         }
+    }
+
+    if (lpclog_is_full())
+    {
+        printf("LPC_LOG: *** LOG OVERFLOWED ***\n");
     }
 }
 
