@@ -73,9 +73,12 @@ void lcd_data_write(uint16_t address, uint8_t *data);
 #define MODXO_REGISTER_BANKING   0xDEAA
 #define MODXO_REGISTER_SIZE      0xDEAB
 #define MODXO_REGISTER_MEM_ERASE 0xDEAC
-#define MODXO_REGISTER_MEM_FLUSH 0xDEAE
 void flashrom_read(uint16_t address, uint8_t *data);
 void flashrom_write(uint16_t address, uint8_t *data);
+
+#define MODXO_REGISTER_MEM_FLUSH 0xDEAE
+void flashrom_flush_read(uint16_t address, uint8_t *data);
+void flashrom_flush_write(uint16_t address, uint8_t *data);
 
 // ModXo/Pico ID
 #define MODXO_REGISTER_CHIP_ID 0xDEAD

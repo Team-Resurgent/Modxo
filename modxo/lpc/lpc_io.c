@@ -31,6 +31,7 @@ typedef enum {
     LPC_IO_READ_NVM_CONFIG_VAL,
 
     LPC_IO_READ_FLASHROM,
+    LPC_IO_READ_FLASHROM_FLUSH,
 } LPC_IO_READ_HDLR;
 
 typedef enum {
@@ -55,6 +56,7 @@ typedef enum {
     LPC_IO_WRITE_NVM_CONFIG_VAL,
 
     LPC_IO_WRITE_FLASHROM,
+    LPC_IO_WRITE_FLASHROM_FLUSH,
 } LPC_IO_WRITE_HDLR;
 
 const static uint8_t io_read_hdlr_lookup[0x10000] = {
@@ -75,7 +77,8 @@ const static uint8_t io_read_hdlr_lookup[0x10000] = {
     [MODXO_REGISTER_NVM_CONFIG_IDX] = LPC_IO_READ_NVM_CONFIG_IDX,
     [MODXO_REGISTER_NVM_CONFIG_VAL] = LPC_IO_READ_NVM_CONFIG_VAL,
 
-    [MODXO_REGISTER_BANKING ... MODXO_REGISTER_MEM_FLUSH] = LPC_IO_READ_FLASHROM,
+    [MODXO_REGISTER_BANKING ... MODXO_REGISTER_MEM_ERASE] = LPC_IO_READ_FLASHROM,
+    [MODXO_REGISTER_MEM_FLUSH] = LPC_IO_READ_FLASHROM_FLUSH,
 };
 
 const static uint8_t io_write_hdlr_lookup[0x10000] = {
@@ -97,7 +100,8 @@ const static uint8_t io_write_hdlr_lookup[0x10000] = {
     [MODXO_REGISTER_NVM_CONFIG_IDX] = LPC_IO_WRITE_NVM_CONFIG_IDX,
     [MODXO_REGISTER_NVM_CONFIG_VAL] = LPC_IO_WRITE_NVM_CONFIG_VAL,
 
-    [MODXO_REGISTER_BANKING ... MODXO_REGISTER_MEM_FLUSH] = LPC_IO_WRITE_FLASHROM,
+    [MODXO_REGISTER_BANKING ... MODXO_REGISTER_MEM_ERASE] = LPC_IO_WRITE_FLASHROM,
+    [MODXO_REGISTER_MEM_FLUSH] = LPC_IO_WRITE_FLASHROM_FLUSH,
 };
 
 const static lpc_io_handler_cback io_read_hdlr_table[] = {
@@ -121,6 +125,7 @@ const static lpc_io_handler_cback io_read_hdlr_table[] = {
     [LPC_IO_READ_NVM_CONFIG_VAL] = nvm_config_val_read,
 
     [LPC_IO_READ_FLASHROM] = flashrom_read,
+    [LPC_IO_READ_FLASHROM_FLUSH] = flashrom_flush_read,
 };
 
 const static lpc_io_handler_cback io_write_hdlr_table[] = {
@@ -145,6 +150,7 @@ const static lpc_io_handler_cback io_write_hdlr_table[] = {
     [LPC_IO_WRITE_NVM_CONFIG_VAL] = nvm_config_val_write,
 
     [LPC_IO_WRITE_FLASHROM] = flashrom_write,
+    [LPC_IO_WRITE_FLASHROM_FLUSH] = flashrom_flush_write,
 };
 
 void io_read_hdlr(uint32_t address, uint8_t * data)

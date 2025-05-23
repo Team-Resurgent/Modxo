@@ -97,13 +97,6 @@ void flashrom_write(uint16_t address, uint8_t *data)
         }
 
         break;
-
-    // Sector Flush
-    case MODXO_REGISTER_MEM_FLUSH:
-        _program_sector_number = *data;
-        __sev();
-        break;
-
     }
 }
 
@@ -122,11 +115,19 @@ void flashrom_read(uint16_t address, uint8_t *data)
         // Is Erasing
         *data = _erase_sector_number < 0 ? false : true;
         break;
-    case MODXO_REGISTER_MEM_FLUSH:
-        // Is Programming
-        *data = _program_sector_number < 0 ? false : true;
-        break;
     }  
+}
+
+void flashrom_flush_write(uint16_t address, uint8_t *data)
+{
+    _program_sector_number = *data;
+    __sev();
+}
+
+void flashrom_flush_read(uint16_t address, uint8_t *data)
+{
+    // Is Programming
+    *data = _program_sector_number < 0 ? false : true;
 }
 
 static void powerup(void)
