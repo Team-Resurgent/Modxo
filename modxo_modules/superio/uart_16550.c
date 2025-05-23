@@ -44,6 +44,7 @@ struct {
     bool cts, cts_changed; // This is controlled by RTS
     bool dsr, dsr_changed; // This is controlled by DTR
     bool did_break;
+    uint8_t rx_byte;
 } com_ports[2];
 
 static void uart_16550_port_read(uint8_t itf, uint8_t port, uint8_t *data)
@@ -52,8 +53,10 @@ static void uart_16550_port_read(uint8_t itf, uint8_t port, uint8_t *data)
     switch (port)
     {
     case 0xF8:
-        // Try to read a byte, otherwise return 0
-        if (!tud_cdc_n_read(itf, data, 1)) *data = 0;
+        // Attemt to read a byte, if this fails, then rx_byte will be unchanged
+        tud_cdc_n_read(itf, com_ports[itf - 1].rx_byte, 1);
+
+        *data = com_ports[itf - 1].rx_byte;
         break;
     case 0xFB:
         tud_cdc_n_get_line_coding(itf, &coding);
@@ -84,7 +87,7 @@ static void uart_16550_port_write(uint8_t itf, uint8_t port, uint8_t *data)
             tud_cdc_n_write(itf, data, 1);
             tud_cdc_n_write_flush(itf);
 
-            // Throw out old data if the buffer is full while DSRT is not asserted to prevent kernel deadlock
+            // Throw out old data if the buffer is full while DSR is not asserted to prevent kernel deadlock
             if (!com_ports[itf - 1].dsr && !tud_cdc_n_write_available(itf))
                 tud_cdc_n_write_clear(itf);
         }
@@ -142,6 +145,7 @@ void uart_16550_reset(uint8_t itf)
     uint8_t state = tud_cdc_n_get_line_state(itf);
 
     itf--;
+    com_ports[itf].rx_byte = 0;
 
     // Reset line state
     com_ports[itf].dsr = state & 1; // DTR
