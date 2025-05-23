@@ -54,7 +54,7 @@ static void uart_16550_port_read(uint8_t itf, uint8_t port, uint8_t *data)
     {
     case 0xF8:
         // Attemt to read a byte, if this fails, then rx_byte will be unchanged
-        tud_cdc_n_read(itf, com_ports[itf - 1].rx_byte, 1);
+        tud_cdc_n_read(itf, &com_ports[itf - 1].rx_byte, 1);
 
         *data = com_ports[itf - 1].rx_byte;
         break;
@@ -63,6 +63,9 @@ static void uart_16550_port_read(uint8_t itf, uint8_t port, uint8_t *data)
         *data = ((coding.data_bits - 5) & 3) | (coding.stop_bits ? 4 : 0) | (coding.parity ? 8 : 0) | (((coding.parity - 1) & 3) << 4);
         break;
     case 0xFD:
+        // Ensure all data is flushed from the TX buffer before checking if there's any room
+        tud_cdc_n_write_flush(itf);
+
         *data = (tud_cdc_n_available(itf) ? 0x01 : 0x00) | (com_ports[itf - 1].did_break ? 0x10 : 0x00) | (tud_cdc_n_write_available(itf) ? 0x20 : 0x00);
         
         com_ports[itf - 1].did_break = false;
@@ -86,10 +89,6 @@ static void uart_16550_port_write(uint8_t itf, uint8_t port, uint8_t *data)
         {
             tud_cdc_n_write(itf, data, 1);
             tud_cdc_n_write_flush(itf);
-
-            // Throw out old data if the buffer is full while DSR is not asserted to prevent kernel deadlock
-            if (!com_ports[itf - 1].dsr && !tud_cdc_n_write_available(itf))
-                tud_cdc_n_write_clear(itf);
         }
         break;
     }
