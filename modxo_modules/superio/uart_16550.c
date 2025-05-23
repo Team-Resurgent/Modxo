@@ -32,17 +32,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "hardware/structs/bus_ctrl.h"
 
 #include <modxo.h>
-#include <modxo/lpc_interface.h>
+#include <modxo/modxo_ports.h>
 #include "tusb.h"
 
 #define UART_ADDR_MASK      0xFF00
-
-#define UART_1_ADDR_START   0x3F8
-#define UART_1_ADDR_END     0x3FF
 #define UART_1_ITF          1
-
-#define UART_2_ADDR_START   0x2F8
-#define UART_2_ADDR_END     0x2FF
 #define UART_2_ITF          2
 
 static void uart_16550_port_read(uint8_t itf, uint8_t port, uint8_t *data)
@@ -75,22 +69,24 @@ static void uart_16550_port_write(uint8_t itf, uint8_t port, uint8_t *data)
     }
 }
 
-static void lpc_io_read(uint16_t address, uint8_t * data)
+void uart_16550_com1_read(uint16_t address, uint8_t * data)
 {
-    switch (address & UART_ADDR_MASK)
-    {
-    case UART_1_ADDR_START & UART_ADDR_MASK: uart_16550_port_read(UART_1_ITF, (uint8_t)address, data); break;
-    case UART_2_ADDR_START & UART_ADDR_MASK: uart_16550_port_read(UART_2_ITF, (uint8_t)address, data); break;
-    }
+    uart_16550_port_read(UART_1_ITF, (uint8_t)address, data);
 }
 
-static void lpc_io_write(uint16_t address, uint8_t * data)
+void uart_16550_com1_write(uint16_t address, uint8_t * data)
 {
-    switch (address & UART_ADDR_MASK)
-    {
-    case UART_1_ADDR_START & UART_ADDR_MASK: uart_16550_port_write(UART_1_ITF, (uint8_t)address, data); break;
-    case UART_2_ADDR_START & UART_ADDR_MASK: uart_16550_port_write(UART_2_ITF, (uint8_t)address, data); break;
-    }
+    uart_16550_port_write(UART_1_ITF, (uint8_t)address, data);
+}
+
+void uart_16550_com2_read(uint16_t address, uint8_t * data)
+{
+    uart_16550_port_read(UART_2_ITF, (uint8_t)address, data);
+}
+
+void uart_16550_com2_write(uint16_t address, uint8_t * data)
+{
+    uart_16550_port_write(UART_2_ITF, (uint8_t)address, data);
 }
 
 static void powerup(void)
@@ -108,13 +104,6 @@ static void powerup(void)
     }
 }
 
-static void uart_16550_init(void)
-{
-    lpc_interface_io_add_handler(UART_1_ADDR_START, UART_1_ADDR_END, lpc_io_read, lpc_io_write); // 16550 Uart 1 port emulation
-    lpc_interface_io_add_handler(UART_2_ADDR_START, UART_2_ADDR_END, lpc_io_read, lpc_io_write); // 16550 Uart 2 port emulation
-}
-
 MODXO_TASK uart_16550_hdlr = {
-    .init = uart_16550_init,
     .powerup = powerup,
 };

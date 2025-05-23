@@ -25,7 +25,6 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "hardware/pio.h"
@@ -49,33 +48,13 @@ typedef struct
     uint8_t address_len;
 } LPC_SM_HANDLER;
 
-typedef struct
-{
-    uint16_t addr_start;
-    uint16_t addr_end;
-    lpc_io_handler_cback read_cback;
-    lpc_io_handler_cback write_cback;
-} lpc_io_handler;
+// These are defined in lpc_mem.c
+void mem_read_hdlr(uint32_t address, uint8_t * data);
+void mem_write_hdlr(uint32_t address, uint8_t * data);
 
-typedef struct
-{
-    uint8_t * read_buffer;
-    uint32_t read_mask;
-    uint8_t * write_buffer;
-    uint32_t write_mask;
-} lpc_mem_handler;
-
-// Give something for empty lpc_mem_handler's to point to
-uint8_t mem_read_dummy, mem_write_dummy;
-
-static void io_read_dummy(uint16_t address, uint8_t * data) { *data = 0; }
-static void io_write_dummy(uint16_t address, uint8_t * data) {}
-
-static void mem_read_hdlr(uint32_t address, uint8_t * data);
-static void mem_write_hdlr(uint32_t address, uint8_t * data);
-static void io_read_hdlr(uint32_t address, uint8_t * data);
-static void io_write_hdlr(uint32_t address, uint8_t * data);
-static void gpio_set_max_drivestrength(io_rw_32 gpio, uint32_t strength);
+// These are defined in lpc_io.c
+void io_read_hdlr(uint32_t address, uint8_t * data);
+void io_write_hdlr(uint32_t address, uint8_t * data);
 
 LPC_SM_HANDLER lpc_handlers[LPC_OP_TOTAL] = {
     [LPC_OP_IO_READ] = {.nibbles_read = 4, .cyctype_dir = 0, .handler = io_read_hdlr, .address_len = 16},
@@ -90,77 +69,6 @@ static const char *LPC_OP_STRINGS[LPC_OP_TOTAL] = {
     [LPC_OP_MEM_WRITE] = "MEM_WRITE",
     [LPC_OP_MEM_READ] = "MEM_READ ",
 };
-
-#define IO_HANDLER_MAX_ENTRIES 32
-static lpc_io_handler io_hdlr_table[IO_HANDLER_MAX_ENTRIES];
-static uint8_t io_hdlr_count = 0;
-static uint8_t io_read_hdlr_last = 0;
-static uint8_t io_write_hdlr_last = 0;
-
-static void io_read_hdlr(uint32_t address, uint8_t *data)
-{
-    if (!io_hdlr_count) return;
-
-    // Start checking from the last handler accessed since subsequent read/writes are likely to be the same handler
-    uint8_t tidx = io_read_hdlr_last;
-    do
-    {
-        if (address >= io_hdlr_table[tidx].addr_start && address <= io_hdlr_table[tidx].addr_end)
-        {
-            io_hdlr_table[tidx].read_cback(address, data);
-
-            io_read_hdlr_last = tidx;
-            return;
-        }
-
-        tidx++;
-        if (tidx >= io_hdlr_count) tidx = 0;
-    }
-    while(tidx != io_read_hdlr_last);
-}
-
-static void io_write_hdlr(uint32_t address, uint8_t *data)
-{
-    if (!io_hdlr_count) return;
-
-    // Start checking from the last handler accessed since subsequent read/writes are likely to be the same handler
-    uint8_t tidx = io_write_hdlr_last;
-    do
-    {
-        if (address >= io_hdlr_table[tidx].addr_start && address <= io_hdlr_table[tidx].addr_end)
-        {
-            io_hdlr_table[tidx].write_cback(address, data);
-
-            io_write_hdlr_last = tidx;
-            return;
-        }
-
-        tidx++;
-        if (tidx >= io_hdlr_count) tidx = 0;
-    }
-    while(tidx != io_write_hdlr_last);
-}
-
-// Decode one of 16 possible memory handlers using the following 'X' nibble: 0xFFX00000
-#define MEM_HANDLER_COUNT 16
-static lpc_mem_handler mem_hdlr_table[MEM_HANDLER_COUNT];
-
-static inline lpc_mem_handler * mem_get_hdlr(uint32_t address)
-{
-    return mem_hdlr_table + ((address >> 20) & 0xF);
-}
-
-static void mem_read_hdlr(uint32_t address, uint8_t * data)
-{
-    lpc_mem_handler * hdlr = mem_get_hdlr(address);
-    *data = hdlr->read_buffer[address & hdlr->read_mask];
-}
-
-static void mem_write_hdlr(uint32_t address, uint8_t * data)
-{
-    lpc_mem_handler * hdlr = mem_get_hdlr(address);
-    hdlr->write_buffer[address & hdlr->write_mask] = *data;
-}
 
 // PIO
 static PIO _pio;
@@ -370,110 +278,6 @@ void lpc_interface_init(void)
     gpio_set_max_drivestrength(GPIO_D0, PADS_BANK0_GPIO0_DRIVE_VALUE_12MA);
 
     lpc_interface_start_sm();
-}
-
-int lpc_interface_io_add_handler(uint16_t addr_start, uint16_t addr_end, lpc_io_handler_cback read_cback, lpc_io_handler_cback write_cback)
-{
-    if (io_hdlr_count >= IO_HANDLER_MAX_ENTRIES) return -1;
-    if (addr_end > addr_start) return -1;
-
-    io_hdlr_table[io_hdlr_count].addr_start = addr_start;
-    io_hdlr_table[io_hdlr_count].addr_end = addr_end;
-    io_hdlr_table[io_hdlr_count].read_cback = read_cback != NULL ? read_cback : io_read_dummy;
-    io_hdlr_table[io_hdlr_count].write_cback = write_cback != NULL ? write_cback : io_write_dummy;
-
-    return io_hdlr_count++;
-}
-
-bool lpc_interface_io_set_addr(unsigned int hdlr_idx, uint16_t addr_start, uint16_t addr_end)
-{
-    if (hdlr_idx >= io_hdlr_count) return false;
-    if (addr_end > addr_start) return false;
-
-    io_hdlr_table[hdlr_idx].addr_start = addr_start;
-    io_hdlr_table[hdlr_idx].addr_end = addr_end;
-
-    return true;
-}
-
-void lpc_interface_mem_global_read_handler(uint8_t * read_buffer, uint32_t read_mask)
-{
-    if (read_buffer != NULL)
-    {
-        for (uint i = 0; i < MEM_HANDLER_COUNT; i++)
-        {
-            mem_hdlr_table[i].read_buffer = read_buffer;
-            mem_hdlr_table[i].read_mask = read_mask & 0x00FFFFFF;
-        }
-    }
-    else
-    {
-        for (uint i = 0; i < MEM_HANDLER_COUNT; i++)
-        {
-            // Point to the dummy buffer to avoid memory errors
-            mem_hdlr_table[i].read_buffer = &mem_read_dummy;
-            mem_hdlr_table[i].read_mask = 0;
-        }
-    }
-}
-
-void lpc_interface_mem_global_write_handler(uint8_t * write_buffer, uint32_t write_mask)
-{
-    if (write_buffer != NULL)
-    {
-        for (uint i = 0; i < MEM_HANDLER_COUNT; i++)
-        {
-            mem_hdlr_table[i].write_buffer = write_buffer;
-            mem_hdlr_table[i].write_mask = write_mask & 0x00FFFFFF;
-        }
-    }
-    else
-    {
-        for (uint i = 0; i < MEM_HANDLER_COUNT; i++)
-        {
-            // Point to the dummy buffer to avoid memory errors
-            mem_hdlr_table[i].write_buffer = &mem_write_dummy;
-            mem_hdlr_table[i].write_mask = 0;
-        }
-    }
-}
-
-bool lpc_interface_mem_set_read_handler(uint32_t address, uint8_t * read_buffer, uint32_t read_mask)
-{
-    if ((address & 0xFF0FFFFF) != 0xFF000000) return false;
-
-    lpc_mem_handler * hdlr = mem_get_hdlr(address);
-    if (read_buffer != NULL)
-    {
-        hdlr->read_buffer = read_buffer;
-        hdlr->read_mask = read_mask & 0x00FFFFFF;
-    }
-    else
-    {
-        hdlr->read_buffer = &mem_read_dummy;
-        hdlr->read_mask = 0;
-    }
-
-    return true;
-}
-
-bool lpc_interface_mem_set_write_handler(uint32_t address, uint8_t * write_buffer, uint32_t write_mask)
-{
-    if ((address & 0xFF0FFFFF) != 0xFF000000) return false;
-
-    lpc_mem_handler * hdlr = mem_get_hdlr(address);
-    if (write_buffer != NULL)
-    {
-        hdlr->write_buffer = write_buffer;
-        hdlr->write_mask = write_mask & 0x00FFFFFF;
-    }
-    else
-    {
-        hdlr->write_buffer = &mem_write_dummy;
-        hdlr->write_mask = 0;
-    }
-
-    return true;
 }
 
 static void lpc_interface_poll(void)
