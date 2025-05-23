@@ -35,38 +35,81 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <modxo/modxo_ports.h>
 #include "tusb.h"
 
+#define UART_BREAK_MIN_DURATION_MS 250
 #define UART_ADDR_MASK      0xFF00
 #define UART_1_ITF          1
 #define UART_2_ITF          2
 
+struct {
+    bool cts, cts_changed; // This is controlled by RTS
+    bool dsr, dsr_changed; // This is controlled by DTR
+    bool did_break;
+} com_ports[2];
+
 static void uart_16550_port_read(uint8_t itf, uint8_t port, uint8_t *data)
 {
+    cdc_line_coding_t coding;
     switch (port)
     {
-    case 0xFD:
-        *data = tud_cdc_n_connected(itf)
-            ? (tud_cdc_n_write_available(itf) ? 0x20 : 0x00) | (tud_cdc_n_available(itf) ? 0x01 : 0x00)
-            : 0xFF; // prevents potential busy-wait infinite loop in kernel
-        break;
     case 0xF8:
-        if (tud_cdc_n_connected(itf)) tud_cdc_n_read(itf, data, 1);
-        else *data = 0;
+        // Try to read a byte, otherwise return 0
+        if (!tud_cdc_n_read(itf, data, 1)) *data = 0;
+        break;
+    case 0xFB:
+        tud_cdc_n_get_line_coding(itf, &coding);
+        *data = ((coding.data_bits - 5) & 3) | (coding.stop_bits ? 4 : 0) | (coding.parity ? 8 : 0) | (((coding.parity - 1) & 3) << 4);
+        break;
+    case 0xFD:
+        *data = (tud_cdc_n_available(itf) ? 0x01 : 0x00) | (com_ports[itf - 1].did_break ? 0x10 : 0x00) | (tud_cdc_n_write_available(itf) ? 0x20 : 0x00);
+        
+        com_ports[itf - 1].did_break = false;
+        break;
+    case 0xFE:
+        *data = (com_ports[itf - 1].cts_changed & 1) | ((com_ports[itf - 1].dsr_changed & 1) << 1) | ((com_ports[itf - 1].cts & 1) << 4) | ((com_ports[itf - 1].dsr & 1) << 5);
+        
+        com_ports[itf - 1].cts_changed = false;
+        com_ports[itf - 1].dsr_changed = false;
         break;
     }
 }
 
 static void uart_16550_port_write(uint8_t itf, uint8_t port, uint8_t *data)
 {
+    // All of the UART properties are remotely configured by the PC, so there's not much to set here
     switch (port)
     {
     case 0xF8:
-        if (tud_cdc_n_connected(itf))
+        if (tud_cdc_n_ready(itf))
         {
             tud_cdc_n_write(itf, data, 1);
             tud_cdc_n_write_flush(itf);
+
+            // Throw out old data if the buffer is full while DSRT is not asserted to prevent kernel deadlock
+            if (!com_ports[itf - 1].dsr && !tud_cdc_n_write_available(itf))
+                tud_cdc_n_write_clear(itf);
         }
         break;
     }
+}
+
+void tud_cdc_line_state_cb(uint8_t itf, bool dtr, bool rts)
+{
+    if (itf == 0) return;
+    itf--;
+
+    if (com_ports[itf].cts != rts) com_ports[itf].cts_changed = true;
+    if (com_ports[itf].dsr != dtr) com_ports[itf].dsr_changed = true;
+    
+    com_ports[itf].cts = rts;
+    com_ports[itf].dsr = dtr;
+}
+
+void tud_cdc_send_break_cb(uint8_t itf, uint16_t duration_ms)
+{
+    if (itf == 0) return;
+    itf--;
+
+    if (duration_ms >= UART_BREAK_MIN_DURATION_MS) com_ports[itf].did_break = true;
 }
 
 void uart_16550_com1_read(uint16_t address, uint8_t * data)
@@ -89,21 +132,37 @@ void uart_16550_com2_write(uint16_t address, uint8_t * data)
     uart_16550_port_write(UART_2_ITF, (uint8_t)address, data);
 }
 
+void uart_16550_reset(uint8_t itf)
+{
+    if (itf == 0) return;
+
+    // Clear RX/TX buffers
+    tud_cdc_n_write_clear(itf);
+    tud_cdc_n_read_flush(itf);
+    uint8_t state = tud_cdc_n_get_line_state(itf);
+
+    itf--;
+
+    // Reset line state
+    com_ports[itf].dsr = state & 1; // DTR
+    com_ports[itf].cts = state & 2; // RTS
+    com_ports[itf].dsr_changed = false;
+    com_ports[itf].cts_changed = false;
+    com_ports[itf].did_break = false;
+}
+
 static void powerup(void)
 {
-    if(tud_cdc_n_connected(1))
-    {
-        tud_cdc_n_write_clear(1);
-        tud_cdc_n_read_flush(1);
-    }
+    uart_16550_reset(UART_1_ITF);
+    uart_16550_reset(UART_2_ITF);
+}
 
-    if(tud_cdc_n_connected(2))
-    {
-        tud_cdc_n_write_clear(2);
-        tud_cdc_n_read_flush(2);
-    }
+static void init(void)
+{
+    powerup();
 }
 
 MODXO_TASK uart_16550_hdlr = {
     .powerup = powerup,
+    .init = init,
 };
