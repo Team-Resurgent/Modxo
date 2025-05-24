@@ -30,6 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "hardware/irq.h"
 #include "hardware/structs/bus_ctrl.h"
 #include <modxo/lpc_interface.h>
+#include <modxo/modxo_ports.h>
 #include <modxo.h>
 
 #include <flashrom.h>
@@ -39,19 +40,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define MODXO_BANK_BOOTLOADER 0x01
 #define STORAGE_CMD_TOTAL_BYTES 64
 
-
-
-#define MODXO_REGISTER_BANKING   0xDEAA
-#define MODXO_REGISTER_SIZE      0xDEAB
-#define MODXO_REGISTER_MEM_ERASE 0xDEAC
-#define MODXO_REGISTER_MEM_FLUSH 0xDEAE
-
-
 #define FLASH_WRITE_PAGE_SIZE 4096
 #define FLASH_START_ADDRESS ((uint8_t *)0x10000000)
 static uint32_t flash_rom_mask;
 static uint8_t mmc_register;
-static uint8_t *flash_rom_data;
+static uint8_t * flash_rom_data = NULL;
 
 static uint8_t flash_write_buffer[FLASH_WRITE_PAGE_SIZE];
 
@@ -77,9 +70,7 @@ static void program_sector(uint8_t sectorn);
 static uint8_t get_flash_size(void);
 static void reset(void);
 
-
-
-static void write_handler(uint16_t address, uint8_t *data)
+void flashrom_write(uint16_t address, uint8_t *data)
 {
     switch (address)
     {
@@ -106,17 +97,10 @@ static void write_handler(uint16_t address, uint8_t *data)
         }
 
         break;
-
-    // Sector Flush
-    case MODXO_REGISTER_MEM_FLUSH:
-        _program_sector_number = *data;
-        __sev();
-        break;
-
     }
 }
 
-static void read_handler(uint16_t address, uint8_t *data)
+void flashrom_read(uint16_t address, uint8_t *data)
 {
     switch (address)
     {
@@ -131,26 +115,49 @@ static void read_handler(uint16_t address, uint8_t *data)
         // Is Erasing
         *data = _erase_sector_number < 0 ? false : true;
         break;
-    case MODXO_REGISTER_MEM_FLUSH:
-        // Is Programming
-        *data = _program_sector_number < 0 ? false : true;
-        break;
     }  
 }
 
-static void flashrom_memread_handler(uint32_t address, uint8_t *data)
+void flashrom_flush_write(uint16_t address, uint8_t *data)
 {
-    register uint32_t mem_data;
-    *data = flash_rom_data[address & flash_rom_mask];
+    _program_sector_number = *data;
+    __sev();
 }
 
-static void flashrom_memwrite_handler(uint32_t address, uint8_t *data)
+void flashrom_flush_read(uint16_t address, uint8_t *data)
 {
-    flash_write_buffer[address & (FLASH_WRITE_PAGE_SIZE - 1)] = *data;
+    // Is Programming
+    *data = _program_sector_number < 0 ? false : true;
+}
+
+static void set_mem_handlers(void)
+{
+    // These are the only ranges actually accessed durring boot
+    const uint32_t addrs[4] = {
+        0xFF000000,
+        0xFF700000,
+        0xFF800000,
+        0xFFF00000,
+    };
+
+    if (flash_rom_data)
+    {
+        for (unsigned int i = 0; i < 4; i++)
+        {
+            lpc_interface_mem_set_read_handler(addrs[i], flash_rom_data, flash_rom_mask);
+        }
+    }
+    
+    for (unsigned int i = 0; i < 4; i++)
+    {
+        lpc_interface_mem_set_write_handler(addrs[i], flash_write_buffer, FLASH_WRITE_PAGE_SIZE - 1);
+    }
 }
 
 static void powerup(void)
 {
+    set_mem_handlers();
+
     set_mmc(MODXO_BANK_BOOTLOADER);
     _erase_sector_number = -1;
     _program_sector_number = -1;
@@ -158,25 +165,9 @@ static void powerup(void)
     password_index = 0;
 }
 
-static void dummy_read_handler(uint16_t address, uint8_t *data)
-{
-    *data = 0xFF;
-}
-
-static void dummy_write_handler(uint16_t address, uint8_t *data)
-{
-    // Do nothing
-}
-
 static void init(void)
 {
     powerup();
-    lpc_interface_add_mem_handler(0, 0xFFFFFFFF, flashrom_memread_handler, flashrom_memwrite_handler);
-
-    lpc_interface_add_io_handler(MODXO_REGISTER_BANKING, MODXO_REGISTER_BANKING + 1, read_handler, write_handler);
-    lpc_interface_add_io_handler(MODXO_REGISTER_MEM_ERASE, MODXO_REGISTER_MEM_ERASE, read_handler, write_handler);
-    lpc_interface_add_io_handler(MODXO_REGISTER_MEM_FLUSH, MODXO_REGISTER_MEM_FLUSH, read_handler, write_handler);
-    lpc_interface_add_io_handler(0x1900, 0x190F, dummy_read_handler, dummy_write_handler);
 }
 
 static void program_sector(uint8_t sector_number)
@@ -217,6 +208,8 @@ static void set_mmc(uint8_t data)
     uint8_t bank_number = data & 0x3F;
     flash_rom_mask = bank_size - 1;
     flash_rom_data = FLASH_START_ADDRESS + bank_size * bank_number;
+
+    set_mem_handlers();
 }
 
 static uint8_t get_mmc(void)

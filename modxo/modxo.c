@@ -50,23 +50,14 @@ static uint8_t handler_count = 0;
 
 bool (*modxo_debug_sp_connected)(void);
 
-static void read_handler(uint16_t address, uint8_t *data)
+void modxo_chip_id_read(uint16_t address, uint8_t * data)
 {
-    switch (address)
-    {
-    case MODXO_REGISTER_CHIP_ID:
-        *data = 0xAF;
-        break;
-    case MODXO_REGISTER_VARIANT_ID:
-        *data = (uint8_t)MODXO_VARIANT;
-        break;
-    }
+    *data = 0xAF;
 }
 
-static void modxo_ports_init(void)
+void modxo_variant_id_read(uint16_t address, uint8_t * data)
 {
-    lpc_interface_add_io_handler(MODXO_REGISTER_CHIP_ID, MODXO_REGISTER_CHIP_ID, read_handler, NULL);
-    lpc_interface_add_io_handler(MODXO_REGISTER_VARIANT_ID, MODXO_REGISTER_VARIANT_ID, read_handler, NULL);
+    *data = (uint8_t)MODXO_VARIANT;
 }
 
 void modxo_poll_core1()
@@ -76,9 +67,6 @@ void modxo_poll_core1()
 
 void modxo_poll_core0()
 {
-#ifdef LPC_LOGGING
-    lpc_interface_poll();
-#endif
     RUN_MODXO_HANDLERS(core0_poll);
 }
 
@@ -120,7 +108,6 @@ void modxo_reset()
 void modxo_init(void)
 {
     RUN_MODXO_HANDLERS(init);
-    modxo_ports_init();
 }
 
 void modxo_register_handler(MODXO_TASK* handler)

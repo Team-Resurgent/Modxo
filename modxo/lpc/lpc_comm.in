@@ -30,46 +30,46 @@
 .wrap_target
     pull
 wait_start:
-    wait 0 irq 7
-    wait 0 gpio LCLK_PIN
-    in pins,4
-    mov X, ISR
+    wait 0 irq 7                ; Wait for interrupt 7 to be 0
+    wait 0 gpio LCLK_PIN        ; Wait for LPC Clock to be 0
+    in pins,4                   ; Read a nibble into ISR
+    mov X, ISR                  ; Copy command from ISR into X
 check_start_again:
-    wait 1 gpio LCLK_PIN
-    mov ISR, null
-    jmp X-- wait_start
+    wait 1 gpio LCLK_PIN        ; Wait for LPC Clock to be 1
+    mov ISR, null               ; Clear the ISR
+    jmp X-- wait_start          ; If the command was anything other than 0b0000 (start command) then keep waiting
 
 wait_cmd:
-    wait 0 gpio LCLK_PIN [2]
-    in pins,4 
-    mov X, ISR
-    jmp X!=Y check_start_again
+    wait 0 gpio LCLK_PIN [2]    ; Wait for LPC Clock to be 0 then wait 2 cycles for bus turnaround
+    in pins,4                   ; Read a nibble into ISR
+    mov X, ISR                  ; Copy command from ISR into X
+    jmp X!=Y check_start_again  ; Check Cycly Type / Direction command against value pre-loaded into Y
     
-    irq set 7
-    mov X, OSR side 0
-    mov ISR, null
+    irq set 7                   ; Block all other SMs until done processing
+    mov X, OSR side 0           ; Pull number of nibbles to read out of TX FIFO
+    mov ISR, null               ; Clear ISR
 
 read_nibbles:
-    wait 0 gpio LCLK_PIN
-    in pins, 4 
-    set pins 5 
-    wait 1 gpio LCLK_PIN
-    jmp X-- read_nibbles
+    wait 0 gpio LCLK_PIN        ; Wait for LPC Clock to be 0
+    in pins, 4                  ; Read a nibble into ISR
+    set pins 5                  ; Insert a short-wait state
+    wait 1 gpio LCLK_PIN        ; Wait for LPC Clock to be 1
+    jmp X-- read_nibbles        ; Decrement X (nibbles remaining) and rerun read_nibbles
     
-    push
-    irq set 0 rel
-    set pindirs, 15
-    set X,3
-    pull
-    wait 0 gpio  LCLK_PIN
+    push                        ; Place incoming address + optional data byte into the RX FIFO
+    irq set 0 rel               ; Trigger interrupt 0, 1, 2, 3 based on what SM this is
+    set pindirs, 15             ; Set all pins to output
+    set X,3                     ; Output 3 nibbles, sync + optional data byte
+    pull                        ; Get data from RX fifo into OSR
+    wait 0 gpio  LCLK_PIN       ; Wait for LPC Clock to be 0
 repeat:
-    wait 1 gpio  LCLK_PIN
-    OUT pins,4
-    wait 0 gpio  LCLK_PIN
-    jmp X-- repeat
+    wait 1 gpio  LCLK_PIN       ; Wait for LPC Clock to be 1
+    OUT pins,4                  ; Output nibble from OSR
+    wait 0 gpio  LCLK_PIN       ; Wait for LPC Clock to be 0
+    jmp X-- repeat              ; Check if all data has been sent, else loop
    ;wait 1 gpio LCLK_PIN
-   set pindirs, 0b00000 [7]
-   irq clear 7 side 1
+   set pindirs, 0b00000 [7]     ; Set all pints to input
+   irq clear 7 side 1           ; Clear block for all other SMs
 .wrap
 % c-sdk {
 
@@ -81,7 +81,7 @@ repeat:
 
 void lpc_read_request_init(PIO pio, uint sm, uint offset, uint address_size, bool lframe_cancel) {
     pio_sm_set_enabled(pio, sm, false);
-    pio_sm_config c =lpc_read_request_program_get_default_config(offset);
+    pio_sm_config c = lpc_read_request_program_get_default_config(offset);
   
     sm_config_set_in_shift(
         &c,

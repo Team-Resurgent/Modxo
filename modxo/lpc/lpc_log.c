@@ -32,6 +32,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "pico/stdlib.h"
 #define LOG_SIZE 1024
 
+static bool is_full = false;
+
 struct
 {
 	int rear;
@@ -47,6 +49,7 @@ void lpclog_enqueue(log_entry item)
 	queue.rear = (queue.rear + 1) % LOG_SIZE;
 	if (queue.rear == queue.front)
 	{
+		is_full = true;
 		queue.rear--;
 	}
 	else
@@ -65,6 +68,13 @@ bool lpclog_dequeue(log_entry *out)
 	}
 
 	return false;
+}
+
+bool lpclog_is_full(void)
+{
+	bool full = is_full;
+	is_full = false;
+	return full;
 }
 
 /////////////////////////////////////////////////////////////////////

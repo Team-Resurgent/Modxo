@@ -18,3 +18,4 @@ typedef struct
 
 void lpclog_enqueue(log_entry item);
 bool lpclog_dequeue(log_entry *out);
+bool lpclog_is_full(void);
