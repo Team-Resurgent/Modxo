@@ -40,23 +40,43 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define UART_1_ITF          1
 #define UART_2_ITF          2
 
-struct {
+typedef struct {
     bool cts, cts_changed; // This is controlled by RTS
     bool dsr, dsr_changed; // This is controlled by DTR
     bool did_break;
+    bool divisor_latch;
     uint8_t rx_byte;
-} com_ports[2];
+} UART_16550_PORT;
+
+static UART_16550_PORT coms[2];
 
 static void uart_16550_port_read(uint8_t itf, uint8_t port, uint8_t *data)
 {
+    UART_16550_PORT * com = coms + (itf - 1);
     cdc_line_coding_t coding;
     switch (port)
     {
     case 0xF8:
-        // Attemt to read a byte, if this fails, then rx_byte will be unchanged
-        tud_cdc_n_read(itf, &com_ports[itf - 1].rx_byte, 1);
-
-        *data = com_ports[itf - 1].rx_byte;
+        if (com->divisor_latch)
+        {
+            // Divisor LSB
+            tud_cdc_n_get_line_coding(itf, &coding);
+            *data = (uint8_t)(115200 / coding.bit_rate);
+        }
+        else
+        {
+            // Attemt to read a byte, if this fails, then rx_byte will be unchanged
+            tud_cdc_n_read(itf, &com->rx_byte, 1);
+            *data = com->rx_byte;
+        }
+        break;
+    case 0xF9:
+        if (com->divisor_latch)
+        {
+            // Divisor MSB
+            tud_cdc_n_get_line_coding(itf, &coding);
+            *data = (uint8_t)((115200 / coding.bit_rate) >> 8);
+        }
         break;
     case 0xFB:
         tud_cdc_n_get_line_coding(itf, &coding);
@@ -66,15 +86,15 @@ static void uart_16550_port_read(uint8_t itf, uint8_t port, uint8_t *data)
         // Ensure all data is flushed from the TX buffer before checking if there's any room
         tud_cdc_n_write_flush(itf);
 
-        *data = (tud_cdc_n_available(itf) ? 0x01 : 0x00) | (com_ports[itf - 1].did_break ? 0x10 : 0x00) | (tud_cdc_n_write_available(itf) ? 0x20 : 0x00);
+        *data = (tud_cdc_n_available(itf) ? 0x01 : 0x00) | (com->did_break ? 0x10 : 0x00) | (tud_cdc_n_write_available(itf) ? 0x20 : 0x00);
         
-        com_ports[itf - 1].did_break = false;
+        com->did_break = false;
         break;
     case 0xFE:
-        *data = (com_ports[itf - 1].cts_changed & 1) | ((com_ports[itf - 1].dsr_changed & 1) << 1) | ((com_ports[itf - 1].cts & 1) << 4) | ((com_ports[itf - 1].dsr & 1) << 5);
+        *data = (com->cts_changed & 1) | ((com->dsr_changed & 1) << 1) | ((com->cts & 1) << 4) | ((com->dsr & 1) << 5);
         
-        com_ports[itf - 1].cts_changed = false;
-        com_ports[itf - 1].dsr_changed = false;
+        com->cts_changed = false;
+        com->dsr_changed = false;
         break;
     }
 }
@@ -82,14 +102,18 @@ static void uart_16550_port_read(uint8_t itf, uint8_t port, uint8_t *data)
 static void uart_16550_port_write(uint8_t itf, uint8_t port, uint8_t *data)
 {
     // All of the UART properties are remotely configured by the PC, so there's not much to set here
+    UART_16550_PORT * com = coms + (itf - 1);
     switch (port)
     {
     case 0xF8:
-        if (tud_cdc_n_ready(itf))
+        if (!com->divisor_latch && tud_cdc_n_ready(itf))
         {
             tud_cdc_n_write(itf, data, 1);
             tud_cdc_n_write_flush(itf);
         }
+        break;
+    case 0xFB:
+        com->divisor_latch = !!(*data & 0x80);
         break;
     }
 }
@@ -99,11 +123,11 @@ void tud_cdc_line_state_cb(uint8_t itf, bool dtr, bool rts)
     if (itf == 0) return;
     itf--;
 
-    if (com_ports[itf].cts != rts) com_ports[itf].cts_changed = true;
-    if (com_ports[itf].dsr != dtr) com_ports[itf].dsr_changed = true;
+    if (coms[itf].cts != rts) coms[itf].cts_changed = true;
+    if (coms[itf].dsr != dtr) coms[itf].dsr_changed = true;
     
-    com_ports[itf].cts = rts;
-    com_ports[itf].dsr = dtr;
+    coms[itf].cts = rts;
+    coms[itf].dsr = dtr;
 }
 
 void tud_cdc_send_break_cb(uint8_t itf, uint16_t duration_ms)
@@ -111,7 +135,7 @@ void tud_cdc_send_break_cb(uint8_t itf, uint16_t duration_ms)
     if (itf == 0) return;
     itf--;
 
-    if (duration_ms >= UART_BREAK_MIN_DURATION_MS) com_ports[itf].did_break = true;
+    if (duration_ms >= UART_BREAK_MIN_DURATION_MS) coms[itf].did_break = true;
 }
 
 void uart_16550_com1_read(uint16_t address, uint8_t * data)
@@ -144,14 +168,15 @@ void uart_16550_reset(uint8_t itf)
     uint8_t state = tud_cdc_n_get_line_state(itf);
 
     itf--;
-    com_ports[itf].rx_byte = 0;
+    coms[itf].rx_byte = 0;
+    coms[itf].divisor_latch = false;
 
     // Reset line state
-    com_ports[itf].dsr = state & 1; // DTR
-    com_ports[itf].cts = state & 2; // RTS
-    com_ports[itf].dsr_changed = false;
-    com_ports[itf].cts_changed = false;
-    com_ports[itf].did_break = false;
+    coms[itf].dsr = state & 1; // DTR
+    coms[itf].cts = state & 2; // RTS
+    coms[itf].dsr_changed = false;
+    coms[itf].cts_changed = false;
+    coms[itf].did_break = false;
 }
 
 static void powerup(void)
