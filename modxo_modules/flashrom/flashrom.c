@@ -130,11 +130,33 @@ void flashrom_flush_read(uint16_t address, uint8_t *data)
     *data = _program_sector_number < 0 ? false : true;
 }
 
+static void set_mem_handlers(void)
+{
+    // These are the only ranges actually accessed durring boot
+    const uint32_t addrs[4] = {
+        0xFF000000,
+        0xFF700000,
+        0xFF800000,
+        0xFFF00000,
+    };
+
+    if (flash_rom_data)
+    {
+        for (unsigned int i = 0; i < 4; i++)
+        {
+            lpc_interface_mem_set_read_handler(addrs[i], flash_rom_data, flash_rom_mask);
+        }
+    }
+    
+    for (unsigned int i = 0; i < 4; i++)
+    {
+        lpc_interface_mem_set_write_handler(addrs[i], flash_write_buffer, FLASH_WRITE_PAGE_SIZE - 1);
+    }
+}
+
 static void powerup(void)
 {
-    if (flash_rom_data)
-        lpc_interface_mem_global_read_handler(flash_rom_data, flash_rom_mask);
-    lpc_interface_mem_global_write_handler(flash_write_buffer, FLASH_WRITE_PAGE_SIZE - 1);
+    set_mem_handlers();
 
     set_mmc(MODXO_BANK_BOOTLOADER);
     _erase_sector_number = -1;
@@ -187,7 +209,7 @@ static void set_mmc(uint8_t data)
     flash_rom_mask = bank_size - 1;
     flash_rom_data = FLASH_START_ADDRESS + bank_size * bank_number;
 
-    lpc_interface_mem_global_read_handler(flash_rom_data, flash_rom_mask);
+    set_mem_handlers();
 }
 
 static uint8_t get_mmc(void)

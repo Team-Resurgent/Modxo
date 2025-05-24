@@ -94,6 +94,9 @@ static int32_t msc_write(uint32_t block, uint32_t offset, uint8_t *data, uint32_
 
 static void powerup(void)
 {
+    lpc_interface_mem_set_read_handler( 0xFF100000, mailbox_buffer, MAILBOX_SIZE - 1);
+    lpc_interface_mem_set_write_handler(0xFF100000, mailbox_buffer, MAILBOX_SIZE - 1);
+    
     io_buffer_idx = 0;
     memset(io_buffer, 0, sizeof(io_buffer));
     memset(mailbox_buffer, 0 , sizeof(mailbox_buffer));
@@ -102,15 +105,6 @@ static void powerup(void)
 static void init(void)
 {
     powerup();
-    /*
-    uint32_t address = MAILBOX_ADDR;
-    for (uint i = 0; i < 8; i++)
-    {
-        lpc_interface_mem_set_read_handler(address,  mailbox_buffer, MAILBOX_SIZE - 1);
-        lpc_interface_mem_set_write_handler(address, mailbox_buffer, MAILBOX_SIZE - 1);
-        address += 0x100000;
-    }
-    */
 
     msc_interface_add_handler(MAILBOX_SIZE/ MSC_DEFAULT_BLOCK_SIZE, MSC_DEFAULT_BLOCK_SIZE, "Mailbox", msc_read, msc_write);
 }
