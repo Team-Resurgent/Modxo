@@ -86,6 +86,10 @@ static void uart_16550_port_read(uint8_t itf, uint8_t port, uint8_t *data)
         // Ensure all data is flushed from the TX buffer before checking if there's any room
         tud_cdc_n_write_flush(itf);
 
+        if (!tud_cdc_n_connected(itf) && !tud_cdc_n_write_available(itf))
+            // Discard data when the buffer is full and no terminal is connected to recieve it
+            tud_cdc_n_write_clear(itf);
+
         *data = (tud_cdc_n_available(itf) ? 0x01 : 0x00) | (com->did_break ? 0x10 : 0x00) | (tud_cdc_n_write_available(itf) ? 0x20 : 0x00);
         
         com->did_break = false;
