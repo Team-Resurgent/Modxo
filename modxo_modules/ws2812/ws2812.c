@@ -604,27 +604,39 @@ uint8_t config_get_value(void)
 }
 
 //* LPC interface functions */
-static void lpc_port_read(uint16_t address, uint8_t *data)
+void led_command_write(uint16_t address, uint8_t *data)
 {
-    if (address == WS2812_COMMAND_PORT)
-    {
-        *data = are_all_strips_updated() ? 1 : 0;
-    }
+    select_command(*data);
 }
 
-
-
-static void lpc_port_write(uint16_t address, uint8_t *data)
+void led_command_read(uint16_t address, uint8_t *data)
 {
-    switch (address)
-    {
-    case WS2812_COMMAND_PORT:
-        select_command(*data);
-        break;
-    case WS2812_DATA_PORT:
-        send_data(*data);
-        break;
-    }
+    *data = are_all_strips_updated() ? 1 : 0;
+}
+
+void led_data_write(uint16_t address, uint8_t *data)
+{
+    send_data(*data);
+}
+
+void nvm_config_idx_read(uint16_t address, uint8_t *data)
+{
+    *data = config_get_reg_sel();
+}
+
+void nvm_config_idx_write(uint16_t address, uint8_t *data)
+{
+    config_set_reg_sel(*data);
+}
+
+void nvm_config_val_read(uint16_t address, uint8_t *data)
+{
+    *data = config_get_value();
+}
+
+void nvm_config_val_write(uint16_t address, uint8_t *data)
+{
+    config_set_value(*data);
 }
 
 static void lpc_reset_off(void)
@@ -637,36 +649,6 @@ static void lpc_reset_off(void)
 static void lpc_reset_on(void)
 {
     ws2812_set_color(current_led_color);
-}
-
-
-static void config_read_hdlr(uint16_t address, uint8_t *data)
-{
-    switch (address)
-    {
-    case MODXO_REGISTER_NVM_CONFIG_SEL:
-        *data = config_get_reg_sel();
-        break;
-    case MODXO_REGISTER_NVM_CONFIG_VAL:
-        *data = config_get_value();
-        break;
-    default:
-        *data = 0;
-        break;
-    }
-}
-
-static void config_write_hdlr(uint16_t address, uint8_t *data)
-{
-    switch (address)
-    {
-    case MODXO_REGISTER_NVM_CONFIG_SEL:
-        config_set_reg_sel(*data);
-        break;
-    case MODXO_REGISTER_NVM_CONFIG_VAL:
-        config_set_value(*data);
-        break;
-    }
 }
 
 // Update LEDs on main loop
@@ -758,9 +740,6 @@ static void ws2812_init()
             ws2812_program_init(LED_PIO, i, offset, strips[i].gpio_pin, 800000, IS_RGBW);
         }
     }
-
-    lpc_interface_add_io_handler(WS2812_COMMAND_PORT, WS2812_DATA_PORT, lpc_port_read, lpc_port_write);
-    lpc_interface_add_io_handler(MODXO_REGISTER_NVM_CONFIG_SEL, MODXO_REGISTER_NVM_CONFIG_SEL + 1, config_read_hdlr, config_write_hdlr);
 
     ws2812_update_pixels();
 }

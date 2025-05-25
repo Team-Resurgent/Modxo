@@ -25,7 +25,6 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "hardware/pio.h"
@@ -39,7 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <modxo/lpc_log.h>
 #include <tusb.h>
 
-typedef void (*lpc_handler)(LPC_OP_TYPE sm, uint32_t address, uint8_t *data);
+typedef void (*lpc_handler)(uint32_t address, uint8_t * data);
 
 typedef struct
 {
@@ -49,31 +48,19 @@ typedef struct
     uint8_t address_len;
 } LPC_SM_HANDLER;
 
-typedef struct
-{
-    uint16_t addr_start;
-    uint16_t addr_end;
-    lpc_io_handler_cback read_cback;
-    lpc_io_handler_cback write_cback;
-} lpc_io_handler;
+// These are defined in lpc_mem.c
+void mem_read_hdlr(uint32_t address, uint8_t * data);
+void mem_write_hdlr(uint32_t address, uint8_t * data);
 
-typedef struct
-{
-    uint32_t addr_start;
-    uint32_t addr_end;
-    lpc_mem_handler_cback read_cback;
-    lpc_mem_handler_cback write_cback;
-} lpc_mem_handler;
-
-static void io_sm_hdlr(LPC_OP_TYPE sm, uint32_t address, uint8_t *data);
-static void mem_sm_hdlr(LPC_OP_TYPE sm, uint32_t address, uint8_t *data);
-static void gpio_set_max_drivestrength(io_rw_32 gpio, uint32_t strength);
+// These are defined in lpc_io.c
+void io_read_hdlr(uint32_t address, uint8_t * data);
+void io_write_hdlr(uint32_t address, uint8_t * data);
 
 LPC_SM_HANDLER lpc_handlers[LPC_OP_TOTAL] = {
-    [LPC_OP_IO_READ] = {.nibbles_read = 4, .cyctype_dir = 0, .handler = io_sm_hdlr, .address_len = 16},
-    [LPC_OP_IO_WRITE] = {.nibbles_read = 6, .cyctype_dir = 2, .handler = io_sm_hdlr, .address_len = 16},
-    [LPC_OP_MEM_READ] = {.nibbles_read = 8, .cyctype_dir = 4, .handler = mem_sm_hdlr, .address_len = 32},
-    [LPC_OP_MEM_WRITE] = {.nibbles_read = 10, .cyctype_dir = 6, .handler = mem_sm_hdlr, .address_len = 32},
+    [LPC_OP_IO_READ] = {.nibbles_read = 4, .cyctype_dir = 0, .handler = io_read_hdlr, .address_len = 16},
+    [LPC_OP_IO_WRITE] = {.nibbles_read = 6, .cyctype_dir = 2, .handler = io_write_hdlr, .address_len = 16},
+    [LPC_OP_MEM_READ] = {.nibbles_read = 8, .cyctype_dir = 4, .handler = mem_read_hdlr, .address_len = 32},
+    [LPC_OP_MEM_WRITE] = {.nibbles_read = 10, .cyctype_dir = 6, .handler = mem_write_hdlr, .address_len = 32},
 }; // 4 SM per PIO
 
 static const char *LPC_OP_STRINGS[LPC_OP_TOTAL] = {
@@ -82,62 +69,6 @@ static const char *LPC_OP_STRINGS[LPC_OP_TOTAL] = {
     [LPC_OP_MEM_WRITE] = "MEM_WRITE",
     [LPC_OP_MEM_READ] = "MEM_READ ",
 };
-
-#define IO_HANDLER_MAX_ENTRIES 32
-static lpc_io_handler io_hdlr_table[IO_HANDLER_MAX_ENTRIES];
-static uint8_t io_hdlr_count = 0;
-static uint8_t io_hdlr_last = 0; // Every time an I/O handler is accessed it's cached here since subsiquent read/writes are likely to be the same handler
-
-static void io_sm_hdlr(LPC_OP_TYPE sm, uint32_t address, uint8_t *data)
-{
-    if (!io_hdlr_count) return;
-
-    // Start checking from the last handler accessed since subsequent read/writes are likely to be the same handler
-    uint8_t tidx = io_hdlr_last;
-    do
-    {
-        if (address >= io_hdlr_table[tidx].addr_start && address <= io_hdlr_table[tidx].addr_end)
-        {
-            if (sm == LPC_OP_IO_READ && io_hdlr_table[tidx].read_cback) io_hdlr_table[tidx].read_cback(address, data);
-            else if (sm == LPC_OP_IO_WRITE && io_hdlr_table[tidx].write_cback) io_hdlr_table[tidx].write_cback(address, data);
-
-            io_hdlr_last = tidx;
-            return;
-        }
-
-        tidx++;
-        if (tidx >= io_hdlr_count) tidx = 0;
-    }
-    while(tidx != io_hdlr_last);
-}
-
-#define MEM_HANDLER_MAX_ENTRIES 32
-static lpc_mem_handler mem_hdlr_table[MEM_HANDLER_MAX_ENTRIES];
-static uint8_t mem_hdlr_count = 0;
-static uint8_t mem_hdlr_last = 0;
-
-static void mem_sm_hdlr(LPC_OP_TYPE sm, uint32_t address, uint8_t * data)
-{
-    if (!mem_hdlr_count) return;
-
-    // Start checking from the last handler accessed since subsequent read/writes are likely to be the same handler
-    uint8_t tmdx = mem_hdlr_last;
-    do
-    {
-        if (address >= mem_hdlr_table[tmdx].addr_start && address <= mem_hdlr_table[tmdx].addr_end)
-        {
-            if (sm == LPC_OP_MEM_READ && mem_hdlr_table[tmdx].read_cback) mem_hdlr_table[tmdx].read_cback(address, data);
-            else if (sm == LPC_OP_MEM_WRITE && mem_hdlr_table[tmdx].write_cback) mem_hdlr_table[tmdx].write_cback(address, data);
-
-            mem_hdlr_last = tmdx;
-            return;
-        }
-
-        tmdx++;
-        if (tmdx >= mem_hdlr_count) tmdx = 0;
-    }
-    while (tmdx != mem_hdlr_last);
-}
 
 // PIO
 static PIO _pio;
@@ -190,14 +121,13 @@ static void lpc_read_handler(LPC_OP_TYPE sm)
     address = _pio->rxf[sm];
     pushed = _pio->rxf[sm];
 
-    if (lpc_handlers[sm].handler)
-        lpc_handlers[sm].handler(sm, address, &result_data);
+    lpc_handlers[sm].handler(address, &result_data);
 
     shifted = 0xF000;
     shifted |= (result_data << 4);
     _pio->txf[sm] = shifted;
     _pio->txf[sm] = lpc_handlers[sm].nibbles_read - 1;
-
+    
 #ifdef LPC_LOGGING
     {
         log_entry item;
@@ -222,8 +152,7 @@ static void lpc_write_handler(LPC_OP_TYPE sm)
     swaped_value |= result_data >> 4;
     result_data = (uint8_t)swaped_value;
 
-    if (lpc_handlers[sm].handler)
-        lpc_handlers[sm].handler(sm, address, &result_data);
+    lpc_handlers[sm].handler(address, &result_data);
 
     shifted = 0xFFF0;
     _pio->txf[sm] = shifted;
@@ -316,6 +245,9 @@ void lpc_interface_reset(void)
 
 void lpc_interface_init(void)
 {
+    lpc_interface_mem_global_read_handler(NULL, 0);
+    lpc_interface_mem_global_write_handler(NULL, 0);
+
     _pio = pio0;
 
     pio_claim_sm_mask(_pio, 15);
@@ -348,56 +280,24 @@ void lpc_interface_init(void)
     lpc_interface_start_sm();
 }
 
-int lpc_interface_add_io_handler(uint16_t addr_start, uint16_t addr_end, lpc_io_handler_cback read_cback, lpc_io_handler_cback write_cback)
-{
-    if (io_hdlr_count >= IO_HANDLER_MAX_ENTRIES) return -1;
-    if (addr_end > addr_start) return -1;
-
-    io_hdlr_table[io_hdlr_count].addr_start = addr_start;
-    io_hdlr_table[io_hdlr_count].addr_end = addr_end;
-    io_hdlr_table[io_hdlr_count].read_cback = read_cback;
-    io_hdlr_table[io_hdlr_count].write_cback = write_cback;
-
-    return io_hdlr_count++;
-}
-
-bool lpc_interface_io_set_addr(unsigned int hdlr_idx, uint16_t addr_start, uint16_t addr_end)
-{
-    if (hdlr_idx >= io_hdlr_count) return false;
-    if (addr_end > addr_start) return false;
-
-    io_hdlr_table[hdlr_idx].addr_start = addr_start;
-    io_hdlr_table[hdlr_idx].addr_end = addr_end;
-
-    return true;
-}
-
-int lpc_interface_add_mem_handler(uint32_t addr_start, uint32_t addr_end, lpc_mem_handler_cback read_cback, lpc_mem_handler_cback write_cback)
-{
-    if (mem_hdlr_count >= MEM_HANDLER_MAX_ENTRIES) return -1;
-    if (addr_end > addr_start) return -1;
-
-    mem_hdlr_table[mem_hdlr_count].addr_start = addr_start;
-    mem_hdlr_table[mem_hdlr_count].addr_end = addr_end;
-    mem_hdlr_table[mem_hdlr_count].read_cback = read_cback;
-    mem_hdlr_table[mem_hdlr_count].write_cback = write_cback;
-
-    return mem_hdlr_count++;
-}
-
-void lpc_interface_poll(void)
+static void lpc_interface_poll(void)
 {
     log_entry entry;
     while (lpclog_dequeue(&entry))
     {
         if (entry.cyc_type == LPC_OP_IO_READ || entry.cyc_type == LPC_OP_IO_WRITE)
         {
-            printf("\nLPC_LOG: %s [0x%04X] data:[%02X]", LPC_OP_STRINGS[entry.cyc_type], entry.address, entry.data);
+            printf("LPC_LOG: %s [0x%04X] data:[%02X]\n", LPC_OP_STRINGS[entry.cyc_type], entry.address, entry.data);
         }
         else
         {
-            printf("\nLPC_LOG: %s [0x%08X] data:[%02X]", LPC_OP_STRINGS[entry.cyc_type], entry.address, entry.data);
+            printf("LPC_LOG: %s [0x%08X] data:[%02X]\n", LPC_OP_STRINGS[entry.cyc_type], entry.address, entry.data);
         }
+    }
+
+    if (lpclog_is_full())
+    {
+        printf("LPC_LOG: *** LOG OVERFLOWED ***\n");
     }
 }
 

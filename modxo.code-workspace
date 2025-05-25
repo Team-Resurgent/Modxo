@@ -72,7 +72,12 @@
 			"stdlib.h": "c",
 			"flash.h": "c",
 			"board_api.h": "c",
-			"ws2812.h": "c"
+			"ws2812.h": "c",
+			"atomic": "c",
+			"cstdint": "c",
+			"compare": "c",
+			"lpc_log.h": "c",
+			"modxo_queue.h": "c"
 		}
 	}
 }
