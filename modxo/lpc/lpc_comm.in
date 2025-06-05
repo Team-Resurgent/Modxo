@@ -30,20 +30,18 @@
 .wrap_target
     pull
 wait_start:
+    mov ISR, null
     wait 0 irq 7
     wait 0 gpio LCLK_PIN
     in pins,4
-    mov X, ISR
-check_start_again:
+    mov X, ISR    
     wait 1 gpio LCLK_PIN
-    mov ISR, null
     jmp X-- wait_start
-
 wait_cmd:
     wait 0 gpio LCLK_PIN [2]
     in pins,4 
     mov X, ISR
-    jmp X!=Y check_start_again
+    jmp X!=Y wait_start
     
     irq set 7
     mov X, OSR side 0
