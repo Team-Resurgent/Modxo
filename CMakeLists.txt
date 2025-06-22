@@ -51,7 +51,7 @@ if(${DEBUG_PRINTS} MATCHES 1)
 endif()
 
 #add_compile_definitions(START_DELAY) #10s Delay to be able to catch startup messages
-add_compile_definitions(LPC_LOGGING) #10s Delay to be able to catch startup messages
+#add_compile_definitions(COM_LOGGING) #Print statistic info about the 16550 COM ports
 
 # Creates a pico-sdk subdirectory
 pico_sdk_init()

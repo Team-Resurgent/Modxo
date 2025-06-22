@@ -34,7 +34,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <modxo/modxo_ports.h>
 #include "modxo/modxo_debug.h"
 #include "modxo/lpc_interface.h"
-#include "modxo/lpc_log.h"
 #include <modxo/data_store.h>
 #include "hardware/watchdog.h"
 #include "hardware/clocks.h"

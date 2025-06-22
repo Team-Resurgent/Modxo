@@ -56,31 +56,6 @@ uint8_t nvm_registers_count = sizeof(nvm_registers) / sizeof(nvm_registers[0]);
 bool reset_pin = false;
 bool xbox_active = false;
 
-void core1_main()
-{
-    printf("MODXO_LOG: CORE1 ENTRY\n");
-    while (true)
-    {
-        if(xbox_active) {
-            modxo_poll_core1();
-        }
-        __wfe();
-    }
-}
-
-void core0_main()
-{
-    printf("MODXO_LOG: CORE0 ENTRY\n");
-    while (true)
-    {
-        tud_task();
-        if(xbox_active) {
-            modxo_poll_core0();
-        }
-        __wfe();
-    }
-}
-
 void init_status_led() {
     gpio_init(LED_STATUS_PIN);
     gpio_set_dir(LED_STATUS_PIN, GPIO_OUT);
@@ -167,30 +142,63 @@ void register_handlers()
     modxo_register_handler(&legacy_display_hdlr);
 }
 
-int main(void)
+void core1_main()
 {
-    set_sys_clock_khz(SYS_FREQ_IN_KHZ, true);
-
-    board_init();
-
+    // Initalize USB before the delay so that the Host PC has time to connect
     tud_init(BOARD_TUD_RHPORT);
 
     if (board_init_after_tusb) {
         board_init_after_tusb();
     }
 
+#ifdef START_DELAY
+    sleep_ms(2000);
+#endif
+    printf("MODXO_LOG: CORE1 ENTRY\n");
+    
+    while (true)
+    {
+        tud_task();
+        if(xbox_active) {
+            modxo_poll_core1();
+        }
+        __wfe();
+    }
+}
+
+void core0_main()
+{
+    // stdio_init_all must be run from Core 0, so spin until TinyUSB is setup
+    while (!tud_inited());
     stdio_init_all();
 
 #ifdef START_DELAY
     sleep_ms(2000);
 #endif
-
-    multicore_reset_core1();
-    multicore_launch_core1(core1_main);
+    printf("MODXO_LOG: CORE0 ENTRY\n");
 
     register_handlers();
     modxo_init();
     set_sys_clock_khz(SYS_FREQ_DEFAULT, true);
     modxo_init_interrupts();
-    core0_main(); // Infinite loop
+
+    while (true)
+    {
+        if(xbox_active) {
+            modxo_poll_core0();
+        }
+        __wfe();
+    }
+}
+
+int main(void)
+{
+    set_sys_clock_khz(SYS_FREQ_IN_KHZ, true);
+
+    board_init();
+
+    // Launch threads
+    multicore_reset_core1();
+    multicore_launch_core1(core1_main);
+    core0_main();
 }
