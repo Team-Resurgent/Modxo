@@ -58,6 +58,7 @@ bool xbox_active = false;
 
 void core1_main()
 {
+    printf("MODXO_LOG: CORE1 ENTRY\n");
     while (true)
     {
         if(xbox_active) {
@@ -69,6 +70,7 @@ void core1_main()
 
 void core0_main()
 {
+    printf("MODXO_LOG: CORE0 ENTRY\n");
     while (true)
     {
         tud_task();
@@ -100,6 +102,7 @@ void pin_3_3v_falling()
     xbox_active = false;
     modxo_shutdown();
     gpio_set_irq_enabled(LPC_ON, GPIO_IRQ_LEVEL_HIGH, true);
+    printf("MODXO_LOG: XBOX OFF\n");
 }
 
 void pin_3_3v_high()
@@ -109,6 +112,7 @@ void pin_3_3v_high()
     init_status_led();
     modxo_reset();
     xbox_active = true;
+    printf("MODXO_LOG: XBOX ON\n");
 }
 
 void core0_irq_handler(uint gpio, uint32_t event)

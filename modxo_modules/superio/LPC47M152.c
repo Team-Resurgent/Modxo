@@ -135,11 +135,6 @@ void lpc47m152_data_write(uint16_t address, uint8_t * data)
     }
 }
 
-static bool superio_connected(void)
-{
-    return tud_cdc_n_connected(1) || tud_cdc_n_connected(2);
-}
-
 static void powerup(void) {
     lpc47m152.config_port_addr = LPC47M152_DEFAULT_CONFIG_ADDR;
     lpc47m152.config_mode = false;
@@ -150,7 +145,6 @@ static void powerup(void) {
 
 static void init(void)
 {
-    modxo_debug_sp_connected = superio_connected;
     powerup();
 }
 

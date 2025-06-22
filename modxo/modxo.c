@@ -38,6 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <modxo/data_store.h>
 #include "hardware/watchdog.h"
 #include "hardware/clocks.h"
+#include "tusb.h"
 
 #define RUN_MODXO_HANDLERS(func) \
     {for(int _modxo_handler_idx = 0; _modxo_handler_idx < handler_count; _modxo_handler_idx++) \
@@ -47,8 +48,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 extern uint8_t current_led_color;
 static MODXO_TASK* modxo_handlers[15] = {NULL};
 static uint8_t handler_count = 0;
-
-bool (*modxo_debug_sp_connected)(void);
 
 void modxo_chip_id_read(uint16_t address, uint8_t * data)
 {
@@ -94,10 +93,12 @@ void modxo_shutdown()
     RUN_MODXO_HANDLERS(shutdown);
     // Modxo sleep
     set_sys_clock_khz(SYS_FREQ_DEFAULT, true);
-
-    // Modxo reset
-    if(!modxo_debug_sp_connected || !modxo_debug_sp_connected())
+    
+    if(!tud_connected())
+    {
+        // Reset ModXo if nothing is connected to the USB port
         software_reset();
+    }
 }
 
 void modxo_reset()
