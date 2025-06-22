@@ -45,8 +45,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <modxo/lpc_interface.h>
 #include <modxo/data_store.h>
 
-
-
 // Modxo nvm contents
 nvm_register_t* nvm_registers[] = {
     &ws2812_nvm,
