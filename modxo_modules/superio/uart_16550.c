@@ -35,12 +35,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <modxo/modxo_ports.h>
 #include "tusb.h"
 
+#define UART_FLUSH_INTERVAL (10 * 1000) // In microseconds
 #define UART_BREAK_MIN_DURATION_MS 250
 #define UART_ADDR_MASK      0xFF00
 #define UART_1_ITF          1
 #define UART_2_ITF          2
 
 typedef struct {
+    uint64_t tx_flush_last;
+    uint32_t tx_bytes_total;
+    uint32_t rx_bytes_total;
     bool cts, cts_changed; // This is controlled by RTS
     bool dsr, dsr_changed; // This is controlled by DTR
     bool did_break;
@@ -49,10 +53,11 @@ typedef struct {
 } UART_16550_PORT;
 
 static UART_16550_PORT coms[2];
+static UART_16550_PORT * itf_coms[3] = {NULL, coms, coms + 1};
 
 static void uart_16550_port_read(uint8_t itf, uint8_t port, uint8_t *data)
 {
-    UART_16550_PORT * com = coms + (itf - 1);
+    UART_16550_PORT * com = itf_coms[itf];
     cdc_line_coding_t coding;
     switch (port)
     {
@@ -66,7 +71,7 @@ static void uart_16550_port_read(uint8_t itf, uint8_t port, uint8_t *data)
         else
         {
             // Attemt to read a byte, if this fails, then rx_byte will be unchanged
-            tud_cdc_n_read(itf, &com->rx_byte, 1);
+            com->rx_bytes_total += tud_cdc_n_read(itf, &com->rx_byte, 1);
             *data = com->rx_byte;
         }
         break;
@@ -83,13 +88,6 @@ static void uart_16550_port_read(uint8_t itf, uint8_t port, uint8_t *data)
         *data = ((coding.data_bits - 5) & 3) | (coding.stop_bits ? 4 : 0) | (coding.parity ? 8 : 0) | (((coding.parity - 1) & 3) << 4);
         break;
     case 0xFD:
-        // Ensure all data is flushed from the TX buffer before checking if there's any room
-        tud_cdc_n_write_flush(itf);
-
-        if (!tud_cdc_n_connected(itf) && !tud_cdc_n_write_available(itf))
-            // Discard data when the buffer is full and no terminal is connected to recieve it
-            tud_cdc_n_write_clear(itf);
-
         *data = (tud_cdc_n_available(itf) ? 0x01 : 0x00) | (com->did_break ? 0x10 : 0x00) | (tud_cdc_n_write_available(itf) ? 0x20 : 0x00);
         
         com->did_break = false;
@@ -106,13 +104,13 @@ static void uart_16550_port_read(uint8_t itf, uint8_t port, uint8_t *data)
 static void uart_16550_port_write(uint8_t itf, uint8_t port, uint8_t *data)
 {
     // All of the UART properties are remotely configured by the PC, so there's not much to set here
-    UART_16550_PORT * com = coms + (itf - 1);
+    UART_16550_PORT * com = itf_coms[itf];
     switch (port)
     {
     case 0xF8:
-        if (!com->divisor_latch && tud_cdc_n_ready(itf))
+        if (!com->divisor_latch && tud_cdc_n_ready(itf) && tud_cdc_n_connected(itf))
         {
-            tud_cdc_n_write(itf, data, 1);
+            com->tx_bytes_total += tud_cdc_n_write(itf, data, 1);
             tud_cdc_n_write_flush(itf);
         }
         break;
@@ -124,22 +122,22 @@ static void uart_16550_port_write(uint8_t itf, uint8_t port, uint8_t *data)
 
 void tud_cdc_line_state_cb(uint8_t itf, bool dtr, bool rts)
 {
-    if (itf == 0) return;
-    itf--;
+    UART_16550_PORT * com = itf_coms[itf];
+    if (!com) return;
 
-    if (coms[itf].cts != rts) coms[itf].cts_changed = true;
-    if (coms[itf].dsr != dtr) coms[itf].dsr_changed = true;
+    if (com->cts != rts) com->cts_changed = true;
+    if (com->dsr != dtr) com->dsr_changed = true;
     
-    coms[itf].cts = rts;
-    coms[itf].dsr = dtr;
+    com->cts = rts;
+    com->dsr = dtr;
 }
 
 void tud_cdc_send_break_cb(uint8_t itf, uint16_t duration_ms)
 {
-    if (itf == 0) return;
-    itf--;
+    UART_16550_PORT * com = itf_coms[itf];
+    if (!com) return;
 
-    if (duration_ms >= UART_BREAK_MIN_DURATION_MS) coms[itf].did_break = true;
+    if (duration_ms >= UART_BREAK_MIN_DURATION_MS) com->did_break = true;
 }
 
 void uart_16550_com1_read(uint16_t address, uint8_t * data)
@@ -164,7 +162,8 @@ void uart_16550_com2_write(uint16_t address, uint8_t * data)
 
 void uart_16550_reset(uint8_t itf)
 {
-    if (itf == 0) return;
+    UART_16550_PORT * com = itf_coms[itf];
+    if (!com) return;
 
     // Clear RX/TX buffers
     tud_cdc_n_write_clear(itf);
@@ -172,15 +171,66 @@ void uart_16550_reset(uint8_t itf)
     uint8_t state = tud_cdc_n_get_line_state(itf);
 
     itf--;
-    coms[itf].rx_byte = 0;
-    coms[itf].divisor_latch = false;
+    com->rx_byte = 0;
+    com->divisor_latch = false;
 
     // Reset line state
-    coms[itf].dsr = state & 1; // DTR
-    coms[itf].cts = state & 2; // RTS
-    coms[itf].dsr_changed = false;
-    coms[itf].cts_changed = false;
-    coms[itf].did_break = false;
+    com->dsr = state & 1; // DTR
+    com->cts = state & 2; // RTS
+    com->dsr_changed = false;
+    com->cts_changed = false;
+    com->did_break = false;
+    com->tx_flush_last = 0;
+    com->tx_bytes_total = 0;
+    com->rx_bytes_total = 0;
+}
+
+static void poll_itf(uint8_t itf)
+{
+    if (tud_cdc_n_ready(itf) && tud_cdc_n_connected(itf))
+    {
+        uint64_t now = time_us_64();
+        UART_16550_PORT * com = itf_coms[itf];
+        if (com && now > com->tx_flush_last + UART_FLUSH_INTERVAL)
+        {
+            // Periodically flush data so as not to overload the USB interface
+            uint32_t flushed_bytes = tud_cdc_n_write_flush(itf);
+            com->tx_bytes_total += flushed_bytes;
+            com->tx_flush_last = now;
+
+#ifdef COM_LOGGING
+            {
+                uint32_t tx_avail = tud_cdc_n_write_available(itf);
+                uint32_t rx_avail = tud_cdc_n_available(itf);
+
+                printf("COM%u_LOG (%u TX TOTAL, %02u TX FREE | %u RX TOTAL, %02u RX PENDING | TIME %016llX): ",
+                    itf,
+                    com->tx_bytes_total, tx_avail,
+                    com->rx_bytes_total, rx_avail,
+                    now
+                );
+
+                if (flushed_bytes)
+                    printf("Flushed %02u bytes", flushed_bytes);
+                else
+                    printf("Nothing to flush");
+
+                printf("\n");
+            }
+#endif
+        }
+    }
+    else
+    {
+        // Discard data when no terminal is connected to recieve it
+        tud_cdc_n_write_clear(itf);
+    }
+}
+
+static void poll(void)
+{
+    poll_itf(UART_1_ITF);
+    poll_itf(UART_2_ITF);
 }
 
 static void powerup(void)
@@ -197,4 +247,5 @@ static void init(void)
 MODXO_TASK uart_16550_hdlr = {
     .powerup = powerup,
     .init = init,
+    .core1_poll = poll,
 };

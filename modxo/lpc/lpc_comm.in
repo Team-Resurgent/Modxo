@@ -30,20 +30,18 @@
 .wrap_target
     pull
 wait_start:
-    wait 0 irq 7                ; Wait for interrupt 7 to be 0
-    wait 0 gpio LCLK_PIN        ; Wait for LPC Clock to be 0
-    in pins,4                   ; Read a nibble into ISR
-    mov X, ISR                  ; Copy command from ISR into X
-check_start_again:
-    wait 1 gpio LCLK_PIN        ; Wait for LPC Clock to be 1
-    mov ISR, null               ; Clear the ISR
-    jmp X-- wait_start          ; If the command was anything other than 0b0000 (start command) then keep waiting
-
+    mov ISR, null
+    wait 0 irq 7
+    wait 0 gpio LCLK_PIN
+    in pins,4
+    mov X, ISR    
+    wait 1 gpio LCLK_PIN
+    jmp X-- wait_start
 wait_cmd:
-    wait 0 gpio LCLK_PIN [2]    ; Wait for LPC Clock to be 0 then wait 2 cycles for bus turnaround
-    in pins,4                   ; Read a nibble into ISR
-    mov X, ISR                  ; Copy command from ISR into X
-    jmp X!=Y check_start_again  ; Check Cycly Type / Direction command against value pre-loaded into Y
+    wait 0 gpio LCLK_PIN [2]
+    in pins,4 
+    mov X, ISR
+    jmp X!=Y wait_start
     
     irq set 7                   ; Block all other SMs until done processing
     mov X, OSR side 0           ; Pull number of nibbles to read out of TX FIFO
