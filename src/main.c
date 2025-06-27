@@ -142,6 +142,16 @@ void register_handlers()
     modxo_register_handler(&legacy_display_hdlr);
 }
 
+static bool is_stdio_ready = false;
+static bool try_init_stdio()
+{
+    if (is_stdio_ready) return true;
+    if (!tud_inited()) return false;
+
+    is_stdio_ready = stdio_usb_init();
+    return is_stdio_ready;
+}
+
 void core1_main()
 {
     // Initalize USB before the delay so that the Host PC has time to connect
@@ -150,11 +160,12 @@ void core1_main()
     if (board_init_after_tusb) {
         board_init_after_tusb();
     }
-
-#ifdef START_DELAY
-    sleep_ms(2000);
-#endif
+    
+#ifdef WAIT_FOR_STDIO
+    // Wait for a terminal to be connected to STDIO
+    while (!tud_cdc_connected()) sleep_ms(100);
     printf("MODXO_LOG: CORE1 ENTRY\n");
+#endif
     
     while (true)
     {
@@ -168,14 +179,14 @@ void core1_main()
 
 void core0_main()
 {
-    // stdio_init_all must be run from Core 0, so spin until TinyUSB is setup
-    while (!tud_inited());
-    stdio_init_all();
+#ifdef WAIT_FOR_STDIO
+    // STDIO must be initialized from Core 0 after TinyUSB is initialized
+    while (!try_init_stdio()) sleep_ms(10);
 
-#ifdef START_DELAY
-    sleep_ms(2000);
-#endif
+    // Wait for a terminal to be connected to STDIO
+    while (!tud_cdc_connected()) sleep_ms(100);
     printf("MODXO_LOG: CORE0 ENTRY\n");
+#endif
 
     register_handlers();
     modxo_init();
@@ -184,6 +195,7 @@ void core0_main()
 
     while (true)
     {
+        try_init_stdio();
         if(xbox_active) {
             modxo_poll_core0();
         }

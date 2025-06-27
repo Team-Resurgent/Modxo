@@ -50,8 +50,8 @@ if(${DEBUG_PRINTS} MATCHES 1)
     add_definitions( -DDEBUG_PRINTS )
 endif()
 
-#add_compile_definitions(START_DELAY) #10s Delay to be able to catch startup messages
-#add_compile_definitions(COM_LOGGING) #Print statistic info about the 16550 COM ports
+#add_compile_definitions(WAIT_FOR_STDIO) # Prevent the ModXo from starting until a terminal is connected to STDIO
+#add_compile_definitions(COM_LOGGING) # Print statistic info about the 16550 COM ports
 
 # Creates a pico-sdk subdirectory
 pico_sdk_init()
