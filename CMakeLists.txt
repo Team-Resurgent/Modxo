@@ -23,7 +23,7 @@ if (EXISTS ${picoVscode})
     include(${picoVscode})
 endif()
 # ====================================================================================
-set(PICO_BOARD pico2 CACHE STRING "Board type")
+set(PICO_BOARD pico CACHE STRING "Board type")
 
 if(NOT DEFINED MODXO_PINOUT)
     if(PICO_BOARD EQUAL pico2)
@@ -60,6 +60,8 @@ add_executable(${PROJECT_NAME})
 pico_set_binary_type(${PROJECT_NAME} copy_to_ram)
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
+set(MODXO_CUSTOM_USB "MODXO_USB_MSC")
 
 add_subdirectory(modxo)
 

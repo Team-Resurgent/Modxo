@@ -7,3 +7,4 @@ target_link_libraries(modxo PUBLIC pico_stdlib pico_multicore hardware_pio hardw
 add_subdirectory(lpc)
 add_subdirectory(config)
 add_subdirectory(data_store)
+add_subdirectory(usb)
