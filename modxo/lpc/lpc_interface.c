@@ -35,7 +35,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <modxo_pinout.h>
 
 #include <lpc_comm.pio.h>
-#include <modxo/lpc_log.h>
 #include <tusb.h>
 
 typedef void (*lpc_handler)(uint32_t address, uint8_t * data);
@@ -127,16 +126,6 @@ static void lpc_read_handler(LPC_OP_TYPE sm)
     shifted |= (result_data << 4);
     _pio->txf[sm] = shifted;
     _pio->txf[sm] = lpc_handlers[sm].nibbles_read - 1;
-    
-#ifdef LPC_LOGGING
-    {
-        log_entry item;
-        item.address = address;
-        item.cyc_type = sm;
-        item.data = result_data;
-        lpclog_enqueue(item);
-    }
-#endif
 
     pio_interrupt_clear(_pio, sm);
 }
@@ -157,16 +146,6 @@ static void lpc_write_handler(LPC_OP_TYPE sm)
     shifted = 0xFFF0;
     _pio->txf[sm] = shifted;
     _pio->txf[sm] = lpc_handlers[sm].nibbles_read - 1;
-
-#ifdef LPC_LOGGING
-    {
-        log_entry item;
-        item.address = address;
-        item.cyc_type = sm;
-        item.data = result_data;
-        lpclog_enqueue(item);
-    }
-#endif
 
     pio_interrupt_clear(_pio, sm);
 }
@@ -280,28 +259,6 @@ void lpc_interface_init(void)
     lpc_interface_start_sm();
 }
 
-static void lpc_interface_poll(void)
-{
-    log_entry entry;
-    while (lpclog_dequeue(&entry))
-    {
-        if (entry.cyc_type == LPC_OP_IO_READ || entry.cyc_type == LPC_OP_IO_WRITE)
-        {
-            printf("LPC_LOG: %s [0x%04X] data:[%02X]\n", LPC_OP_STRINGS[entry.cyc_type], entry.address, entry.data);
-        }
-        else
-        {
-            printf("LPC_LOG: %s [0x%08X] data:[%02X]\n", LPC_OP_STRINGS[entry.cyc_type], entry.address, entry.data);
-        }
-    }
-
-    if (lpclog_is_full())
-    {
-        printf("LPC_LOG: *** LOG OVERFLOWED ***\n");
-    }
-}
-
 MODXO_TASK lpc_interface_hdlr = {
-    .init = lpc_interface_init,
-    .core0_poll = lpc_interface_poll
+    .init = lpc_interface_init
 };

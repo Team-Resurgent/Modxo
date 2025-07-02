@@ -45,8 +45,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <modxo/lpc_interface.h>
 #include <modxo/data_store.h>
 
-
-
 // Modxo nvm contents
 nvm_register_t* nvm_registers[] = {
     &ws2812_nvm,
@@ -57,29 +55,6 @@ uint8_t nvm_registers_count = sizeof(nvm_registers) / sizeof(nvm_registers[0]);
 
 bool reset_pin = false;
 bool xbox_active = false;
-
-void core1_main()
-{
-    while (true)
-    {
-        if(xbox_active) {
-            modxo_poll_core1();
-        }
-        __wfe();
-    }
-}
-
-void core0_main()
-{
-    while (true)
-    {
-        tud_task();
-        if(xbox_active) {
-            modxo_poll_core0();
-        }
-        __wfe();
-    }
-}
 
 void init_status_led() {
     gpio_init(LED_STATUS_PIN);
@@ -102,6 +77,7 @@ void pin_3_3v_falling()
     xbox_active = false;
     modxo_shutdown();
     gpio_set_irq_enabled(LPC_ON, GPIO_IRQ_LEVEL_HIGH, true);
+    printf("MODXO_LOG: XBOX OFF\n");
 }
 
 void pin_3_3v_high()
@@ -111,6 +87,7 @@ void pin_3_3v_high()
     init_status_led();
     modxo_reset();
     xbox_active = true;
+    printf("MODXO_LOG: XBOX ON\n");
 }
 
 void core0_irq_handler(uint gpio, uint32_t event)
@@ -165,30 +142,75 @@ void register_handlers()
     modxo_register_handler(&legacy_display_hdlr);
 }
 
+static bool is_stdio_ready = false;
+static bool try_init_stdio()
+{
+    if (is_stdio_ready) return true;
+    if (!tud_inited()) return false;
+
+    is_stdio_ready = stdio_usb_init();
+    return is_stdio_ready;
+}
+
+void core1_main()
+{
+    // Initalize USB before the delay so that the Host PC has time to connect
+    tud_init(BOARD_TUD_RHPORT);
+
+    if (board_init_after_tusb) {
+        board_init_after_tusb();
+    }
+    
+#ifdef WAIT_FOR_STDIO
+    // Wait for a terminal to be connected to STDIO
+    while (!tud_cdc_connected()) sleep_ms(100);
+    printf("MODXO_LOG: CORE1 ENTRY\n");
+#endif
+    
+    while (true)
+    {
+        tud_task();
+        if(xbox_active) {
+            modxo_poll_core1();
+        }
+        __wfe();
+    }
+}
+
+void core0_main()
+{
+#ifdef WAIT_FOR_STDIO
+    // STDIO must be initialized from Core 0 after TinyUSB is initialized
+    while (!try_init_stdio()) sleep_ms(10);
+
+    // Wait for a terminal to be connected to STDIO
+    while (!tud_cdc_connected()) sleep_ms(100);
+    printf("MODXO_LOG: CORE0 ENTRY\n");
+#endif
+
+    register_handlers();
+    modxo_init();
+    set_sys_clock_khz(SYS_FREQ_DEFAULT, true);
+    modxo_init_interrupts();
+
+    while (true)
+    {
+        try_init_stdio();
+        if(xbox_active) {
+            modxo_poll_core0();
+        }
+        __wfe();
+    }
+}
+
 int main(void)
 {
     set_sys_clock_khz(SYS_FREQ_IN_KHZ, true);
 
     board_init();
 
-    tud_init(BOARD_TUD_RHPORT);
-
-    if (board_init_after_tusb) {
-        board_init_after_tusb();
-    }
-
-    stdio_init_all();
-
-#ifdef START_DELAY
-    sleep_ms(2000);
-#endif
-
+    // Launch threads
     multicore_reset_core1();
     multicore_launch_core1(core1_main);
-
-    register_handlers();
-    modxo_init();
-    set_sys_clock_khz(SYS_FREQ_DEFAULT, true);
-    modxo_init_interrupts();
-    core0_main(); // Infinite loop
+    core0_main();
 }

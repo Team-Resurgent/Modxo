@@ -135,12 +135,7 @@ void lpc47m152_data_write(uint16_t address, uint8_t * data)
     }
 }
 
-static bool superio_connected(void)
-{
-    return tud_cdc_n_connected(1) || tud_cdc_n_connected(2);
-}
-
-static void lpc47m152_powerup(void) {
+static void powerup(void) {
     lpc47m152.config_port_addr = LPC47M152_DEFAULT_CONFIG_ADDR;
     lpc47m152.config_mode = false;
     lpc47m152.index_port = 0;
@@ -148,13 +143,12 @@ static void lpc47m152_powerup(void) {
     uart_16550_hdlr.powerup();
 }
 
-static void lpc47m152_init(void)
+static void init(void)
 {
-    modxo_debug_sp_connected = superio_connected;
-    lpc47m152_powerup();
+    powerup();
 }
 
 MODXO_TASK LPC47M152_hdlr = {
-    .init = lpc47m152_init,
-    .powerup = lpc47m152_powerup,
+    .init = init,
+    .powerup = powerup,
 };

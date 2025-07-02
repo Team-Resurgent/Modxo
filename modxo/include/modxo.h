@@ -26,7 +26,6 @@ typedef struct {
 	void (*shutdown)(void);
 }MODXO_TASK;
 
-extern bool (*modxo_debug_sp_connected)(void);
 void modxo_register_handler(MODXO_TASK* handler);
 void modxo_reset(void);
 void modxo_init(void);

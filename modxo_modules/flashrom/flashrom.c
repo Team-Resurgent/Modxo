@@ -44,7 +44,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define FLASH_START_ADDRESS ((uint8_t *)0x10000000)
 static uint32_t flash_rom_mask;
 static uint8_t mmc_register;
-static uint8_t * flash_rom_data = NULL;
+static uint8_t *flash_rom_data;
 
 static uint8_t flash_write_buffer[FLASH_WRITE_PAGE_SIZE];
 
