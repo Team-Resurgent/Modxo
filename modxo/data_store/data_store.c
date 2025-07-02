@@ -40,30 +40,33 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "math.h"
 
 #define DATA_STORE_PORT_BASE MODXO_REGISTER_VOLATILE_CONFIG_SEL
-#define DATA_STORE_ADDRESS_MASK 0xFFFE
+#define DATA_STORE_PORT_COUNT 2
 #define DATA_STORE_COMMAND_PORT DATA_STORE_PORT_BASE
 #define DATA_STORE_DATA_PORT DATA_STORE_PORT_BASE + 1
 
 uint8_t data_store_cmd;
 uint8_t data_store_buffer[256];
 
-static void lpc_port_read(uint16_t address, uint8_t *data)
+static uint8_t lpc_port_read(uint16_t address)
 {
+    uint8_t data = 0xFF; // Default value for unhandled addresses
     if (address == DATA_STORE_DATA_PORT)
     {
-        *data = data_store_buffer[data_store_cmd];
+        data = data_store_buffer[data_store_cmd];
     }
+
+    return data;
 }
 
-static void lpc_port_write(uint16_t address, uint8_t *data)
+static void lpc_port_write(uint16_t address, uint8_t data)
 {
     switch (address)
     {
     case DATA_STORE_COMMAND_PORT:
-        data_store_cmd = *data;
+        data_store_cmd = data;
         break;
     case DATA_STORE_DATA_PORT:
-        data_store_buffer[data_store_cmd] = *data;
+        data_store_buffer[data_store_cmd] = data;
         break;
     }
 }
@@ -77,7 +80,7 @@ static void powerup(void)
 static void init()
 {
     powerup();
-    lpc_interface_add_io_handler(DATA_STORE_PORT_BASE, DATA_STORE_ADDRESS_MASK, lpc_port_read, lpc_port_write);
+    lpc_register_io_handler(DATA_STORE_PORT_BASE, DATA_STORE_PORT_COUNT, lpc_port_read, lpc_port_write);
 }
 
 MODXO_TASK data_store_handler = {

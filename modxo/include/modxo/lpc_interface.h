@@ -6,26 +6,36 @@ Copyright (c) 2024, Shalx <Alejandro L. Huitron shalxmva@gmail.com>
 */
 #ifndef _LPC_INTERFACE_H_
 #define _LPC_INTERFACE_H_
-
-#include "hardware/pio.h"
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
 #include <modxo.h>
 
-typedef enum
+typedef uint8_t (*lpc_mem_read_t )  (uint32_t address);
+typedef uint8_t (*lpc_io_read_t  )  (uint16_t address);
+typedef void    (*lpc_mem_write_t)  (uint32_t address, uint8_t data);
+typedef void    (*lpc_io_write_t )  (uint16_t address, uint8_t data);
+
+typedef bool    (*lpc_sub_io)   (uint16_t port_base, size_t total_ports, lpc_io_read_t read_cback, lpc_io_write_t write_cback);
+typedef bool    (*lpc_sub_mem) (uint32_t port_base, size_t mem_size, lpc_mem_read_t read_cback, lpc_mem_write_t write_cback);
+
+typedef struct
 {
-    LPC_OP_IO_READ = 0,
-    LPC_OP_IO_WRITE = 1,
-    LPC_OP_MEM_WRITE = 2,
-    LPC_OP_MEM_READ = 3,
-    LPC_OP_TOTAL = 4
-} LPC_OP_TYPE;
+    lpc_mem_read_t mem_read;
+    lpc_io_read_t  io_read;
+    lpc_mem_write_t mem_write;
+    lpc_io_write_t io_write;
+    
+    lpc_sub_io io_subscriber;
+    lpc_sub_mem mem_subscriber;
+} lpc_op_mapper_t;
 
-typedef void (*lpc_handler_cback)(uint32_t address, uint8_t *data);
-typedef void (*SUPERIO_PORT_CALLBACK_T)(uint16_t address, uint8_t *data);
+extern lpc_op_mapper_t lpc_op_mapper;//This will link only one mapper to all LPC operations
+bool lpc_register_io_handler ( uint16_t port_base   , size_t total_regs, lpc_io_read_t  read_cback, lpc_io_write_t  write_cback);
+bool lpc_register_mem_handler( uint32_t address_base, size_t mem_size  , lpc_mem_read_t read_cback, lpc_mem_write_t write_cback);
 
-void lpc_interface_set_callback(LPC_OP_TYPE op, lpc_handler_cback cback);
 void lpc_interface_disable_onboard_flash(bool disable);
 void lpc_interface_start_sm(void);
-bool lpc_interface_add_io_handler(uint16_t port_base, uint16_t mask, SUPERIO_PORT_CALLBACK_T read_cback, SUPERIO_PORT_CALLBACK_T write_cback);
 
 extern MODXO_TASK lpc_interface_hdlr;
 #endif

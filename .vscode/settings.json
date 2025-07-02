@@ -46,6 +46,8 @@
         "lpc_regs.h": "c",
         "modxo.h": "c",
         "math.h": "c",
-        "modxo_pinout.h": "c"
+        "modxo_pinout.h": "c",
+        "lpc_interface.h": "c",
+        "bus_ctrl.h": "c"
     }
 }

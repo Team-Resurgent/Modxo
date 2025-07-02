@@ -282,7 +282,7 @@ static void init()
     legacy_display_set_spi_mode(3);
     legacy_display_set_spi(0);
     
-    lpc_interface_add_io_handler(MODXO_REGISTER_LCD_COMMAND, 0xFFFE, NULL, write_handler);
+    lpc_register_io_handler(MODXO_REGISTER_LCD_COMMAND, 2, NULL, write_handler);
 }
 
 

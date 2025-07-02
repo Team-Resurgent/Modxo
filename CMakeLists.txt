@@ -85,7 +85,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     ws2812
     legacy_display
     superio
-    flashrom
+    flashrom_mapper
 )
 
 set(PICO_DEFAULT_BINARY_TYPE copy_to_ram)
