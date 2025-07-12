@@ -55,19 +55,19 @@ jobs:
           mkdir build
           mkdir output
 
-      - name: Build Modxo {{ matrix.pretty_name }}
+      - name: Build Modxo ${{ matrix.pretty_name }}
         run: |
           cd ${{ github.workspace }}/build
-          cmake -DPICO_SDK_PATH=${{ github.workspace }}/pico-sdk -DMODXO_PINOUT={{ matrix.pinout }} .. 
+          cmake -DPICO_SDK_PATH=${{ github.workspace }}/pico-sdk -DMODXO_PINOUT=${{ matrix.pinout }} .. 
           cmake --build .
 
       - name: Copy files
         run: |
-          cp ${{ github.workspace }}/build/{{ matrix.output_name }}.bin ${{ github.workspace }}/output/{{ matrix.output_name }}.bin
-          cp ${{ github.workspace }}/build/{{ matrix.output_name }}.uf2 ${{ github.workspace }}/output/{{ matrix.output_name }}.uf2
+          cp ${{ github.workspace }}/build/${{ matrix.output_name }}.bin ${{ github.workspace }}/output/${{ matrix.output_name }}.bin
+          cp ${{ github.workspace }}/build/${{ matrix.output_name }}.uf2 ${{ github.workspace }}/output/${{ matrix.output_name }}.uf2
 
       - name: Compress binaries
-        run: 7z a ${{ github.workspace }}/${{ matrix.output_name }}.zip ${{ github.workspace }}/output/{{ matrix.output_name }}.*
+        run: 7z a ${{ github.workspace }}/${{ matrix.output_name }}.zip ${{ github.workspace }}/output/${{ matrix.output_name }}.*
 
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
