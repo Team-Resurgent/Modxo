@@ -68,14 +68,11 @@ jobs:
           cp ${{ steps.cmake.outputs.build-dir }}/${{ matrix.output_name }}.bin ${{ github.workspace }}/output/
           cp ${{ steps.cmake.outputs.build-dir }}/${{ matrix.output_name }}.uf2 ${{ github.workspace }}/output/
 
-      - name: Compress binaries
-        run: 7z a ${{ github.workspace }}/${{ matrix.output_name }}.zip ${{ github.workspace }}/output/${{ matrix.output_name }}.*
-
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.pretty_name }}
-          path: ${{ github.workspace }}/${{ matrix.output_name }}.zip
+          path: ${{ github.workspace }}/output/*
           if-no-files-found: error
 
   release:
