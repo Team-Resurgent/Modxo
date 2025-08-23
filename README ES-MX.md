@@ -50,6 +50,9 @@ No necesita ningún hardware especializado ni herramientas complicadas para carg
 
 Los siguientes pasos no son requeridos sí pretende utilizar PrometheOS, sólo actualice PrometheOS-{variante de placa}.uf2 directamente...
 
+> [!IMPORTANT]
+> Los siguientes pasos no son requeridos sí pretende utilizar PrometheOS, sólo actualice PrometheOS-{variante de placa}.uf2 directamente...
+
 1. Conecte la placa Raspberry Pi Pico al PC con el botón BOOTSEL (ó cualquier botón equivalente) presionado, Windows detectará una nueva unidad de almacenamiento y la abrirá.
 2. Copie Modxo-{variante de placa}.uf2 en la unidad de la Raspberry Pi Pico. Una vez hecho esto, la Raspberry se desconectará automáticamente.
 3. Reconecte la Raspberry Pi Pico con el botón BOOTSEL presionado, de modo que la unidad de almacenamiento de la Raspberry Pi Pico aparazca nuevamente.
@@ -58,6 +61,9 @@ Los siguientes pasos no son requeridos sí pretende utilizar PrometheOS, sólo a
 #### Pasos para actualizar PrometheOS en Modxo
 
 Los siguientes pasos solo son necesarios sí desea actualizar PrometheOS con actualizaciones/correciones de errores de Modxo...
+
+> [!IMPORTANT]
+> Los siguientes pasos solo son necesarios sí desea actualizar PrometheOS con actualizaciones/correciones de errores de Modxo...
 
 1. Suponiendo que PrometheOS-{variante de placa}.uf2 ya está instalado.
 2. Conecte la Raspberry Pi Pico a la PC con el botón BOOTSEL (o cualquier botón equivalente) presionado, y una nueva unidad de almacenamiento aparecerá.
