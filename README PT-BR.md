@@ -7,7 +7,8 @@
 
 # Versões traduzidas
 
-*Nota: algumas traduções podem estar desatualizadas e podem demorar um tempo para serem atualizadas em relação à versão em inglês.
+> [!NOTE]
+> Algumas traduções podem estar desatualizadas e podem demorar um tempo para serem atualizadas em relação à versão em inglês.
 
  - [English](https://github.com/Team-Resurgent/Modxo)
  - [Español](https://github.com/Team-Resurgent/Modxo/blob/main/README%20ES-MX.md)
@@ -48,6 +49,9 @@ Nenhum hardware especializado ou ferramentas complicadas são necessárias para 
 
 Os seguintes passos não são necessários se você pretende usar o PrometheOS, apenas grave o PrometheOS-{variante-da-placa}.uf2 diretamente...
 
+> [!NOTE]
+> Os seguintes passos não são necessários se você pretende usar o PrometheOS, apenas grave o PrometheOS-{variante-da-placa}.uf2 diretamente...
+
 1. Conecte o Raspberry Pi Pico a um PC com o botão BOOTSEL (ou botão equivalente em hardware RP2040 compatível) pressionado e uma nova unidade ficará disponível.
 2. Copie o Modxo-{variante da placa}.uf2 para a unidade do Raspberry Pi Pico.
 3. Reconecte o Raspberry Pi Pico com o botão BOOTSEL pressionado, para que a unidade anterior apareça novamente.
@@ -55,7 +59,9 @@ Os seguintes passos não são necessários se você pretende usar o PrometheOS, 
 
 #### Passos para atualizar o Modxo do PrometheOS
 
-Os seguintes passos são necessários apenas se quiser atualizar o PrometheOS com atualizações/correções do Modxo...
+> [!IMPORTANT]
+> Os seguintes passos são necessários apenas se quiser atualizar o PrometheOS com atualizações/correções do Modxo...
+
 
 1. Assumindo que o PrometheOS-{variante-da-placa}.uf2 já está gravado.
 2. Conecte o Raspberry Pi Pico a um PC com o botão BOOTSEL (ou botão equivalente em hardware RP2040 compatível) pressionado e uma nova unidade ficará disponível.
@@ -66,35 +72,39 @@ Os seguintes passos são necessários apenas se quiser atualizar o PrometheOS co
 #### Cabeçalho LPC
    ![Diagrama de fiação do cabeçalho LPC](images/lpc_header_wiring.png)
 
-  Notas:
-  * D0 é necessário para versões 1.0 - 1.5 a menos que esteja aterrado.
-  * Conexões LFrame e LPC 3.3V são necessárias pela versão 1.6 ou quando conectar o Pico à porta USB.
-  * LFrame não é necessário para debug USB.
-  * Reconstrução LPC é necessária para versão 1.6
+  > [!NOTE]
+  > * D0 é necessário para versões 1.0 - 1.5 a menos que esteja aterrado.
+  > * Conexões LFrame e LPC 3.3V são necessárias pela versão 1.6 ou quando conectar o Pico à porta USB.
+  > * LFrame não é necessário para debug USB.
+  > * Reconstrução LPC é necessária para versão 1.6
 ---
 #### Raspberry Pi Pico Oficial
 
    ![Diagrama de fiação do cabeçalho LPC](images/official_pinout_pico1.png)
 
-   * Nota: Por favor adicione o diodo se conectar o Pico ao USB. Isso evita alimentar o pino LPC 5V através do cabo USB, o que poderia ter consequências não intencionais.
+   > [!NOTE]
+   > Por favor adicione o diodo se conectar o Pico ao USB. Isso evita alimentar o pino LPC 5V através do cabo USB, o que poderia ter consequências não intencionais.
 ---
 #### Raspberry Pi Pico 2 Oficial
 
    ![Diagrama de fiação do cabeçalho LPC](images/official_pinout_pico2.png)
 
-   * Nota: Por favor adicione o diodo se conectar o Pico ao USB. Isso evita alimentar o pino LPC 5V através do cabo USB, o que poderia ter consequências não intencionais.
+   > [!NOTE]
+   > Por favor adicione o diodo se conectar o Pico ao USB. Isso evita alimentar o pino LPC 5V através do cabo USB, o que poderia ter consequências não intencionais.
 ---
 #### YD-RP2040
 
    ![Diagrama de fiação do cabeçalho LPC](images/YD_RP2040_pinout.png)
 
-   * Nota: Não esqueça de adicionar solda ao jumper R68 se usar o LED RGB integrado
+   > [!NOTE]
+   > Não esqueça de adicionar solda ao jumper R68 se usar o LED RGB integrado
 ---
 #### RP2040-Zero/Tiny
 
    ![Diagrama de fiação do cabeçalho LPC](images/RP2040_Zero_pinout.png)
 
-   * Nota: Por favor adicione o diodo se conectar o Pico ao USB. Isso evita alimentar o pino LPC 5V através do cabo USB, o que poderia ter consequências não intencionais.
+   > [!NOTE]
+   > Por favor adicione o diodo se conectar o Pico ao USB. Isso evita alimentar o pino LPC 5V através do cabo USB, o que poderia ter consequências não intencionais.
 ---
 #### XIAO-RP2040
 
@@ -167,7 +177,8 @@ docker compose run --rm bios2uf2
  * Windbg às vezes trava quando conectado à porta serial SuperIO do Modxo
 
 ## Notas
- * Atualmente, o Modxo usa o ID 0xAF. Qualquer hardware derivado com mudanças significativas deveria idealmente usar um ID diferente. Isso é para que software como o PrometheOS possa mirar recursos apropriadamente.
+ > [!IMPORTANT]
+ > Atualmente, Modxo usa o ID 0xAF. Idealmente, qualquer hardware derivado com mudanças significativas deveria usar um ID diferente. Isso é para que um software como o PrometheOS possa mirar suas características de forma adequada.
 
 ## Requisito de Atribuição
 
