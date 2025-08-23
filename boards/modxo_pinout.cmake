@@ -27,7 +27,6 @@ add_compile_definitions(BOARD_LED_BRIGHTNESS_ADJUST=${BOARD_LED_BRIGHTNESS_ADJUS
 message(STATUS "Building for ${MODXO_PINOUT}.")
 
 configure_file(${CMAKE_CURRENT_LIST_DIR}/modxo_pinout.h.in modxo_pinout.h @ONLY)
-
 add_compile_definitions(PICO_FLASH_SIZE_BYTES=${BOARD_FLASH_SIZE})
 
 #Output filename

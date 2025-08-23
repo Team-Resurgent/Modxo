@@ -1,0 +1,124 @@
+;SPDX short identifier: BSD-2-Clause
+;BSD 2-Clause License
+;
+;Copyright (c) 2024, Shalx <Alejandro L. Huitron shalxmva@gmail.com>
+;
+;Redistribution and use in source and binary forms, with or without
+;modification, are permitted provided that the following conditions are met:
+;
+;1. Redistributions of source code must retain the above copyright notice, this
+;   list of conditions and the following disclaimer.
+;
+;2. Redistributions in binary form must reproduce the above copyright notice,
+;   this list of conditions and the following disclaimer in the documentation
+;   and/or other materials provided with the distribution.;
+;
+;THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+;AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+;IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+;DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+;FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+;DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+;SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+;CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+;OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+;OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+.program lpc_read_request
+.define public LCLK_PIN   @LPC_CLK@
+.side_set 1 opt
+.wrap_target
+    pull
+wait_start:
+    mov ISR, null
+    wait 0 irq 7
+    wait 0 gpio LCLK_PIN
+    in pins,4
+    mov X, ISR    
+    wait 1 gpio LCLK_PIN
+    jmp X-- wait_start
+wait_cmd:
+    wait 0 gpio LCLK_PIN [2]
+    in pins,4 
+    mov X, ISR
+    jmp X!=Y wait_start
+    
+    irq set 7
+    mov X, OSR side 0
+    mov ISR, null
+
+read_nibbles:
+    wait 0 gpio LCLK_PIN
+    in pins, 4 
+    set pins 5 
+    wait 1 gpio LCLK_PIN
+    jmp X-- read_nibbles
+    
+    push
+    irq set 0 rel
+    set pindirs, 15
+    set X,3
+    pull
+    wait 0 gpio  LCLK_PIN
+repeat:
+    wait 1 gpio  LCLK_PIN
+    OUT pins,4
+    wait 0 gpio  LCLK_PIN
+    jmp X-- repeat
+   ;wait 1 gpio LCLK_PIN
+   set pindirs, 0b00000 [7]
+   irq clear 7 side 1
+.wrap
+% c-sdk {
+
+#include <modxo_pinout.h>
+#include <stdbool.h>
+#include <hardware/pio.h>
+
+#define LAD_PIN_COUNT 4
+
+void lpc_read_request_init(PIO pio, uint sm, uint offset, uint address_size, bool lframe_cancel) {
+    pio_sm_set_enabled(pio, sm, false);
+    pio_sm_config c =lpc_read_request_program_get_default_config(offset);
+  
+    sm_config_set_in_shift(
+        &c,
+        false,  // ShiftDir : true: shift ISR to right, false: shift ISR to left
+        true,   // AutoPush : true: enabled, false: disabled
+        address_size      // AutoPush threshold: <0-32>
+    );
+
+    // Set 'IN' base pin. To read the LAD[0-3].
+    sm_config_set_in_pins (&c, LPC_LAD_START);
+    sm_config_set_out_pins(&c, LPC_LAD_START, LAD_PIN_COUNT);
+    sm_config_set_set_pins(&c, LPC_LAD_START, LAD_PIN_COUNT);
+
+    pio_sm_set_consecutive_pindirs(pio, sm, LPC_LAD_START, LAD_PIN_COUNT, false);   
+   
+
+    if(lframe_cancel){
+        pio_sm_set_consecutive_pindirs(pio, sm, LPC_LFRAME, 1,  true);
+        sm_config_set_sideset_pins(&c, LPC_LFRAME);
+    }else{
+        sm_config_set_sideset_pins(&c, 31);
+    }
+
+    sm_config_set_clkdiv(&c, 1);
+    pio_sm_set_config(pio, sm, &c);
+    pio_sm_clear_fifos(pio, sm);
+
+        // Clear FIFO debug flags
+    const uint32_t fdebug_sm_mask =
+            (1u << PIO_FDEBUG_TXOVER_LSB) |
+            (1u << PIO_FDEBUG_RXUNDER_LSB) |
+            (1u << PIO_FDEBUG_TXSTALL_LSB) |
+            (1u << PIO_FDEBUG_RXSTALL_LSB);
+    pio->fdebug = fdebug_sm_mask << sm;
+
+    // Finally, clear some internal SM state
+    pio_sm_restart(pio, sm);
+    pio_sm_clkdiv_restart(pio, sm);
+}
+
+
+%}

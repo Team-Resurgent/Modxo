@@ -28,26 +28,37 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdio.h>
 #include <string.h>
-#include "pico/stdlib.h"
-#include "pico/multicore.h"
-#include "hardware/clocks.h"
-#include "hardware/dma.h"
-#include "hardware/gpio.h"
-#include "tusb.h"
+#include <pico/stdlib.h>
+#include <pico/multicore.h>
+#include <hardware/clocks.h>
+#include <hardware/gpio.h>
 
-#include "modxo/modxo.h"
-#include "modxo_pinout.h"
+#include <flashrom.h>
+#include <modxo.h>
+#include <modxo_pinout.h>
+#include <ws2812.h>
+#include <legacy_display.h>
+#include <LPC47M152.h>
+#include <uart_16550.h>
+#include <modxo/lpc_interface.h>
+#include <modxo/data_store.h>
 
-#define SYS_FREQ_IN_KHZ (266 * 1000)
+// Modxo nvm contents
+nvm_register_t* nvm_registers[] = {
+    &ws2812_nvm,
+};
+
+uint8_t nvm_registers_count = sizeof(nvm_registers) / sizeof(nvm_registers[0]);
+
 
 bool reset_pin = false;
-bool modxo_active = false;
+bool xbox_active = false;
 
 void core1_main()
 {
     while (true)
     {
-        if(modxo_active) {
+        if(xbox_active) {
             modxo_poll_core1();
         }
         __wfe();
@@ -58,7 +69,7 @@ void core0_main()
 {
     while (true)
     {
-        if(modxo_active) {
+        if(xbox_active) {
             modxo_poll_core0();
         }
         __wfe();
@@ -83,16 +94,18 @@ void reset_pin_rising()
 
 void pin_3_3v_falling()
 {
-    modxo_low_power_mode();
+    xbox_active = false;
+    modxo_shutdown();
+    gpio_set_irq_enabled(LPC_ON, GPIO_IRQ_LEVEL_HIGH, true);
 }
 
 void pin_3_3v_high()
 {
-    gpio_set_irq_enabled(LPC_ON, GPIO_IRQ_LEVEL_HIGH, false);
     set_sys_clock_khz(SYS_FREQ_IN_KHZ, true);
+    gpio_set_irq_enabled(LPC_ON, GPIO_IRQ_LEVEL_HIGH, false);
     init_status_led();
-    modxo_init();
-    modxo_active = true;
+    modxo_reset();
+    xbox_active = true;
 }
 
 void core0_irq_handler(uint gpio, uint32_t event)
@@ -112,15 +125,11 @@ void core0_irq_handler(uint gpio, uint32_t event)
         pin_3_3v_falling();
     }
 
+    // Use LEVEL_HIGH because rising edge triggers too early after power-up (~500us)
     if (gpio == LPC_ON && (event & GPIO_IRQ_LEVEL_HIGH) != 0)
     {
         pin_3_3v_high();
     }
-}
-
-void xbox_shutdown()
-{
-    multicore_reset_core1();
 }
 
 void modxo_init_pin_irq(uint pin, uint32_t event)
@@ -140,18 +149,32 @@ void modxo_init_interrupts()
     irq_set_enabled(IO_IRQ_BANK0, true);
 }
 
+void register_handlers()
+{
+    modxo_register_handler(&flashrom_hdlr);
+    modxo_register_handler(&lpc_interface_hdlr);
+    modxo_register_handler(&LPC47M152_hdlr);
+    modxo_register_handler(&uart_16550_hdlr);
+    modxo_register_handler(&data_store_handler);
+    modxo_register_handler(&ws2812_hdlr);
+    modxo_register_handler(&legacy_display_hdlr);
+}
+
 int main(void)
 {
+    set_sys_clock_khz(SYS_FREQ_IN_KHZ, true);
     stdio_init_all();
 
 #ifdef START_DELAY
     sleep_ms(2000);
 #endif
 
-    modxo_init_interrupts();
-
     multicore_reset_core1();
     multicore_launch_core1(core1_main);
 
+    register_handlers();
+    modxo_init();
+    set_sys_clock_khz(SYS_FREQ_DEFAULT, true);
+    modxo_init_interrupts();
     core0_main(); // Infinite loop
 }

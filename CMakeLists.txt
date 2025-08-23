@@ -23,7 +23,7 @@ if (EXISTS ${picoVscode})
     include(${picoVscode})
 endif()
 # ====================================================================================
-set(PICO_BOARD pico CACHE STRING "Board type")
+set(PICO_BOARD pico2 CACHE STRING "Board type")
 
 if(NOT DEFINED MODXO_PINOUT)
     if(PICO_BOARD EQUAL pico2)
@@ -59,43 +59,34 @@ pico_sdk_init()
 add_executable(${PROJECT_NAME})
 pico_set_binary_type(${PROJECT_NAME} copy_to_ram)
 
-configure_file(${CMAKE_CURRENT_LIST_DIR}/src/modxo/lpc/lpc_comm.in temp/lpc_comm.pio @ONLY)
-pico_generate_pio_header(${PROJECT_NAME} "temp/lpc_comm.pio")
-pico_generate_pio_header(${PROJECT_NAME} ${CMAKE_CURRENT_LIST_DIR}/src/modxo/ws2812/ws2812.pio)
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
+add_subdirectory(modxo)
+
+file(GLOB dirs LIST_DIRECTORIES true modxo_modules/*)
+foreach(subdir ${dirs})
+    IF(IS_DIRECTORY ${subdir} AND EXISTS ${subdir}/CMakeLists.txt)
+        add_subdirectory(${subdir})
+    endif()
+endforeach()
 
 #Source files
 target_sources(${PROJECT_NAME} PRIVATE
-    src/modxo/modxo.c
-    src/modxo/modxo_queue.c
-    src/modxo/modxo_ports.c
-    src/modxo/lpc/lpc_comm.in
-    src/modxo/lpc/lpc_interface.c
-    src/modxo/lpc/lpc_log.c
-    src/modxo/lpc/lpc_regs.c
-    src/modxo/flashrom/flashrom.c
-    src/modxo/data_store/data_store.c
-    src/modxo/superio/LPC47M152.c
-    src/modxo/superio/uart_16550.c
-    src/modxo/ws2812/ws2812.c
-    src/modxo/legacy_display/legacy_display.c
-    src/modxo/config/config_nvm.c
-    src/modxo/config/config_lpc.c
     src/main.c
 )
 
 # Link to pico_stdlib (gpio, time, etc. functions)
 target_link_libraries(${PROJECT_NAME} PRIVATE
     pico_stdlib
-    hardware_pio
-    hardware_dma
     pico_multicore
-    hardware_i2c
-    hardware_spi
-    hardware_flash
+    modxo
+    ws2812
+    legacy_display
+    superio
+    flashrom
 )
 
 set(PICO_DEFAULT_BINARY_TYPE copy_to_ram)
-
 pico_enable_stdio_usb(${PROJECT_NAME} 1)
 pico_enable_stdio_uart(${PROJECT_NAME} 0)
 
