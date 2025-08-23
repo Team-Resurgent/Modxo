@@ -48,8 +48,6 @@ No necesita ningún hardware especializado ni herramientas complicadas para carg
 
 #### Pasos para Flashear (BIOS simple)
 
-Los siguientes pasos no son requeridos sí pretende utilizar PrometheOS, sólo actualice PrometheOS-{variante de placa}.uf2 directamente...
-
 > [!IMPORTANT]
 > Los siguientes pasos no son requeridos sí pretende utilizar PrometheOS, sólo actualice PrometheOS-{variante de placa}.uf2 directamente...
 
@@ -59,8 +57,6 @@ Los siguientes pasos no son requeridos sí pretende utilizar PrometheOS, sólo a
 4. Copie el archivo UF2 de su BIOS en la unidad de la Raspberry Pi Pico.
 
 #### Pasos para actualizar PrometheOS en Modxo
-
-Los siguientes pasos solo son necesarios sí desea actualizar PrometheOS con actualizaciones/correciones de errores de Modxo...
 
 > [!IMPORTANT]
 > Los siguientes pasos solo son necesarios sí desea actualizar PrometheOS con actualizaciones/correciones de errores de Modxo...
