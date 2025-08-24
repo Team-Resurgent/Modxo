@@ -7,7 +7,8 @@
 
 # Vertaalde versies
 
-*Let op: sommige vertalingen kunnen verouderd zijn, het kan langer duren voordat deze zijn bijgewerkt. De Engelse versie is altijd de meest recente versie.
+> [!NOTE]
+> Sommige vertalingen kunnen verouderd zijn, het kan langer duren voordat deze zijn bijgewerkt. De Engelse versie is altijd de meest recente versie.
 
  - [English](https://github.com/Team-Resurgent/Modxo)
  - [Español](https://github.com/Team-Resurgent/Modxo/blob/main/README%20ES-MX.md)
@@ -45,7 +46,8 @@ Er is geen speciale hardware of ingewikkelde tools nodig om Modxo op een compati
 
 #### Flashen van een enkele BIOS
 
-De volgende stappen zijn niet nodig als u PrometheOS wilt gebruiken. In dit geval flasht u gewoon PrometheOS-{board variant}.uf2 rechtstreeks...
+> [!IMPORTANT]
+> De volgende stappen zijn niet nodig als u PrometheOS wilt gebruiken. In dit geval flasht u gewoon PrometheOS-{board variant}.uf2 rechtstreeks...
 
 1. Sluit de Raspberry Pi Pico aan op een pc met de BOOTSEL-knop ingedrukt (of een vergelijkbare knop op compatibele RP2040-hardware). Er zal dan een nieuw schijfstation beschikbaar komen.
 2. Kopieer Modxo-{board variant}.uf2 naar de Raspberry Pi Pico Drive.
@@ -54,7 +56,8 @@ De volgende stappen zijn niet nodig als u PrometheOS wilt gebruiken. In dit geva
 
 #### Stappen om PrometheOS op Modxo te updaten
 
-De volgende stappen zijn alleen nodig als u PrometheOS wilt updaten met Modxo-updates/bugfixes...
+> [!IMPORTANT]
+> De volgende stappen zijn alleen nodig als u PrometheOS wilt updaten met Modxo-updates/bugfixes...
 
 1. Ervan uitgaande dat PrometheOS-{board-variant}.uf2 al geflasht is.
 2. Sluit de Raspberry Pi Pico aan op een pc met de BOOTSEL-knop ingedrukt (of een vergelijkbare knop op compatibele RP2040-hardware). Er zal dan een nieuw schijfstation beschikbaar komen.
@@ -65,35 +68,40 @@ De volgende stappen zijn alleen nodig als u PrometheOS wilt updaten met Modxo-up
 #### LPC Poort
    ![LPC Header wiring diagram](images/lpc_header_wiring.png)
 
-  Notities:
-  * Voor xbox revisie 1.0 - 1.5 is D0 vereist, tenzij deze geaard is.
-  * LFrame- en LPC 3.3V-aansluitingen zijn vereist vanaf xbox revisie 1.6 of wanneer de Pico op een USB-poort wordt aangesloten.
-  * LFrame is niet vereist voor USB debugging.
-  * Herbouw van de LPC-poort is vereist voor xbox revisie 1.6.
+   > [!NOTE]
+   > * Voor xbox revisie 1.0 - 1.5 is D0 vereist, tenzij deze geaard is.
+   > * LFrame- en LPC 3.3V-aansluitingen zijn vereist vanaf xbox revisie 1.6 of wanneer de Pico op een USB-poort wordt aangesloten.
+   > * LFrame is niet vereist voor USB debugging.
+   > * Herbouw van de LPC-poort is vereist voor xbox revisie 1.6.
+
 ---
 #### Officiële Raspberry Pi Pico
 
    ![LPC Header wiring diagram](images/official_pinout_pico1.png)
 
-   * Let op: Voeg de diode toe als u de Pico via USB aansluit. Zo voorkomt u dat de 5V-pin van de LPC via de USB-kabel van stroom wordt voorzien, wat onbedoelde gevolgen kan hebben.
+   > [!NOTE]
+   > Voeg de diode toe als u de Pico via USB aansluit. Zo voorkomt u dat de 5V-pin van de LPC via de USB-kabel van stroom wordt voorzien, wat onbedoelde gevolgen kan hebben.
 ---
 #### Officiële Raspberry Pi Pico 2
 
    ![LPC Header wiring diagram](images/official_pinout_pico2.png)
 
-   * Let op: Voeg de diode toe als u de Pico via USB aansluit. Zo voorkomt u dat de 5V-pin van de LPC via de USB-kabel van stroom wordt voorzien, wat onbedoelde gevolgen kan hebben.
+   > [!NOTE]
+   > Voeg de diode toe als u de Pico via USB aansluit. Zo voorkomt u dat de 5V-pin van de LPC via de USB-kabel van stroom wordt voorzien, wat onbedoelde gevolgen kan hebben.
 ---
 #### YD-RP2040
 
    ![LPC Header wiring diagram](images/YD_RP2040_pinout.png)
 
-   * Let op: vergeet niet om soldeer toe te voegen aan jumper R68 als u de ingebouwde RGB-led gebruikt
+   > [!NOTE]
+   > Vergeet niet om soldeer toe te voegen aan jumper R68 als u de ingebouwde RGB-led gebruikt
 ---
 #### RP2040-Zero/Tiny
 
    ![LPC Header wiring diagram](images/RP2040_Zero_pinout.png)
 
-   * Let op: Voeg de diode toe als u de Pico via USB aansluit. Zo voorkomt u dat de 5V-pin van de LPC via de USB-kabel van stroom wordt voorzien, wat onbedoelde gevolgen kan hebben.
+   > [!NOTE]
+   > Voeg de diode toe als u de Pico via USB aansluit. Zo voorkomt u dat de 5V-pin van de LPC via de USB-kabel van stroom wordt voorzien, wat onbedoelde gevolgen kan hebben.
 ---
 #### XIAO-RP2040
 
@@ -166,7 +174,9 @@ docker compose run --rm bios2uf2
  * Windbg loopt soms vast wanneer deze is aangesloten op de seriële poort van Modxo SuperIO
 
 ## Notes
- * Momenteel gebruikt Modxo de ID 0xAF. Idealiter zou afgeleide hardware met aanzienlijke wijzigingen een andere ID moeten gebruiken. Dit is zodat software zoals PrometheOS zijn functies optimaal kan afstemmen.
+
+  > [!IMPORTANT]
+  > Momenteel gebruikt Modxo de ID 0xAF. Idealiter zou afgeleide hardware met aanzienlijke wijzigingen een andere ID moeten gebruiken. Dit is zodat software zoals PrometheOS zijn functies optimaal kan afstemmen.
 
 ## Vereisten voor bronvermeldingen
 
@@ -186,5 +196,5 @@ docker compose run --rm bios2uf2
 
     c) **Branding richtlijnen:**  
        U vindt de logo's en gedetailleerde branding richtlijnen in het
-       bestand `BRANDING.md` dat bij dit project is geleverd. De logo's mogen niet op een manier worden
+       bestand `BRANDING NL.md` dat bij dit project is geleverd. De logo's mogen niet op een manier worden
        gewijzigd die de oorspronkelijke branding zou vertekenen of verkeerd zou weergeven.

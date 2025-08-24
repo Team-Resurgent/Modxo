@@ -1,6 +1,7 @@
 # Branding Guidelines
 
-Derivitive projects should include the appropriate Modxo and Team Resurgent logos.
+> [!IMPORTANT]
+> Derivitive projects should include the appropriate Modxo and Team Resurgent logos.
 
 ## Modxo Horizontal Logo (PNG)
 

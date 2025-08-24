@@ -6,15 +6,14 @@
 <!--Translated by: Emmanuelito18-->
 
 # Translated versions
-
-*Note: some translations could be outdated and may take a while to be updated than english version.
+> [!NOTE]
+> Some translations could be outdated and may take a while to be updated than english version.
 
  - [English](https://github.com/Team-Resurgent/Modxo)
  - [Español](https://github.com/Team-Resurgent/Modxo/blob/main/README%20ES-MX.md)
  - [Portuguese](https://github.com/Team-Resurgent/Modxo/blob/main/README%20PT-BR.md)
  - [Nederlands](https://github.com/Team-Resurgent/Modxo/blob/main/README%20NL.md)
  - More translations coming soon
- 
 
 # Modxo
 
@@ -47,7 +46,8 @@ No specialized hardware or complicated tooling is needed to load Modxo on a comp
 
 #### Flashing steps (Single Bios)
 
-The following steps are not required if you intend to use PrometheOS, and just flash PrometheOS-{board-variant}.uf2 directly...
+> [!IMPORTANT]
+> The following steps are not required if you intend to use PrometheOS, and just flash PrometheOS-{board-variant}.uf2 directly...
 
 1. Connect Raspberry Pi Pico to a PC with BOOTSEL button (or equivalent button on compatible RP2040 hardware) pressed and a new drive will become available.
 2. Copy Modxo-{board variant}.uf2 into the Raspberry Pi Pico Drive.
@@ -56,7 +56,8 @@ The following steps are not required if you intend to use PrometheOS, and just f
 
 #### Upgrading PrometheOS's Modxo steps 
 
-The following steps are only needed if wanting to upgrade PrometheOS with Modxo updates/fixes...
+> [!IMPORTANT]
+> The following steps are only needed if wanting to upgrade PrometheOS with Modxo updates/fixes...
 
 1. Assuming PrometheOS-{board-variant}.uf2 is already flashed.
 2. Connect Raspberry Pi Pico to a PC with BOOTSEL button (or equivalent button on compatible RP2040 hardware) pressed and a new drive will become available.
@@ -67,35 +68,39 @@ The following steps are only needed if wanting to upgrade PrometheOS with Modxo 
 #### LPC Header
    ![LPC Header wiring diagram](images/lpc_header_wiring.png)
 
-  Notes:
-  * D0 is required for versions 1.0 - 1.5 unless it is grounded.
-  * LFrame and LPC 3.3V connections are required by version 1.6 or when connecting the Pico to USB port.
-  * LFrame is not required for USB debug.
-  * LPC Rebuild is required for version 1.6
+  > [!NOTE]
+  > * D0 is required for versions 1.0 - 1.5 unless it is grounded.
+  > * LFrame and LPC 3.3V connections are required by version 1.6 or when connecting the Pico to USB port.
+  > * LFrame is not required for USB debug.
+  > * LPC Rebuild is required for version 1.6
 ---
 #### Official Raspberry Pi Pico
 
    ![LPC Header wiring diagram](images/official_pinout_pico1.png)
 
-   * Note: Please add the diode if connecting the Pico to USB. This avoid powering the LPC 5V Pin from the USB cable which could have unintended consequences.
+   > [!NOTE]
+   > Please add the diode if connecting the Pico to USB. This avoid powering the LPC 5V Pin from the USB cable which could have unintended consequences.
 ---
 #### Official Raspberry Pi Pico 2
 
    ![LPC Header wiring diagram](images/official_pinout_pico2.png)
 
-   * Note: Please add the diode if connecting the Pico to USB. This avoid powering the LPC 5V Pin from the USB cable which could have unintended consequences.
+   > [!NOTE]
+   > Please add the diode if connecting the Pico to USB. This avoid powering the LPC 5V Pin from the USB cable which could have unintended consequences.
 ---
 #### YD-RP2040
 
    ![LPC Header wiring diagram](images/YD_RP2040_pinout.png)
 
-   * Note: Dont forget to add solder to jumper R68 if using the onboard RGB Led
+   > [!NOTE]
+   > Dont forget to add solder to jumper R68 if using the onboard RGB Led.
 ---
 #### RP2040-Zero/Tiny
 
    ![LPC Header wiring diagram](images/RP2040_Zero_pinout.png)
 
-   * Note:  Please add the diode if connecting the Pico to USB. This avoid powering the LPC 5V Pin from the USB cable which could have unintended consequences.
+   > [!NOTE]
+   > Please add the diode if connecting the Pico to USB. This avoid powering the LPC 5V Pin from the USB cable which could have unintended consequences.
 ---
 #### XIAO-RP2040
 
@@ -168,7 +173,9 @@ docker compose run --rm bios2uf2
  * Windbg get stuck sometimes when connected to Modxo SuperIO's serial port
 
 ## Notes
- * Currently, Modxo uses the ID 0xAF. Any derivative hardware with significant changes should ideally use a different ID. This is so that software like PrometheOS can target features appropriately.
+
+> [!IMPORTANT]
+> Currently, Modxo uses the ID 0xAF. Any derivative hardware with significant changes should ideally use a different ID. This is so that software like PrometheOS can target features appropriately.
 
 ## Attribution Requirement
 

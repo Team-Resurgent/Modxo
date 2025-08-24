@@ -1,6 +1,7 @@
 # Diretrizes de Marca
 
-Projetos derivados devem incluir os logotipos apropriados do Modxo e Team Resurgent.
+> [!IMPORTANT]
+> Projetos derivados devem incluir os logotipos apropriados do Modxo e Team Resurgent.
 
 ## Logo Horizontal do Modxo (PNG)
 
