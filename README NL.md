@@ -196,5 +196,5 @@ docker compose run --rm bios2uf2
 
     c) **Branding richtlijnen:**  
        U vindt de logo's en gedetailleerde branding richtlijnen in het
-       bestand `BRANDING.md` dat bij dit project is geleverd. De logo's mogen niet op een manier worden
+       bestand `BRANDING NL.md` dat bij dit project is geleverd. De logo's mogen niet op een manier worden
        gewijzigd die de oorspronkelijke branding zou vertekenen of verkeerd zou weergeven.

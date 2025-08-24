@@ -199,5 +199,5 @@ docker compose run --rm bios2uf2
 
     c) **Diretrizes de Marca:**  
        Você pode encontrar os logos e diretrizes detalhadas de marca no 
-       arquivo `BRANDING.md` fornecido com este projeto. Os logos não devem 
+       arquivo `BRANDING PT-BR.md` fornecido com este projeto. Os logos não devem 
        ser alterados de qualquer forma que distorça ou deturpe a marca original.
