@@ -10,7 +10,7 @@
 > [!NOTE]
 > Sommige vertalingen kunnen verouderd zijn, het kan langer duren voordat deze zijn bijgewerkt. De Engelse versie is altijd de meest recente versie.
 
-- [English](https://github.com/Team-Resurgent/Modxo)
+- [English](https://github.com/Team-Resurgent/Modxo/blob/main/README.md)
 - [Español](https://github.com/Team-Resurgent/Modxo/blob/main/README%20ES-MX.md)
 - [Portuguese](https://github.com/Team-Resurgent/Modxo/blob/main/README%20PT-BR.md)
 - [Nederlands](https://github.com/Team-Resurgent/Modxo/blob/main/README%20NL.md)
@@ -76,7 +76,6 @@ Er is geen speciale hardware of ingewikkelde tools nodig om Modxo op een compati
    ![LPC Header wiring diagram](images/lpc_header_wiring.png)
 
    > [!NOTE]
-   >
    > - Voor xbox revisie 1.0 - 1.5 is D0 vereist, tenzij deze geaard is.
    > - LFrame- en LPC 3.3V-aansluitingen zijn vereist vanaf xbox revisie 1.6 of wanneer de Pico op een USB-poort wordt aangesloten.
    > - LFrame is niet vereist voor USB debugging.

@@ -10,7 +10,7 @@
 > [!NOTE]
 > Algunas traducciones pueden estár desactualizadas, y puede tardar un poco en actualizarse en comparación con la versión en inglés.
 
-- [English](https://github.com/Team-Resurgent/Modxo)
+- [English](https://github.com/Team-Resurgent/Modxo/blob/main/README.md)
 - [Español](https://github.com/Team-Resurgent/Modxo/blob/main/README%20ES-MX.md)
 - [Portuguese](https://github.com/Team-Resurgent/Modxo/blob/main/README%20PT-BR.md)
 - [Nederlands](https://github.com/Team-Resurgent/Modxo/blob/main/README%20NL.md)
@@ -77,7 +77,6 @@ No necesita ningún hardware especializado ni herramientas complicadas para carg
    ![Diagrama de cableado del LPC](images/lpc_header_wiring.png)
 
   > [!NOTE]
-  >
   > - D0 es requerido para versiones 1.0 - 1.5 a menos esté conectado a tierra.
   > - Las conexiones LFrame y LPC 3.3v solo son necesarios para la versión 1.6 o cuando se conecta la Raspberry Pi Pico al puerto USB.
   > - LFrame no es requerido para la depuración USB.
