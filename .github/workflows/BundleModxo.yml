@@ -5,13 +5,40 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-    
-  workflow_dispatch:
+  workflow_dispatch: {}
   
 jobs:
   build:
-  
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        pinout: 
+          - official_pico
+          - official_pico2
+          - yd_rp2040
+          - rp2040_zero_tiny
+          - xiao_rp2040
+          - ultra
+        include:
+          - pinout: official_pico
+            pretty_name: Official Pico
+            output_name: modxo_official_pico
+          - pinout: official_pico2
+            pretty_name: Official Pico 2
+            output_name: modxo_official_pico2
+          - pinout: yd_rp2040
+            pretty_name: YD-RP2040
+            output_name: modxo_yd_rp2040
+          - pinout: rp2040_zero_tiny
+            pretty_name: RP2040-Zero-Tiny
+            output_name: modxo_rp2040_zero_tiny
+          - pinout: xiao_rp2040
+            pretty_name: XIAO-RP2040
+            output_name: modxo_xiao_rp2040
+          - pinout: ultra
+            pretty_name: Ultra
+            output_name: modxo_ultra
+
 
     steps:
       - uses: actions/checkout@v4
@@ -27,72 +54,54 @@ jobs:
           mkdir build
           mkdir output
 
-      - name: Build Modxo Official Pico2
-        run: |
-          cd ${{ github.workspace }}/build
-          cmake -DPICO_SDK_PATH=${{ github.workspace }}/pico-sdk -DMODXO_PINOUT=official_pico2 .. 
-          cmake --build .
-          cp ${{ github.workspace }}/build/modxo_official_pico2.bin ${{ github.workspace }}/output/modxo_official_pico2.bin
-          cp ${{ github.workspace }}/build/modxo_official_pico2.uf2 ${{ github.workspace }}/output/modxo_official_pico2.uf2
+      - name: Build Modxo ${{ matrix.pretty_name }}
+        uses: threeal/cmake-action@v2
+        id: cmake
+        with:
+          options: |
+            PICO_SDK_PATH=${{ github.workspace }}/pico-sdk
+            MODXO_PINOUT=${{ matrix.pinout }}
 
-      - name: Build Modxo Official Pico
+      - name: Copy files
         run: |
-          cd ${{ github.workspace }}/build
-          rm -fr ./*
-          cmake -DPICO_SDK_PATH=${{ github.workspace }}/pico-sdk -DMODXO_PINOUT=official_pico .. 
-          cmake --build .
-          cp ${{ github.workspace }}/build/modxo_official_pico.bin ${{ github.workspace }}/output/modxo_official_pico.bin
-          cp ${{ github.workspace }}/build/modxo_official_pico.uf2 ${{ github.workspace }}/output/modxo_official_pico.uf2
+          cp ${{ steps.cmake.outputs.build-dir }}/${{ matrix.output_name }}.bin ${{ github.workspace }}/output/
+          cp ${{ steps.cmake.outputs.build-dir }}/${{ matrix.output_name }}.uf2 ${{ github.workspace }}/output/
 
-      - name: Build Modxo YD-RP2040
-        run: |
-          cd ${{ github.workspace }}/build
-          cmake -DPICO_SDK_PATH=${{ github.workspace }}/pico-sdk -DMODXO_PINOUT=yd_rp2040 .. 
-          cmake --build .
-          cp ${{ github.workspace }}/build/modxo_yd_rp2040.bin ${{ github.workspace }}/output/modxo_yd_rp2040.bin
-          cp ${{ github.workspace }}/build/modxo_yd_rp2040.uf2 ${{ github.workspace }}/output/modxo_yd_rp2040.uf2
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.pretty_name }}
+          path: ${{ github.workspace }}/output/*
+          if-no-files-found: error
 
-      - name: Build Modxo RP2040-Zero-Tiny
-        run: |
-          cd ${{ github.workspace }}/build
-          cmake -DPICO_SDK_PATH=${{ github.workspace }}/pico-sdk -DMODXO_PINOUT=rp2040_zero_tiny .. 
-          cmake --build .
-          cp ${{ github.workspace }}/build/modxo_rp2040_zero_tiny.bin ${{ github.workspace }}/output/modxo_rp2040_zero_tiny.bin
-          cp ${{ github.workspace }}/build/modxo_rp2040_zero_tiny.uf2 ${{ github.workspace }}/output/modxo_rp2040_zero_tiny.uf2
-
-      - name: Build Modxo XIAO-RP2040
-        run: |
-          cd ${{ github.workspace }}/build
-          cmake -DPICO_SDK_PATH=${{ github.workspace }}/pico-sdk -DMODXO_PINOUT=xiao_rp2040 .. 
-          cmake --build .
-          cp ${{ github.workspace }}/build/modxo_xiao_rp2040.bin ${{ github.workspace }}/output/modxo_xiao_rp2040.bin
-          cp ${{ github.workspace }}/build/modxo_xiao_rp2040.uf2 ${{ github.workspace }}/output/modxo_xiao_rp2040.uf2
-
-      - name: Build Modxo Ultra
-        run: |
-          cd ${{ github.workspace }}/build
-          cmake -DPICO_SDK_PATH=${{ github.workspace }}/pico-sdk -DMODXO_PINOUT=ultra .. 
-          cmake --build .
-          cp ${{ github.workspace }}/build/modxo_ultra.bin ${{ github.workspace }}/output/modxo_ultra.bin
-          cp ${{ github.workspace }}/build/modxo_ultra.uf2 ${{ github.workspace }}/output/modxo_ultra.uf2
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        id: artifacts
+        with:
+          path: pipeline/build/artifacts
+          merge-multiple: true
 
       - name: List Files
-        run: ls ${{ github.workspace }}/build
+        run: |
+          ls -la ${{ steps.artifacts.outputs.download-path }}
 
       - name: Create Draft Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
           draft: true
           files: |
-            ${{ github.workspace }}/output/*.bin
-            ${{ github.workspace }}/output/*.uf2
+            ${{ steps.artifacts.outputs.download-path }}/*
 
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            ${{ github.workspace }}/output/*.bin
-            ${{ github.workspace }}/output/*.uf2
+            ${{ steps.artifacts.outputs.download-path }}/*
 
