@@ -6,27 +6,30 @@
 <!--Translated by: Emmanuelito18-->
 
 # Translated versions
+
 > [!NOTE]
 > Some translations could be outdated and may take a while to be updated than english version.
 
- - [English](https://github.com/Team-Resurgent/Modxo/blob/main/README.md)
- - [Español](https://github.com/Team-Resurgent/Modxo/blob/main/README%20ES-MX.md)
- - [Portuguese](https://github.com/Team-Resurgent/Modxo/blob/main/README%20PT-BR.md)
- - [Nederlands](https://github.com/Team-Resurgent/Modxo/blob/main/README%20NL.md)
- - More translations coming soon
+- [English](https://github.com/Team-Resurgent/Modxo/blob/main/README.md)
+- [Español](https://github.com/Team-Resurgent/Modxo/blob/main/README%20ES-MX.md)
+- [Portuguese](https://github.com/Team-Resurgent/Modxo/blob/main/README%20PT-BR.md)
+- [Nederlands](https://github.com/Team-Resurgent/Modxo/blob/main/README%20NL.md)
+- More translations coming soon
 
 # Modxo
 
-Modxo (pronnounced "Modsho") is an RP2040 firmware that converts a Raspberry Pi Pico (or similar RP2040-based device) into an Original Xbox-compatible LPC peripheral device. 
+Modxo (pronnounced "Modsho") is an RP2040 firmware that converts a Raspberry Pi Pico (or similar RP2040-based device) into an Original Xbox-compatible LPC peripheral device.
 
 Modxo can be used for loading an Xbox BIOS image from the LPC port, as well as for interfacing compatible Xbox software with peripheral devices such as HD44780 displays or addressable RGB LEDs.
 
-Modxo is *not* a modchip. Whereas legacy modchips rely on largely obsolete hardware like LPC flash storage chips or expensive programmable logic ICs, Modxo is the first fully software-defined implementation of an LPC peripheral device. It is open source software, mostly written in C, developed using the official Raspberry Pi Pico SDK and designed to run on RP2040-based hardware. 
+Modxo is *not* a modchip. Whereas legacy modchips rely on largely obsolete hardware like LPC flash storage chips or expensive programmable logic ICs, Modxo is the first fully software-defined implementation of an LPC peripheral device. It is open source software, mostly written in C, developed using the official Raspberry Pi Pico SDK and designed to run on RP2040-based hardware.
 
 No specialized hardware or complicated tooling is needed to load Modxo on a compatible device -- in most cased just a USB cable is all that is necessary. And installation works much like legacy devices -- all that is needed for installation is a compatible RP2040-based device, a few resistors, wire and basic soldering equipment. Custom PCBs exist to simplify the installation process even further.
 
 ## How to Install
+
 ### Requirements
+
 - An Xbox (any revision) with a working LPC Port. 1.6 Xboxes will need an LPC rebuild.
 - A RP2040 development board. There may be some clone boards that are not compatible. The following boards are known to work with Modxo:
 - - Official Raspberry Pi Pico
@@ -40,6 +43,7 @@ No specialized hardware or complicated tooling is needed to load Modxo on a comp
 ### Flashing firmware
 
 #### Packing Bios
+
 1. Go to [https://team-resurgent.github.io/modxo/](https://team-resurgent.github.io/Modxo/)
 2. Drag and Drop your bios file
 3. UF2 File with bios image will be downloaded
@@ -54,7 +58,7 @@ No specialized hardware or complicated tooling is needed to load Modxo on a comp
 3. Reconnect Raspberry Pi Pico with BOOTSEL button pressed, so the previous drive will showup again.
 4. Copy your bios UF2 file into the drive
 
-#### Upgrading PrometheOS's Modxo steps 
+#### Upgrading PrometheOS's Modxo steps
 
 > [!IMPORTANT]
 > The following steps are only needed if wanting to upgrade PrometheOS with Modxo updates/fixes...
@@ -62,18 +66,23 @@ No specialized hardware or complicated tooling is needed to load Modxo on a comp
 1. Assuming PrometheOS-{board-variant}.uf2 is already flashed.
 2. Connect Raspberry Pi Pico to a PC with BOOTSEL button (or equivalent button on compatible RP2040 hardware) pressed and a new drive will become available.
 3. Copy Modxo-{board variant}.uf2 into the Raspberry Pi Pico Drive.
-   
+
 ### Wiring diagrams
+
 ---
+
 #### LPC Header
+
    ![LPC Header wiring diagram](images/lpc_header_wiring.png)
 
   > [!NOTE]
-  > * D0 is required for versions 1.0 - 1.5 unless it is grounded.
-  > * LFrame and LPC 3.3V connections are required by version 1.6 or when connecting the Pico to USB port.
-  > * LFrame is not required for USB debug.
-  > * LPC Rebuild is required for version 1.6
+  > - D0 is required for versions 1.0 - 1.5 unless it is grounded.
+  > - LFrame and LPC 3.3V connections are required by version 1.6 or when connecting the Pico to USB port.
+  > - LFrame is not required for USB debug.
+  > - LPC Rebuild is required for version 1.6
+  >
 ---
+
 #### Official Raspberry Pi Pico
 
    ![LPC Header wiring diagram](images/official_pinout_pico1.png)
@@ -81,6 +90,7 @@ No specialized hardware or complicated tooling is needed to load Modxo on a comp
    > [!NOTE]
    > Please add the diode if connecting the Pico to USB. This avoid powering the LPC 5V Pin from the USB cable which could have unintended consequences.
 ---
+
 #### Official Raspberry Pi Pico 2
 
    ![LPC Header wiring diagram](images/official_pinout_pico2.png)
@@ -88,6 +98,7 @@ No specialized hardware or complicated tooling is needed to load Modxo on a comp
    > [!NOTE]
    > Please add the diode if connecting the Pico to USB. This avoid powering the LPC 5V Pin from the USB cable which could have unintended consequences.
 ---
+
 #### YD-RP2040
 
    ![LPC Header wiring diagram](images/YD_RP2040_pinout.png)
@@ -95,6 +106,7 @@ No specialized hardware or complicated tooling is needed to load Modxo on a comp
    > [!NOTE]
    > Dont forget to add solder to jumper R68 if using the onboard RGB Led.
 ---
+
 #### RP2040-Zero/Tiny
 
    ![LPC Header wiring diagram](images/RP2040_Zero_pinout.png)
@@ -102,6 +114,7 @@ No specialized hardware or complicated tooling is needed to load Modxo on a comp
    > [!NOTE]
    > Please add the diode if connecting the Pico to USB. This avoid powering the LPC 5V Pin from the USB cable which could have unintended consequences.
 ---
+
 #### XIAO-RP2040
 
    ![LPC Header wiring diagram](images/XIAO-RP2040_pnout.png)
@@ -111,6 +124,7 @@ No specialized hardware or complicated tooling is needed to load Modxo on a comp
 ## Firmware Build Instructions
 
 ### Windows
+
 1.- Download and Install [Visual Studio Code](https://code.visualstudio.com/download)
 
 2.- Install extension: "Raspberry Pi Pico"
@@ -129,15 +143,18 @@ No specialized hardware or complicated tooling is needed to load Modxo on a comp
 
 7.- UF2 File will be generated on Build folder
 
-
 ### Docker
+
 #### Setup
+
 Build your base docker image with
+
 ```
 docker build -t modxo-builder .
 ```
 
 #### Firmware Build
+
 ```
 docker compose run --rm builder
 ```
@@ -152,17 +169,20 @@ There are also some extra parameters that can be passed to the build script:
 
 - BUILD_TYPE=`Release` | `Debug` - Default is `Debug`.
 
+*Examples:*
 
-_Examples:_
 ```
 MODXO_PINOUT=rp2040_zero BUILD_TYPE=Release docker compose run --rm builder
 ```
+
 ```
 CLEAN MODXO_PINOUT=yd_rp2040 docker compose run --rm builder
 ```
 
 #### Packing Bios locally
+
 Place your bios file named `bios.bin` in this directory or place any bios files (regardless of their name) in the bios directory
+
 ```
 docker compose run --rm bios2uf2
 ```
@@ -170,7 +190,8 @@ docker compose run --rm bios2uf2
 ---
 
 ## Known bugs
- * Windbg get stuck sometimes when connected to Modxo SuperIO's serial port
+
+- Windbg get stuck sometimes when connected to Modxo SuperIO's serial port
 
 ## Notes
 

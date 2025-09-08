@@ -10,11 +10,11 @@
 > [!NOTE]
 > Algumas traduções podem estar desatualizadas e podem demorar um tempo para serem atualizadas em relação à versão em inglês.
 
- - [English](https://github.com/Team-Resurgent/Modxo)
- - [Español](https://github.com/Team-Resurgent/Modxo/blob/main/README%20ES-MX.md)
- - [Portuguese](https://github.com/Team-Resurgent/Modxo/blob/main/README%20PT-BR.md)
- - Mais traduções em breve
- 
+- [English](https://github.com/Team-Resurgent/Modxo/blob/main/README.md)
+- [Español](https://github.com/Team-Resurgent/Modxo/blob/main/README%20ES-MX.md)
+- [Portuguese](https://github.com/Team-Resurgent/Modxo/blob/main/README%20PT-BR.md)
+- [Nederlands](https://github.com/Team-Resurgent/Modxo/blob/main/README%20NL.md)
+- Mais traduções em breve
 
 # Modxo
 
@@ -27,7 +27,9 @@ O Modxo *não* é um modchip. Enquanto os modchips legados dependem de hardware 
 Nenhum hardware especializado ou ferramentas complicadas são necessárias para carregar o Modxo em um dispositivo compatível -- na maioria dos casos apenas um cabo USB é tudo que é necessário. E a instalação funciona muito como dispositivos legados -- tudo que é necessário para instalação é um dispositivo compatível baseado em RP2040, alguns resistores, fios e equipamentos básicos de solda. PCBs customizadas existem para simplificar ainda mais o processo de instalação.
 
 ## Como Instalar
+
 ### Requisitos
+
 - Um Xbox (qualquer revisão) com uma Porta LPC funcionando. Xbox's 1.6 precisarão de uma reconstrução LPC.
 - Uma placa de desenvolvimento RP2040. Pode haver algumas placas clones que não são compatíveis. As seguintes placas são conhecidas por funcionar com o Modxo:
 - - Raspberry Pi Pico Oficial
@@ -41,6 +43,7 @@ Nenhum hardware especializado ou ferramentas complicadas são necessárias para 
 ### Gravando o firmware
 
 #### Empacotando a BIOS
+
 1. Vá para [https://team-resurgent.github.io/modxo/](https://team-resurgent.github.io/Modxo/)
 2. Arraste e solte seu arquivo de BIOS
 3. O arquivo UF2 com a imagem da BIOS será baixado
@@ -62,22 +65,26 @@ Os seguintes passos não são necessários se você pretende usar o PrometheOS, 
 > [!IMPORTANT]
 > Os seguintes passos são necessários apenas se quiser atualizar o PrometheOS com atualizações/correções do Modxo...
 
-
 1. Assumindo que o PrometheOS-{variante-da-placa}.uf2 já está gravado.
 2. Conecte o Raspberry Pi Pico a um PC com o botão BOOTSEL (ou botão equivalente em hardware RP2040 compatível) pressionado e uma nova unidade ficará disponível.
 3. Copie o Modxo-{variante da placa}.uf2 para a unidade do Raspberry Pi Pico.
-   
+
 ### Diagramas de fiação
+
 ---
+
 #### Cabeçalho LPC
+
    ![Diagrama de fiação do cabeçalho LPC](images/lpc_header_wiring.png)
 
   > [!NOTE]
-  > * D0 é necessário para versões 1.0 - 1.5 a menos que esteja aterrado.
-  > * Conexões LFrame e LPC 3.3V são necessárias pela versão 1.6 ou quando conectar o Pico à porta USB.
-  > * LFrame não é necessário para debug USB.
-  > * Reconstrução LPC é necessária para versão 1.6
+  > - D0 é necessário para versões 1.0 - 1.5 a menos que esteja aterrado.
+  > - Conexões LFrame e LPC 3.3V são necessárias pela versão 1.6 ou quando conectar o Pico à porta USB.
+  > - LFrame não é necessário para debug USB.
+  > - Reconstrução LPC é necessária para versão 1.6
+  >
 ---
+
 #### Raspberry Pi Pico Oficial
 
    ![Diagrama de fiação do cabeçalho LPC](images/official_pinout_pico1.png)
@@ -85,6 +92,7 @@ Os seguintes passos não são necessários se você pretende usar o PrometheOS, 
    > [!NOTE]
    > Por favor adicione o diodo se conectar o Pico ao USB. Isso evita alimentar o pino LPC 5V através do cabo USB, o que poderia ter consequências não intencionais.
 ---
+
 #### Raspberry Pi Pico 2 Oficial
 
    ![Diagrama de fiação do cabeçalho LPC](images/official_pinout_pico2.png)
@@ -92,6 +100,7 @@ Os seguintes passos não são necessários se você pretende usar o PrometheOS, 
    > [!NOTE]
    > Por favor adicione o diodo se conectar o Pico ao USB. Isso evita alimentar o pino LPC 5V através do cabo USB, o que poderia ter consequências não intencionais.
 ---
+
 #### YD-RP2040
 
    ![Diagrama de fiação do cabeçalho LPC](images/YD_RP2040_pinout.png)
@@ -99,6 +108,7 @@ Os seguintes passos não são necessários se você pretende usar o PrometheOS, 
    > [!NOTE]
    > Não esqueça de adicionar solda ao jumper R68 se usar o LED RGB integrado
 ---
+
 #### RP2040-Zero/Tiny
 
    ![Diagrama de fiação do cabeçalho LPC](images/RP2040_Zero_pinout.png)
@@ -106,6 +116,7 @@ Os seguintes passos não são necessários se você pretende usar o PrometheOS, 
    > [!NOTE]
    > Por favor adicione o diodo se conectar o Pico ao USB. Isso evita alimentar o pino LPC 5V através do cabo USB, o que poderia ter consequências não intencionais.
 ---
+
 #### XIAO-RP2040
 
    ![Diagrama de fiação do cabeçalho LPC](images/XIAO-RP2040_pnout.png)
@@ -115,6 +126,7 @@ Os seguintes passos não são necessários se você pretende usar o PrometheOS, 
 ## Instruções de Compilação do Firmware
 
 ### Windows
+
 1.- Baixe e instale o [Visual Studio Code](https://code.visualstudio.com/download)
 
 2.- Instale a extensão: "Raspberry Pi Pico"
@@ -133,15 +145,18 @@ Os seguintes passos não são necessários se você pretende usar o PrometheOS, 
 
 7.- O arquivo UF2 será gerado na pasta Build
 
-
 ### Docker
+
 #### Configuração
+
 Compile sua imagem docker base com
+
 ```
 docker build -t modxo-builder .
 ```
 
 #### Compilação do Firmware
+
 ```
 docker compose run --rm builder
 ```
@@ -156,17 +171,20 @@ Também há alguns parâmetros extras que podem ser passados para o script de co
 
 - BUILD_TYPE=`Release` | `Debug` - O padrão é `Debug`.
 
+*Exemplos:*
 
-_Exemplos:_
 ```
 MODXO_PINOUT=rp2040_zero BUILD_TYPE=Release docker compose run --rm builder
 ```
+
 ```
 CLEAN MODXO_PINOUT=yd_rp2040 docker compose run --rm builder
 ```
 
 #### Empacotando BIOS localmente
+
 Coloque seu arquivo de BIOS nomeado `bios.bin` neste diretório ou coloque quaisquer arquivos de BIOS (independentemente do nome) no diretório bios
+
 ```
 docker compose run --rm bios2uf2
 ```
@@ -174,9 +192,11 @@ docker compose run --rm bios2uf2
 ---
 
 ## Bugs conhecidos
- * Windbg às vezes trava quando conectado à porta serial SuperIO do Modxo
+
+- Windbg às vezes trava quando conectado à porta serial SuperIO do Modxo
 
 ## Notas
+ >
  > [!IMPORTANT]
  > Atualmente, Modxo usa o ID 0xAF. Idealmente, qualquer hardware derivado com mudanças significativas deveria usar um ID diferente. Isso é para que um software como o PrometheOS possa mirar suas características de forma adequada.
 
