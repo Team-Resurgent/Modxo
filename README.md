@@ -77,8 +77,8 @@ No specialized hardware or complicated tooling is needed to load Modxo on a comp
 
   > [!NOTE]
   > - D0 is required for versions 1.0 - 1.5 unless it is grounded.
-  > - LFrame and LPC 3.3V connections are required by version 1.6 or when connecting the Pico to USB port.
-  > - LFrame is not required for USB debug.
+  > - LFrame connection is required by version 1.6.
+  > - LPC 3.3V is required for all versions
   > - LPC Rebuild is required for version 1.6
   >
 ---
@@ -89,6 +89,7 @@ No specialized hardware or complicated tooling is needed to load Modxo on a comp
 
    > [!NOTE]
    > Please add the diode if connecting the Pico to USB. This avoid powering the LPC 5V Pin from the USB cable which could have unintended consequences.
+   > LPC 3.3V is required for all versions
 ---
 
 #### Official Raspberry Pi Pico 2
@@ -97,6 +98,7 @@ No specialized hardware or complicated tooling is needed to load Modxo on a comp
 
    > [!NOTE]
    > Please add the diode if connecting the Pico to USB. This avoid powering the LPC 5V Pin from the USB cable which could have unintended consequences.
+   > LPC 3.3V is required for all versions
 ---
 
 #### YD-RP2040
@@ -105,6 +107,7 @@ No specialized hardware or complicated tooling is needed to load Modxo on a comp
 
    > [!NOTE]
    > Dont forget to add solder to jumper R68 if using the onboard RGB Led.
+   > LPC 3.3V is required for all versions
 ---
 
 #### RP2040-Zero/Tiny
@@ -113,6 +116,7 @@ No specialized hardware or complicated tooling is needed to load Modxo on a comp
 
    > [!NOTE]
    > Please add the diode if connecting the Pico to USB. This avoid powering the LPC 5V Pin from the USB cable which could have unintended consequences.
+   > LPC 3.3V is required for all versions
 ---
 
 #### XIAO-RP2040
