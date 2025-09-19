@@ -78,8 +78,8 @@ No necesita ningún hardware especializado ni herramientas complicadas para carg
 
   > [!NOTE]
   > - D0 es requerido para versiones 1.0 - 1.5 a menos esté conectado a tierra.
-  > - Las conexiones LFrame y LPC 3.3v solo son necesarios para la versión 1.6 o cuando se conecta la Raspberry Pi Pico al puerto USB.
-  > - LFrame no es requerido para la depuración USB.
+  > - Las conexion LFrame solo es necesaria para la versión 1.6.
+  > - LPC 3.3v es requerida para todas las versiones
   > - Se requiere una reconstrucción del LPC para la versión 1.6
   >
 ---
@@ -90,6 +90,7 @@ No necesita ningún hardware especializado ni herramientas complicadas para carg
 
    > [!NOTE]
    > Agregue el diodo si conecta la Raspberry Pi Pico al USB. Esto evita que se alimente el el pin LPC de 5v desde el cable USB, lo que podría tener consecuencias no deseadas.
+   > LPC 3.3v es requerida para todas las versiones
 ---
 
 #### Raspberry Pi Pico 2 (Oficial)
@@ -98,6 +99,7 @@ No necesita ningún hardware especializado ni herramientas complicadas para carg
 
    > [!NOTE]
    > Agregue el diodo si conecta la Raspberry Pi Pico al USB. Esto evita que se alimente el pin LPC de 5v desde el cable USB, lo que podría tener consecuencias no deseadas.
+   > LPC 3.3v es requerida para todas las versiones
 ---
 
 #### YD-RP2040
@@ -106,6 +108,7 @@ No necesita ningún hardware especializado ni herramientas complicadas para carg
 
    > [!NOTE]
    > No olvide puentear R68 si usa LEDS RGB integrados en la placa
+   > LPC 3.3v es requerida para todas las versiones
 ---
 
 #### RP2040-Zero/Tiny
@@ -114,6 +117,7 @@ No necesita ningún hardware especializado ni herramientas complicadas para carg
 
    > [!NOTE]
    > Por favor agrege el diodo si conecta la Raspberry Pi Pico al USB. Esto evita que se alimente el pin LPC de 5v desde el cable USB, lo que podría tener consecuencias no deseadas.
+   > LPC 3.3v es requerida para todas las versiones
 ---
 
 #### XIAO-RP2040
