@@ -24,7 +24,18 @@ typedef struct {
 	void (*lpc_reset_on)(void);
 	void (*lpc_reset_off)(void);
 	void (*shutdown)(void);
+	void (*core1_init)(void);
 }MODXO_TASK;
+
+
+extern MODXO_TASK* modxo_handlers[];
+extern uint8_t handler_count;
+
+#define RUN_MODXO_HANDLERS(func) \
+    {for(int _modxo_handler_idx = 0; _modxo_handler_idx < handler_count; _modxo_handler_idx++) \
+        if(modxo_handlers[_modxo_handler_idx] != NULL && modxo_handlers[_modxo_handler_idx]->func != NULL) \
+            modxo_handlers[_modxo_handler_idx]->func();}
+
 
 extern bool (*modxo_debug_sp_connected)(void);
 void modxo_register_handler(MODXO_TASK* handler);
