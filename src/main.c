@@ -76,6 +76,12 @@ void core0_main()
     }
 }
 
+void core1_init() {
+    RUN_MODXO_HANDLERS(core1_init);
+
+    core1_main(); // Infinite loop
+}
+
 void init_status_led() {
     gpio_init(LED_STATUS_PIN);
     gpio_set_dir(LED_STATUS_PIN, GPIO_OUT);
@@ -169,10 +175,11 @@ int main(void)
     sleep_ms(2000);
 #endif
 
-    multicore_reset_core1();
-    multicore_launch_core1(core1_main);
-
     register_handlers();
+
+    multicore_reset_core1();
+    multicore_launch_core1(core1_init);
+
     modxo_init();
     set_sys_clock_khz(SYS_FREQ_DEFAULT, true);
     modxo_init_interrupts();

@@ -39,14 +39,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "hardware/watchdog.h"
 #include "hardware/clocks.h"
 
-#define RUN_MODXO_HANDLERS(func) \
-    {for(int _modxo_handler_idx = 0; _modxo_handler_idx < handler_count; _modxo_handler_idx++) \
-        if(modxo_handlers[_modxo_handler_idx] != NULL && modxo_handlers[_modxo_handler_idx]->func != NULL) \
-            modxo_handlers[_modxo_handler_idx]->func();}
-
 extern uint8_t current_led_color;
-static MODXO_TASK* modxo_handlers[15] = {NULL};
-static uint8_t handler_count = 0;
+MODXO_TASK* modxo_handlers[15] = {NULL};
+uint8_t handler_count = 0;
 
 bool (*modxo_debug_sp_connected)(void);
 
