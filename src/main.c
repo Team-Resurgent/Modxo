@@ -138,7 +138,7 @@ void core0_irq_handler(uint gpio, uint32_t event)
     }
 }
 
-static void modxo_init_pin_irq(uint pin, uint32_t event)
+void modxo_init_pin_irq(uint pin, uint32_t event)
 {
     gpio_init(pin);
     gpio_set_dir(pin, GPIO_IN);
