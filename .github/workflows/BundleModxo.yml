@@ -29,6 +29,9 @@ jobs:
           - pinout: yd_rp2040
             pretty_name: YD-RP2040
             output_name: modxo_yd_rp2040
+          - pinout: yd_rp2350
+            pretty_name: YD-RP2350
+            output_name: modxo_yd_rp2350
           - pinout: rp2040_zero_tiny
             pretty_name: RP2040-Zero-Tiny
             output_name: modxo_rp2040_zero_tiny
