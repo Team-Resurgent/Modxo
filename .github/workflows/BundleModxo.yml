@@ -23,21 +23,27 @@ jobs:
           - pinout: official_pico
             pretty_name: Official Pico
             output_name: modxo_official_pico
+            pico_board: pico
           - pinout: official_pico2
             pretty_name: Official Pico 2
             output_name: modxo_official_pico2
+            pico_board: pico2
           - pinout: yd_rp2040
             pretty_name: YD-RP2040
             output_name: modxo_yd_rp2040
+            pico_board: pico
           - pinout: rp2040_zero_tiny
             pretty_name: RP2040-Zero-Tiny
             output_name: modxo_rp2040_zero_tiny
+            pico_board: pico
           - pinout: xiao_rp2040
             pretty_name: XIAO-RP2040
             output_name: modxo_xiao_rp2040
+            pico_board: pico
           - pinout: ultra
             pretty_name: Ultra
             output_name: modxo_ultra
+            pico_board: pico
 
 
     steps:
@@ -61,6 +67,7 @@ jobs:
           options: |
             PICO_SDK_PATH=${{ github.workspace }}/pico-sdk
             MODXO_PINOUT=${{ matrix.pinout }}
+            PICO_BOARD=${{ matrix.pico_board }}
 
       - name: Copy files
         run: |
