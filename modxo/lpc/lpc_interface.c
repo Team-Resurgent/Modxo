@@ -235,12 +235,7 @@ static void enable_pio_interrupts(void)
     // irq_set_enabled(PIO0_IRQ_1, true);
 }
 
-/*
-    Used for LFRAME Cancel
-*/
-void lpc_interface_disable_onboard_flash(bool disable)
-{
-    _disable_internal_flash = disable;
+void setup_onboard_flash() {
     if (_disable_internal_flash)
     {
         gpio_put(GPIO_D0, 0);
@@ -250,6 +245,29 @@ void lpc_interface_disable_onboard_flash(bool disable)
     {
         gpio_set_dir(GPIO_D0, GPIO_IN);
     }
+
+    // Re-setup LFrame cancel
+    bool pin_dir_out = _disable_internal_flash;
+    uint lframe_pin  = _disable_internal_flash ? LPC_LFRAME : 31;
+
+    pio_sm_set_enabled(_pio, LPC_OP_MEM_READ, false);
+    pio_sm_set_enabled(_pio, LPC_OP_MEM_WRITE, false);
+
+    pio_sm_set_consecutive_pindirs(_pio, LPC_OP_MEM_READ, LPC_LFRAME, 1, pin_dir_out);
+    pio_sm_set_consecutive_pindirs(_pio, LPC_OP_MEM_WRITE, LPC_LFRAME, 1, pin_dir_out);
+    sm_config_set_sideset_pins(&modxo_pio_main_config, lframe_pin);
+
+    pio_sm_set_enabled(_pio, LPC_OP_MEM_READ, true);
+    pio_sm_set_enabled(_pio, LPC_OP_MEM_WRITE, true);
+}
+
+/*
+    Used for LFRAME Cancel
+*/
+void lpc_interface_disable_onboard_flash(bool disable)
+{
+    _disable_internal_flash = disable;
+    setup_onboard_flash();
 }
 
 void lpc_interface_set_callback(LPC_OP_TYPE op, lpc_handler_cback cback)
@@ -297,15 +315,7 @@ void lpc_interface_init(void)
     gpio_init(GPIO_D0);
     gpio_disable_pulls(GPIO_D0);
 
-    if (_disable_internal_flash)
-    {
-        gpio_put(GPIO_D0, 0);
-        gpio_set_dir(GPIO_D0, GPIO_OUT);
-    }
-    else
-    {
-        gpio_set_dir(GPIO_D0, GPIO_IN);
-    }
+    setup_onboard_flash();
 
     // lpc_disable_tsop(disable_internal_flash);
 
