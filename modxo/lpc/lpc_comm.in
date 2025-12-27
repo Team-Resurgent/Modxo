@@ -77,34 +77,37 @@ repeat:
 
 #define LAD_PIN_COUNT 4
 
+pio_sm_config modxo_pio_main_config;
+
 void lpc_read_request_init(PIO pio, uint sm, uint offset, uint address_size, bool lframe_cancel) {
     pio_sm_set_enabled(pio, sm, false);
-    pio_sm_config c =lpc_read_request_program_get_default_config(offset);
-  
+    modxo_pio_main_config = lpc_read_request_program_get_default_config(offset);
+    pio_sm_config *c = &modxo_pio_main_config;
+
     sm_config_set_in_shift(
-        &c,
+        c,
         false,  // ShiftDir : true: shift ISR to right, false: shift ISR to left
         true,   // AutoPush : true: enabled, false: disabled
         address_size      // AutoPush threshold: <0-32>
     );
 
     // Set 'IN' base pin. To read the LAD[0-3].
-    sm_config_set_in_pins (&c, LPC_LAD_START);
-    sm_config_set_out_pins(&c, LPC_LAD_START, LAD_PIN_COUNT);
-    sm_config_set_set_pins(&c, LPC_LAD_START, LAD_PIN_COUNT);
+    sm_config_set_in_pins (c, LPC_LAD_START);
+    sm_config_set_out_pins(c, LPC_LAD_START, LAD_PIN_COUNT);
+    sm_config_set_set_pins(c, LPC_LAD_START, LAD_PIN_COUNT);
 
-    pio_sm_set_consecutive_pindirs(pio, sm, LPC_LAD_START, LAD_PIN_COUNT, false);   
+    pio_sm_set_consecutive_pindirs(pio, sm, LPC_LAD_START, LAD_PIN_COUNT, false);
    
 
     if(lframe_cancel){
         pio_sm_set_consecutive_pindirs(pio, sm, LPC_LFRAME, 1,  true);
-        sm_config_set_sideset_pins(&c, LPC_LFRAME);
+        sm_config_set_sideset_pins(c, LPC_LFRAME);
     }else{
-        sm_config_set_sideset_pins(&c, 31);
+        sm_config_set_sideset_pins(c, 31);
     }
 
-    sm_config_set_clkdiv(&c, 1);
-    pio_sm_set_config(pio, sm, &c);
+    sm_config_set_clkdiv(c, 1);
+    pio_sm_set_config(pio, sm, c);
     pio_sm_clear_fifos(pio, sm);
 
         // Clear FIFO debug flags
