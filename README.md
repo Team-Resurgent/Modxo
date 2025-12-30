@@ -26,6 +26,14 @@ Modxo is *not* a modchip. Whereas legacy modchips rely on largely obsolete hardw
 
 No specialized hardware or complicated tooling is needed to load Modxo on a compatible device -- in most cased just a USB cable is all that is necessary. And installation works much like legacy devices -- all that is needed for installation is a compatible RP2040-based device, a few resistors, wire and basic soldering equipment. Custom PCBs exist to simplify the installation process even further.
 
+## PrometheOS
+
+If you want to upgrade the Modxo part of PrometheOS, see Upgrading PrometheOS's Modxo steps below.
+However if you just want to install PrometheOS you can disregard the instructions below as PrometheOS already contains a working version of Modxo so all you need to do is:
+
+1) Use Pandora
+2) Download the relevant .uf2 for your pi variant e.g. RP2040 Zero & Tiny Prometheos VX.X.X.uf2 
+
 ## How to Install
 
 ### Requirements
