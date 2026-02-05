@@ -135,7 +135,7 @@ However if you just want to install PrometheOS you can disregard the instruction
 
 ## Firmware Build Instructions
 
-### Windows
+### Visual Studio Code (Windows/Linux/Mac)
 
 1.- Download and Install [Visual Studio Code](https://code.visualstudio.com/download)
 
@@ -143,7 +143,7 @@ However if you just want to install PrometheOS you can disregard the instruction
 
 ![Pico Extension](images/extension.png)
 
-3.- Ensure SDK 2.0.0 selected as below...
+3.- Ensure SDK 2.0.0 is selected as below...
 
 ![SDK 2.0.0](images/sdk.png)
 
@@ -156,6 +156,9 @@ However if you just want to install PrometheOS you can disregard the instruction
 7.- UF2 File will be generated on Build folder
 
 ### Docker
+
+   > [!WARNING]
+   > The Docker method is currently not working. Consider using VScode.
 
 #### Setup
 
