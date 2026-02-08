@@ -80,6 +80,13 @@
             "cwd": "${workspaceFolder}"
         },
         {
+            "name": "Build (Official Pico Clone)",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "cmake -DMODXO_PINOUT=official_pico_clone ./build; cmake --build ./build; pause; exit",
+            "cwd": "${workspaceFolder}"
+        },
+        {
             "name": "Build (Official Pico2)",
             "type": "node-terminal",
             "request": "launch",
@@ -87,17 +94,17 @@
             "cwd": "${workspaceFolder}"
         },
         {
-            "name": "Build (Pico Clone)",
-            "type": "node-terminal",
-            "request": "launch",
-            "command": "cmake -DMODXO_PINOUT=pico_cone ./build; cmake --build ./build; pause; exit",
-            "cwd": "${workspaceFolder}"
-        },
-        {
             "name": "Build (YD-RP2040)",
             "type": "node-terminal",
             "request": "launch",
             "command": "cmake -DMODXO_PINOUT=yd_rp2040 ./build; cmake --build ./build; pause; exit",
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "Build (YD-RP2040 Clone)",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "cmake -DMODXO_PINOUT=yd_rp2040_clone ./build; cmake --build ./build; pause; exit",
             "cwd": "${workspaceFolder}"
         },
         {
