@@ -14,8 +14,10 @@ jobs:
       matrix:
         pinout: 
           - official_pico
+          - official_pico_clone
           - official_pico2
           - yd_rp2040
+          - yd_rp2040_clone
           - rp2040_zero_tiny
           - xiao_rp2040
           - ultra
@@ -24,6 +26,10 @@ jobs:
             pretty_name: Official Pico
             output_name: modxo_official_pico
             pico_board: pico
+          - pinout: official_pico_clone
+            pretty_name: Official Pico Clone
+            output_name: modxo_official_pico_clone
+            pico_board: pico
           - pinout: official_pico2
             pretty_name: Official Pico 2
             output_name: modxo_official_pico2
@@ -31,6 +37,10 @@ jobs:
           - pinout: yd_rp2040
             pretty_name: YD-RP2040
             output_name: modxo_yd_rp2040
+            pico_board: pico
+          - pinout: yd_rp2040_clone
+            pretty_name: YD-RP2040 Clone
+            output_name: modxo_yd_rp2040_clone
             pico_board: pico
           - pinout: rp2040_zero_tiny
             pretty_name: RP2040-Zero-Tiny
