@@ -30,6 +30,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <pico.h>
 #include <hardware/sync.h>
 
+#include "pico/stdlib.h"
+
 #include <modxo.h>
 #include <modxo/modxo_ports.h>
 #include "modxo/modxo_debug.h"
