@@ -1,0 +1,15 @@
+name: Delete old workflow runs
+
+on:
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete workflow runs
+        uses: InfraWay/delete-workflow-runs@v2.1.2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          retain_days: 7
+          keep_minimum_runs: 5
