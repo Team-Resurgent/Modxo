@@ -88,7 +88,7 @@ void legacy_display_command(uint32_t raw)
 {
     MODXO_QUEUE_ITEM_T _item;
     _item.iscmd = true;
-    _item.raw = raw;
+    _item.data.raw = raw;
     modxo_queue_insert(&private_data.queue, &_item);
     __sev();
 }
@@ -97,7 +97,7 @@ void legacy_display_data(uint8_t *data)
 {
     MODXO_QUEUE_ITEM_T _item;
     _item.iscmd = false;
-    _item.data = *data;
+    _item.data.cmd = *data;
     modxo_queue_insert(&private_data.queue, &_item);
     __sev();
 }
@@ -110,7 +110,7 @@ static void legacy_display_poll()
         if (_item.iscmd)
         {
             MODXO_LCD_CMD rx_cmd;
-            rx_cmd.raw = _item.raw;
+            rx_cmd.raw = _item.data.raw;
 
             switch (rx_cmd.cmd)
             {
@@ -142,7 +142,7 @@ static void legacy_display_poll()
             {
                 uint csPin = private_data.spi_device == 0 ? LCD_PORT_SPI_CSN1 : LCD_PORT_SPI_CSN2;
                 gpio_put(csPin, 0);
-                spi_write_blocking(LCD_PORT_SPI_INST, &_item.data, 1);
+                spi_write_blocking(LCD_PORT_SPI_INST, &_item.data.cmd, 1);
                 gpio_put(csPin, 1);
                 __sev();
                 return;
@@ -153,12 +153,12 @@ static void legacy_display_poll()
                 {
                     char tempBuffer[2];
                     tempBuffer[0] = private_data.i2c_prefix;
-                    tempBuffer[1] = _item.data;
+                    tempBuffer[1] = _item.data.cmd;
                     i2c_write_timeout_us(LCD_PORT_I2C_INST, private_data.i2c_address, tempBuffer, 2, false, 1000);
                     __sev();
                     return;
                 }
-                i2c_write_timeout_us(LCD_PORT_I2C_INST, private_data.i2c_address, &_item.data, 1, false, LCD_TIMEOUT_US);
+                i2c_write_timeout_us(LCD_PORT_I2C_INST, private_data.i2c_address, &_item.data.cmd, 1, false, LCD_TIMEOUT_US);
             }
         }
         __sev();
