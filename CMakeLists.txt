@@ -80,6 +80,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     pico_stdlib
     pico_multicore
     modxo
+    modxo_sd_card
     ws2812
     legacy_display
     superio
