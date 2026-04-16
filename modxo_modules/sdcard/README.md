@@ -40,10 +40,9 @@ SDCARD_DATA  = 0xDEBF
 ; SDCARD_COMMAND_GET_RESPONSE_ROOT_LIST_NAME_BYTE    = 69
 ; SDCARD_ROOT_FLAG_DIRECTORY                         = 0x01
 
-; Refresh root listing (async on device core0)
+; Refresh root listing (async on device core0) — one write to CMD queues the job
 function sdcard_root_list_refresh():
     write_port(SDCARD_CMD, SDCARD_COMMAND_REQUEST_ROOT_LIST_REFRESH)
-    write_port(SDCARD_DATA, 0)   ; any value - second write queues the job
 
 ; After refresh, poll until ready
 function sdcard_wait_root_list_ready():
@@ -116,8 +115,9 @@ function fetch_sd_root_entries() -> list of Entry:
 
 ### Notes
 
+- `SDCARD_COMMAND_REQUEST_ROOT_LIST_REFRESH` is **queued by one write** to `SDCARD_CMD`. A following write to `SDCARD_DATA` (old two-step sequence) is ignored, so legacy hosts still enqueue only one refresh.
 - Every **read** of `SDCARD_DATA` uses whatever command was last written to `SDCARD_CMD`; set the command byte **before** each data read (and before each data write that depends on the command).
 - Listing reflects the **root** of volume `0:` only; refresh again if the card or files may have changed.
 - After a root refresh, the device **closes** any prior file-read state; always refresh (or at least re-fetch count) before relying on indices.
 
-For **reading file contents** in 1 KiB chunks, see `SDCARD_COMMAND_REQUEST_FILE_READ_CHUNK`, `SDCARD_COMMAND_SET_FILE_OFFSET_B0` through `SDCARD_COMMAND_SET_FILE_OFFSET_B3`, and the `SDCARD_COMMAND_GET_RESPONSE_FILE_*` opcodes in `sdcard.h`.
+For **reading file contents** in 1 KiB chunks, see `SDCARD_COMMAND_REQUEST_FILE_READ_CHUNK`, `SDCARD_COMMAND_SET_FILE_OFFSET_B0` through `SDCARD_COMMAND_SET_FILE_OFFSET_B3`, and the `SDCARD_COMMAND_GET_RESPONSE_FILE_*` opcodes in `sdcard.h`. Select the root entry with `SDCARD_COMMAND_SET_ROOT_LIST_ENTRY_INDEX` (data = index), set the byte offset, then a **single** write of `SDCARD_COMMAND_REQUEST_FILE_READ_CHUNK` to the command port queues the read (the old data-byte index step is ignored).

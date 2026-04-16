@@ -10,12 +10,12 @@
 
 /* Scan SD root ("0:/"): command reg then data write queues refresh on core0. */
 #define SDCARD_COMMAND_REQUEST_ROOT_LIST_REFRESH 1
-/* Open root file by index, read up to SDCARD_FILE_CHUNK_SIZE at offset (SET_FILE_OFFSET_B0..B3), then close. Data byte = root index. Async. */
+/* Open root file at last SET_ROOT_LIST_ENTRY_INDEX, read up to SDCARD_FILE_CHUNK_SIZE at offset (SET_FILE_OFFSET_B0..B3), then close. One CMD write queues. Async. */
 #define SDCARD_COMMAND_REQUEST_FILE_READ_CHUNK 2
 
 #define SDCARD_COMMAND_SET_ROOT_LIST_ENTRY_INDEX 32
 #define SDCARD_COMMAND_SET_ROOT_LIST_NAME_INDEX 33
-/* Little-endian offset for next READ_CHUNK (max 16 MiB - 1). Set B0..B3, then READ_CHUNK with data = root index. */
+/* Little-endian offset for next READ_CHUNK (max 16 MiB - 1). Set B0..B3, then READ_CHUNK (uses entry index from SET_ROOT_LIST_ENTRY_INDEX). */
 #define SDCARD_COMMAND_SET_FILE_OFFSET_B0 34
 #define SDCARD_COMMAND_SET_FILE_OFFSET_B1 35
 #define SDCARD_COMMAND_SET_FILE_OFFSET_B2 36

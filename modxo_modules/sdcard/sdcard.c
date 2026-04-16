@@ -321,14 +321,6 @@ static void write_handler(uint16_t address, uint8_t *data)
         {
             switch (cmd_byte)
             {
-                case SDCARD_COMMAND_REQUEST_ROOT_LIST_REFRESH:
-                    private_data.root_list_ready = 0;
-                    queue_SDCARD_command(cmd_byte, *data);
-                    break;
-                case SDCARD_COMMAND_REQUEST_FILE_READ_CHUNK:
-                    private_data.file_op_ready = 0;
-                    queue_SDCARD_command(cmd_byte, *data);
-                    break;
                 case SDCARD_COMMAND_SET_ROOT_LIST_ENTRY_INDEX:
                     private_data.root_list_entry_sel = *data;
                     break;
@@ -368,9 +360,12 @@ static void write_handler(uint16_t address, uint8_t *data)
                 case SDCARD_COMMAND_REQUEST_ROOT_LIST_REFRESH:
                     private_data.root_list_ready = 0;
                     cmd_byte = *data;
+                    queue_SDCARD_command(*data, 0);
                     break;
                 case SDCARD_COMMAND_REQUEST_FILE_READ_CHUNK:
                     cmd_byte = *data;
+                    private_data.file_op_ready = 0;
+                    queue_SDCARD_command(*data, private_data.root_list_entry_sel);
                     break;
                 case SDCARD_COMMAND_SET_ROOT_LIST_ENTRY_INDEX:
                 case SDCARD_COMMAND_SET_ROOT_LIST_NAME_INDEX:
