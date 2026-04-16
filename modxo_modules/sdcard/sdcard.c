@@ -40,7 +40,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <modxo_pinout.h>
 
-#if MODXO_SDCARD_FATFS
+#if SD_CARD_SPI_ENABLE
 #include "ff.h"
 #endif
 
@@ -97,13 +97,13 @@ static struct
     uint8_t file_read_result;
     uint8_t file_chunk_read_index;
 
-#if MODXO_SDCARD_FATFS
+#if SD_CARD_SPI_ENABLE
     FATFS fatfs;
     uint8_t sd_fat_mounted;
 #endif
 } private_data;
 
-#if MODXO_SDCARD_FATFS
+#if SD_CARD_SPI_ENABLE
 
 static void ensure_mounted(void)
 {
@@ -253,7 +253,7 @@ static void refresh_root_list(void)
     private_data.root_list_ready = 1;
 }
 
-#else /* !MODXO_SDCARD_FATFS */
+#else /* !SD_CARD_SPI_ENABLE */
 
 static void file_read_chunk_by_index(uint8_t index)
 {
@@ -524,11 +524,9 @@ static void init()
 {
     memset(&private_data, 0, sizeof(private_data));
     private_data.file_op_ready = 1;
-    modxo_queue_init(&private_data.queue, (void *)private_data.buffer,
-                     sizeof(private_data.buffer[0]), SDCARD_QUEUE_BUFFER_LEN);
+    modxo_queue_init(&private_data.queue, (void *)private_data.buffer, sizeof(private_data.buffer[0]), SDCARD_QUEUE_BUFFER_LEN);
 
-    lpc_interface_add_io_handler(MODXO_REGISTER_SDCARD_COMMAND, 0xFFFE, read_handler,
-                                 write_handler);
+    lpc_interface_add_io_handler(MODXO_REGISTER_SDCARD_COMMAND, 0xFFFE, read_handler, write_handler);
 }
 
 
