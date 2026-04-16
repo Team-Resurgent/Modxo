@@ -25,8 +25,8 @@ Flow:
 ### Pseudocode
 
 ```text
-SDCARD_CMD   = 0xDEBE
-SDCARD_DATA  = 0xDEBF
+SDCARD_CMD   = 0xDEB0
+SDCARD_DATA  = 0xDEB1
 
 ; --- values from sdcard.h (include <sdcard.h> for these macros) ---
 ; SDCARD_COMMAND_REQUEST_ROOT_LIST_REFRESH           = 1

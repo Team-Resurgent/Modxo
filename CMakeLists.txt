@@ -86,6 +86,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     superio
     flashrom
     expansion
+    sdcard
 )
 
 set(PICO_DEFAULT_BINARY_TYPE copy_to_ram)
