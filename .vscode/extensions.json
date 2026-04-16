@@ -4,6 +4,6 @@
         "ms-vscode.cpptools",
         "ms-vscode.cpptools-extension-pack",
         "ms-vscode.vscode-serial-monitor",
-        "raspberry-pi.raspberry-pi-pico",
+        "raspberry-pi.raspberry-pi-pico"
     ]
 }

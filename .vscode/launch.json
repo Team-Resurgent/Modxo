@@ -3,19 +3,19 @@
     "configurations": [
         {
             "name": "Pico Debug (Cortex-Debug)",
-            "cwd": "${env:USERPROFILE}/.pico-sdk/openocd/0.12.0+dev/scripts",
+            "cwd": "${userHome}/.pico-sdk/openocd/0.12.0+dev/scripts",
             "executable": "${command:raspberry-pi-pico.launchTargetPath}",
             "request": "launch",
             "type": "cortex-debug",
             "servertype": "openocd",
-            "serverpath": "${env:USERPROFILE}/.pico-sdk/openocd/0.12.0+dev/openocd.exe",
+            "serverpath": "${userHome}/.pico-sdk/openocd/0.12.0+dev/openocd.exe",
             "gdbPath": "${command:raspberry-pi-pico.getGDBPath}",
             "device": "${command:raspberry-pi-pico.getChipUppercase}",
             "configFiles": [
                 "interface/cmsis-dap.cfg",
                 "target/${command:raspberry-pi-pico.getTarget}.cfg"
             ],
-            "svdFile": "${env:USERPROFILE}/.pico-sdk/sdk/2.0.0/src/${command:raspberry-pi-pico.getChip}/hardware_regs/${command:raspberry-pi-pico.getChipUppercase}.svd",
+            "svdFile": "${userHome}/.pico-sdk/sdk/2.2.0/src/${command:raspberry-pi-pico.getChip}/hardware_regs/${command:raspberry-pi-pico.getChipUppercase}.svd",
             "runToEntryPoint": "main",
             // Fix for no_flash binaries, where monitor reset halt doesn't do what is expected
             // Also works fine for flash binaries
@@ -37,33 +37,14 @@
             "gdbTarget": "localhost:3333",
             "gdbPath": "${command:raspberry-pi-pico.getGDBPath}",
             "device": "${command:raspberry-pi-pico.getChipUppercase}",
-            "svdFile": "${env:USERPROFILE}/.pico-sdk/sdk/2.0.0/src/${command:raspberry-pi-pico.getChip}/hardware_regs/${command:raspberry-pi-pico.getChipUppercase}.svd",
+            "svdFile": "${userHome}/.pico-sdk/sdk/2.2.0/src/${command:raspberry-pi-pico.getChip}/hardware_regs/${command:raspberry-pi-pico.getChipUppercase}.svd",
             "runToEntryPoint": "main",
-            // Give restart the same functionality as runToEntryPoint - main
-            "postRestartCommands": [
-                "break main",
-                "continue"
+            // Fix for no_flash binaries, where monitor reset halt doesn't do what is expected
+            // Also works fine for flash binaries
+            "overrideLaunchCommands": [
+                "monitor reset init",
+                "load \"${command:raspberry-pi-pico.launchTargetPath}\""
             ]
-        },
-        {
-            "name": "Pico Debug (C++ Debugger)",
-            "type": "cppdbg",
-            "request": "launch",
-            "cwd": "${workspaceRoot}",
-            "program": "${command:raspberry-pi-pico.launchTargetPath}",
-            "MIMode": "gdb",
-            "miDebuggerPath": "${command:raspberry-pi-pico.getGDBPath}",
-            "miDebuggerServerAddress": "localhost:3333",
-            "debugServerPath": "${env:USERPROFILE}/.pico-sdk/openocd/0.12.0+dev/openocd.exe",
-            "debugServerArgs": "-f interface/cmsis-dap.cfg -f target/${command:raspberry-pi-pico.getTarget}.cfg -c \"adapter speed 5000\"",
-            "serverStarted": "Listening on port .* for gdb connections",
-            "filterStderr": true,
-            "hardwareBreakpoints": {
-                "require": true,
-                "limit": 4
-            },
-            "preLaunchTask": "Flash",
-            "svdPath": "${env:USERPROFILE}/.pico-sdk/sdk/2.0.0/src/${command:raspberry-pi-pico.getChip}/hardware_regs/${command:raspberry-pi-pico.getChipUppercase}.svd"
         },
         {
             "name": "Clean",
