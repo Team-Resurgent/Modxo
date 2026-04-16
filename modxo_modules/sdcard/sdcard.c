@@ -67,12 +67,14 @@ typedef union
 } MODXO_SDCARD_CMD;
 #pragma pack(pop)
 
+#pragma pack(push, 1)
 typedef struct
 {
     uint8_t id;
     uint8_t flags;
     char name[SDCARD_ROOT_NAME_MAX + 1];
 } sdcard_root_entry_t;
+#pragma pack(pop)
 
 static uint8_t cmd_byte = SDCARD_COMMAND_NONE;
 
