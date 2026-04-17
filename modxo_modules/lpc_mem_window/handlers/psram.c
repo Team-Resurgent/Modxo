@@ -10,7 +10,7 @@
 #include <stdio.h>
 
 #include <string.h>
-#include <modxo/lpc_mem_window.h>
+#include <lpc_mem_window.h>
 
 #define ACCESS_REGION 0x10000000  //Cached
 #define PSRAM_OFFSET  0x01000000  //Window 2 at 16MB (CSn1)

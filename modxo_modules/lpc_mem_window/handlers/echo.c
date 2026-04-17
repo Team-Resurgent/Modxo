@@ -1,7 +1,7 @@
 // Simple single byte echo handler, great for testing
 
 #include <string.h>
-#include <modxo/lpc_mem_window.h>
+#include <lpc_mem_window.h>
 
 uint8_t echo_val;
 

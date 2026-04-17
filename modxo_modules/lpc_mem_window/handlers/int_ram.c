@@ -1,7 +1,7 @@
 // Internal (rp2040/rp2350) ram handler, use this handler with caution
 
 #include <string.h>
-#include <modxo/lpc_mem_window.h>
+#include <lpc_mem_window.h>
 
 #define INT_RAM_CMD_WIN_OFFSET 0
 

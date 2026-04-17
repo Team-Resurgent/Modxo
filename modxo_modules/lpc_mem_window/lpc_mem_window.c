@@ -4,7 +4,7 @@
 
 #include <modxo.h>
 #include <modxo/lpc_interface.h>
-#include <modxo/lpc_mem_window.h>
+#include <lpc_mem_window.h>
 
 LPC_MEM_WINDOW lpc_mem_windows[NUM_LPC_MEM_WINDOWS];
 

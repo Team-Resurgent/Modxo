@@ -7,7 +7,7 @@
 #include "pico/rand.h"
 
 #include <string.h>
-#include <modxo/lpc_mem_window.h>
+#include <lpc_mem_window.h>
 
 #define RNG_CMD_WIN_RESET 0
 
