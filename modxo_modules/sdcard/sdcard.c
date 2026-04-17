@@ -52,6 +52,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SDCARD_ROOT_MAX_ENTRIES 32
 #define SDCARD_ROOT_NAME_MAX 255
 
+static uint8_t cmd_byte = SDCARD_COMMAND_NONE;
+
 #pragma pack(push, 1)
 typedef union
 {
@@ -72,12 +74,12 @@ typedef struct
 {
     uint8_t id;
     uint8_t flags;
+    uint32_t file_size;
     char name[SDCARD_ROOT_NAME_MAX + 1];
 } sdcard_root_entry_t;
 #pragma pack(pop)
 
-static uint8_t cmd_byte = SDCARD_COMMAND_NONE;
-
+#pragma pack(push, 1)
 static struct
 {
     MODXO_QUEUE_ITEM_T buffer[SDCARD_QUEUE_BUFFER_LEN];
@@ -92,8 +94,7 @@ static struct
     uint8_t file_op_ready;
     uint16_t file_chunk_length;
     uint8_t file_chunk_buffer[SDCARD_FILE_CHUNK_SIZE];
-    uint32_t file_offset_staged;
-    uint32_t file_size_cached;
+    uint16_t file_chunk_index_staged;
     uint8_t file_read_result;
     uint8_t file_chunk_read_index;
 
@@ -102,6 +103,7 @@ static struct
     uint8_t sd_fat_mounted;
 #endif
 } private_data;
+#pragma pack(pop)
 
 #if SD_CARD_SPI_ENABLE
 
@@ -120,7 +122,6 @@ static void ensure_mounted(void)
 static void file_read_chunk_by_index(uint8_t index)
 {
     private_data.file_chunk_length = 0;
-    private_data.file_size_cached = 0;
     private_data.file_read_result = SDCARD_FILE_READ_RESULT_IDLE;
 
     if (index >= private_data.root_list_count)
@@ -145,25 +146,23 @@ static void file_read_chunk_by_index(uint8_t index)
     snprintf(path, sizeof(path), "0:/%s", private_data.root_entries[index].name);
 
     FIL fp;
+    uint32_t sz = private_data.root_entries[index].file_size;
+
+    uint32_t chunk_ix = (uint32_t)private_data.file_chunk_index_staged;
+    uint32_t max_chunk_ix = (sz + SDCARD_FILE_CHUNK_SIZE - 1u) / SDCARD_FILE_CHUNK_SIZE;
+    if (chunk_ix > max_chunk_ix)
+    {
+        private_data.file_read_result = SDCARD_FILE_READ_RESULT_ERROR;
+        return;
+    }
+    uint32_t off = chunk_ix * (uint32_t)SDCARD_FILE_CHUNK_SIZE;
+
     FRESULT fr = f_open(&fp, path, FA_READ);
     if (fr != FR_OK)
     {
         private_data.file_read_result = SDCARD_FILE_READ_RESULT_ERROR;
         return;
     }
-
-    FSIZE_t fsz = f_size(&fp);
-    if (fsz > (FSIZE_t)SDCARD_FILE_MAX_SIZE)
-    {
-        f_close(&fp);
-        private_data.file_read_result = SDCARD_FILE_READ_RESULT_TOO_LARGE;
-        return;
-    }
-
-    uint32_t sz = (uint32_t)fsz;
-    private_data.file_size_cached = sz;
-
-    uint32_t off = private_data.file_offset_staged;
     if (off >= sz)
     {
         f_close(&fp);
@@ -179,7 +178,6 @@ static void file_read_chunk_by_index(uint8_t index)
     {
         f_close(&fp);
         private_data.file_read_result = SDCARD_FILE_READ_RESULT_ERROR;
-        private_data.file_size_cached = 0;
         return;
     }
 
@@ -189,7 +187,6 @@ static void file_read_chunk_by_index(uint8_t index)
     if (fr != FR_OK)
     {
         private_data.file_read_result = SDCARD_FILE_READ_RESULT_ERROR;
-        private_data.file_size_cached = 0;
         private_data.file_chunk_length = 0;
         return;
     }
@@ -204,7 +201,6 @@ static void refresh_root_list(void)
     DIR dj;
     FILINFO fno;
 
-    private_data.file_size_cached = 0;
     private_data.file_read_result = SDCARD_FILE_READ_RESULT_IDLE;
     private_data.file_chunk_length = 0;
 
@@ -233,15 +229,30 @@ static void refresh_root_list(void)
             fr = f_findnext(&dj, &fno);
             continue;
         }
+
         if (fno.fname[0] == '.' && fno.fname[1] == '.' && fno.fname[2] == '\0')
         {
             fr = f_findnext(&dj, &fno);
             continue;
         }
 
+        if (!(fno.fattrib & AM_DIR) && fno.fsize > (FSIZE_t)SDCARD_FILE_MAX_SIZE)
+        {
+            fr = f_findnext(&dj, &fno);
+            continue;
+        }
+
         private_data.root_entries[n].id = n;
-        private_data.root_entries[n].flags =
-            (fno.fattrib & AM_DIR) ? (uint8_t)SDCARD_ROOT_FLAG_DIRECTORY : 0;
+        private_data.root_entries[n].flags = (fno.fattrib & AM_DIR) ? (uint8_t)SDCARD_ROOT_FLAG_DIRECTORY : 0;
+        if (fno.fattrib & AM_DIR)
+        {
+            private_data.root_entries[n].file_size = 0;
+        }
+        else
+        {
+            private_data.root_entries[n].file_size = (uint32_t)fno.fsize;
+        }
+
         strncpy(private_data.root_entries[n].name, fno.fname, SDCARD_ROOT_NAME_MAX);
         private_data.root_entries[n].name[SDCARD_ROOT_NAME_MAX] = '\0';
         n++;
@@ -259,7 +270,6 @@ static void file_read_chunk_by_index(uint8_t index)
 {
     (void)index;
     private_data.file_chunk_length = 0;
-    private_data.file_size_cached = 0;
     private_data.file_read_result = SDCARD_FILE_READ_RESULT_ERROR;
 }
 
@@ -327,25 +337,13 @@ static void write_handler(uint16_t address, uint8_t *data)
                 case SDCARD_COMMAND_SET_ROOT_LIST_NAME_INDEX:
                     private_data.root_name_byte_index = *data;
                     break;
-                case SDCARD_COMMAND_SET_FILE_OFFSET_B0:
-                    private_data.file_offset_staged =
-                        (private_data.file_offset_staged & ~(0xffu << 0)) |
-                        ((uint32_t)(*data & 0xffu) << 0);
+                case SDCARD_COMMAND_SET_FILE_CHUNK_INDEX_LO:
+                    private_data.file_chunk_index_staged =
+                        (uint16_t)((private_data.file_chunk_index_staged & 0xff00u) | ((uint16_t)(*data & 0xffu)));
                     break;
-                case SDCARD_COMMAND_SET_FILE_OFFSET_B1:
-                    private_data.file_offset_staged =
-                        (private_data.file_offset_staged & ~(0xffu << 8)) |
-                        ((uint32_t)(*data & 0xffu) << 8);
-                    break;
-                case SDCARD_COMMAND_SET_FILE_OFFSET_B2:
-                    private_data.file_offset_staged =
-                        (private_data.file_offset_staged & ~(0xffu << 16)) |
-                        ((uint32_t)(*data & 0xffu) << 16);
-                    break;
-                case SDCARD_COMMAND_SET_FILE_OFFSET_B3:
-                    private_data.file_offset_staged =
-                        (private_data.file_offset_staged & ~(0xffu << 24)) |
-                        ((uint32_t)(*data & 0xffu) << 24);
+                case SDCARD_COMMAND_SET_FILE_CHUNK_INDEX_HI:
+                    private_data.file_chunk_index_staged =
+                        (uint16_t)((private_data.file_chunk_index_staged & 0x00ffu) | ((uint16_t)(*data & 0xffu) << 8));
                     break;
                 case SDCARD_COMMAND_SET_FILE_CHUNK_READ_INDEX:
                     private_data.file_chunk_read_index = *data;
@@ -369,10 +367,8 @@ static void write_handler(uint16_t address, uint8_t *data)
                     break;
                 case SDCARD_COMMAND_SET_ROOT_LIST_ENTRY_INDEX:
                 case SDCARD_COMMAND_SET_ROOT_LIST_NAME_INDEX:
-                case SDCARD_COMMAND_SET_FILE_OFFSET_B0:
-                case SDCARD_COMMAND_SET_FILE_OFFSET_B1:
-                case SDCARD_COMMAND_SET_FILE_OFFSET_B2:
-                case SDCARD_COMMAND_SET_FILE_OFFSET_B3:
+                case SDCARD_COMMAND_SET_FILE_CHUNK_INDEX_LO:
+                case SDCARD_COMMAND_SET_FILE_CHUNK_INDEX_HI:
                 case SDCARD_COMMAND_SET_FILE_CHUNK_READ_INDEX:
                 case SDCARD_COMMAND_GET_RESPONSE_ROOT_LIST_READY:
                 case SDCARD_COMMAND_GET_RESPONSE_ROOT_LIST_COUNT:
@@ -470,11 +466,12 @@ static void read_handler(uint16_t address, uint8_t *data)
                     *data = private_data.file_op_ready;
                     break;
                 case SDCARD_COMMAND_GET_RESPONSE_FILE_CHUNK_LENGTH_LO:
-                    *data = (uint8_t)((private_data.file_chunk_length >> 0) & 0xffu);
-                    break;
                 case SDCARD_COMMAND_GET_RESPONSE_FILE_CHUNK_LENGTH_HI:
-                    *data = (uint8_t)((private_data.file_chunk_length >> 8) & 0xffu);
+                {
+                    unsigned sh = (unsigned)(cmd_byte - SDCARD_COMMAND_GET_RESPONSE_FILE_CHUNK_LENGTH_LO) * 8u;
+                    *data = (uint8_t)((private_data.file_chunk_length >> sh) & 0xffu);
                     break;
+                }
                 case SDCARD_COMMAND_GET_RESPONSE_FILE_CHUNK_BYTE:
                     if (private_data.file_chunk_read_index < private_data.file_chunk_length)
                     {
@@ -487,17 +484,19 @@ static void read_handler(uint16_t address, uint8_t *data)
                     }
                     break;
                 case SDCARD_COMMAND_GET_RESPONSE_FILE_SIZE_B0:
-                    *data = (uint8_t)((private_data.file_size_cached >> 0) & 0xffu);
-                    break;
                 case SDCARD_COMMAND_GET_RESPONSE_FILE_SIZE_B1:
-                    *data = (uint8_t)((private_data.file_size_cached >> 8) & 0xffu);
-                    break;
                 case SDCARD_COMMAND_GET_RESPONSE_FILE_SIZE_B2:
-                    *data = (uint8_t)((private_data.file_size_cached >> 16) & 0xffu);
-                    break;
                 case SDCARD_COMMAND_GET_RESPONSE_FILE_SIZE_B3:
-                    *data = (uint8_t)((private_data.file_size_cached >> 24) & 0xffu);
+                {
+                    uint32_t sz = 0;
+                    if (private_data.root_list_entry_sel < private_data.root_list_count)
+                    {
+                        sz = private_data.root_entries[private_data.root_list_entry_sel].file_size;
+                    }
+                    unsigned sh = (unsigned)(cmd_byte - SDCARD_COMMAND_GET_RESPONSE_FILE_SIZE_B0) * 8u;
+                    *data = (uint8_t)((sz >> sh) & 0xffu);
                     break;
+                }
                 case SDCARD_COMMAND_GET_RESPONSE_FILE_READ_RESULT:
                     *data = private_data.file_read_result;
                     break;
