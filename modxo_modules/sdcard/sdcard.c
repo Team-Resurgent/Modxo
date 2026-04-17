@@ -79,6 +79,7 @@ typedef struct
 } sdcard_root_entry_t;
 #pragma pack(pop)
 
+#pragma pack(push, 1)
 static struct
 {
     MODXO_QUEUE_ITEM_T buffer[SDCARD_QUEUE_BUFFER_LEN];
@@ -102,6 +103,7 @@ static struct
     uint8_t sd_fat_mounted;
 #endif
 } private_data;
+#pragma pack(pop)
 
 #if SD_CARD_SPI_ENABLE
 
