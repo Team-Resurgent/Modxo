@@ -98,12 +98,66 @@ static struct
     uint8_t file_read_result;
     uint8_t file_chunk_read_index;
 
+    char cwd[SDCARD_CWD_PATH_MAX + 1u];
+    uint8_t cwd_result;
+
 #if SD_CARD_SPI_ENABLE
     FATFS fatfs;
     uint8_t sd_fat_mounted;
 #endif
 } private_data;
 #pragma pack(pop)
+
+static void cwd_reset_to_root(void)
+{
+    private_data.cwd[0] = '0';
+    private_data.cwd[1] = ':';
+    private_data.cwd[2] = '\0';
+    private_data.cwd_result = SDCARD_CWD_RESULT_OK;
+}
+
+static void cwd_parent(void)
+{
+    size_t len = strlen(private_data.cwd);
+    if (len <= 2u)
+    {
+        private_data.cwd_result = SDCARD_CWD_RESULT_AT_ROOT;
+        return;
+    }
+    char *slash = strrchr(private_data.cwd, '/');
+    if (slash == NULL)
+    {
+        private_data.cwd_result = SDCARD_CWD_RESULT_AT_ROOT;
+        return;
+    }
+    *slash = '\0';
+    private_data.cwd_result = SDCARD_CWD_RESULT_OK;
+}
+
+static void cwd_enter_selected(void)
+{
+    uint8_t sel = private_data.root_list_entry_sel;
+    if (sel >= private_data.root_list_count)
+    {
+        private_data.cwd_result = SDCARD_CWD_RESULT_BAD_INDEX;
+        return;
+    }
+    if (!(private_data.root_entries[sel].flags & SDCARD_LIST_FLAG_DIRECTORY))
+    {
+        private_data.cwd_result = SDCARD_CWD_RESULT_NOT_DIRECTORY;
+        return;
+    }
+    const char *nm = private_data.root_entries[sel].name;
+    size_t clen = strlen(private_data.cwd);
+    size_t nlen = strlen(nm);
+    if (clen + 1u + nlen >= sizeof(private_data.cwd))
+    {
+        private_data.cwd_result = SDCARD_CWD_RESULT_PATH_TOO_LONG;
+        return;
+    }
+    snprintf(private_data.cwd + clen, sizeof(private_data.cwd) - clen, "/%s", nm);
+    private_data.cwd_result = SDCARD_CWD_RESULT_OK;
+}
 
 #if SD_CARD_SPI_ENABLE
 
@@ -129,7 +183,7 @@ static void file_read_chunk_by_index(uint8_t index)
         private_data.file_read_result = SDCARD_FILE_READ_RESULT_BAD_INDEX;
         return;
     }
-    if (private_data.root_entries[index].flags & SDCARD_ROOT_FLAG_DIRECTORY)
+    if (private_data.root_entries[index].flags & SDCARD_LIST_FLAG_DIRECTORY)
     {
         private_data.file_read_result = SDCARD_FILE_READ_RESULT_IS_DIRECTORY;
         return;
@@ -142,8 +196,15 @@ static void file_read_chunk_by_index(uint8_t index)
         return;
     }
 
-    char path[4 + SDCARD_ROOT_NAME_MAX + 1];
-    snprintf(path, sizeof(path), "0:/%s", private_data.root_entries[index].name);
+    char path[SDCARD_CWD_PATH_MAX + 1u + SDCARD_ROOT_NAME_MAX + 8u];
+    if (strcmp(private_data.cwd, "0:") == 0)
+    {
+        snprintf(path, sizeof(path), "0:/%s", private_data.root_entries[index].name);
+    }
+    else
+    {
+        snprintf(path, sizeof(path), "%s/%s", private_data.cwd, private_data.root_entries[index].name);
+    }
 
     FIL fp;
     uint32_t sz = private_data.root_entries[index].file_size;
@@ -195,7 +256,7 @@ static void file_read_chunk_by_index(uint8_t index)
     private_data.file_read_result = SDCARD_FILE_READ_RESULT_OK;
 }
 
-static void refresh_root_list(void)
+static void refresh_dir_list(void)
 {
     FRESULT fr;
     DIR dj;
@@ -220,7 +281,7 @@ static void refresh_root_list(void)
 
     memset(&dj, 0, sizeof(dj));
     memset(&fno, 0, sizeof(fno));
-    fr = f_findfirst(&dj, &fno, "0:", "*");
+    fr = f_findfirst(&dj, &fno, private_data.cwd, "*");
     uint8_t n = 0;
     while (fr == FR_OK && fno.fname[0] != 0 && n < SDCARD_ROOT_MAX_ENTRIES)
     {
@@ -243,7 +304,7 @@ static void refresh_root_list(void)
         }
 
         private_data.root_entries[n].id = n;
-        private_data.root_entries[n].flags = (fno.fattrib & AM_DIR) ? (uint8_t)SDCARD_ROOT_FLAG_DIRECTORY : 0;
+        private_data.root_entries[n].flags = (fno.fattrib & AM_DIR) ? (uint8_t)SDCARD_LIST_FLAG_DIRECTORY : 0;
         if (fno.fattrib & AM_DIR)
         {
             private_data.root_entries[n].file_size = 0;
@@ -273,7 +334,7 @@ static void file_read_chunk_by_index(uint8_t index)
     private_data.file_read_result = SDCARD_FILE_READ_RESULT_ERROR;
 }
 
-static void refresh_root_list(void)
+static void refresh_dir_list(void)
 {
     private_data.root_list_count = 0;
     private_data.root_list_ready = 1;
@@ -292,8 +353,8 @@ static void SDCARD_poll()
             rx_cmd.raw = _item.data.raw;
             switch (rx_cmd.cmd)
             {
-                case SDCARD_COMMAND_REQUEST_ROOT_LIST_REFRESH:
-                    refresh_root_list();
+                case SDCARD_COMMAND_REQUEST_DIR_LIST_REFRESH:
+                    refresh_dir_list();
                     break;
                 case SDCARD_COMMAND_REQUEST_FILE_READ_CHUNK:
                     private_data.file_chunk_read_index = 0;
@@ -331,10 +392,10 @@ static void write_handler(uint16_t address, uint8_t *data)
         {
             switch (cmd_byte)
             {
-                case SDCARD_COMMAND_SET_ROOT_LIST_ENTRY_INDEX:
+                case SDCARD_COMMAND_SET_LIST_ENTRY_INDEX:
                     private_data.root_list_entry_sel = *data;
                     break;
-                case SDCARD_COMMAND_SET_ROOT_LIST_NAME_INDEX:
+                case SDCARD_COMMAND_SET_LIST_NAME_INDEX:
                     private_data.root_name_byte_index = *data;
                     break;
                 case SDCARD_COMMAND_SET_FILE_CHUNK_INDEX_LO:
@@ -355,7 +416,7 @@ static void write_handler(uint16_t address, uint8_t *data)
         {
             switch (*data)
             {
-                case SDCARD_COMMAND_REQUEST_ROOT_LIST_REFRESH:
+                case SDCARD_COMMAND_REQUEST_DIR_LIST_REFRESH:
                     private_data.root_list_ready = 0;
                     cmd_byte = *data;
                     queue_SDCARD_command(*data, 0);
@@ -365,17 +426,29 @@ static void write_handler(uint16_t address, uint8_t *data)
                     private_data.file_op_ready = 0;
                     queue_SDCARD_command(*data, private_data.root_list_entry_sel);
                     break;
-                case SDCARD_COMMAND_SET_ROOT_LIST_ENTRY_INDEX:
-                case SDCARD_COMMAND_SET_ROOT_LIST_NAME_INDEX:
+                case SDCARD_COMMAND_REQUEST_CWD_TO_ROOT:
+                    cwd_reset_to_root();
+                    cmd_byte = SDCARD_COMMAND_NONE;
+                    break;
+                case SDCARD_COMMAND_REQUEST_CWD_PARENT:
+                    cwd_parent();
+                    cmd_byte = SDCARD_COMMAND_NONE;
+                    break;
+                case SDCARD_COMMAND_REQUEST_CWD_ENTER_SELECTED:
+                    cwd_enter_selected();
+                    cmd_byte = SDCARD_COMMAND_NONE;
+                    break;
+                case SDCARD_COMMAND_SET_LIST_ENTRY_INDEX:
+                case SDCARD_COMMAND_SET_LIST_NAME_INDEX:
                 case SDCARD_COMMAND_SET_FILE_CHUNK_INDEX_LO:
                 case SDCARD_COMMAND_SET_FILE_CHUNK_INDEX_HI:
                 case SDCARD_COMMAND_SET_FILE_CHUNK_READ_INDEX:
-                case SDCARD_COMMAND_GET_RESPONSE_ROOT_LIST_READY:
-                case SDCARD_COMMAND_GET_RESPONSE_ROOT_LIST_COUNT:
-                case SDCARD_COMMAND_GET_RESPONSE_ROOT_LIST_ENTRY_ID:
-                case SDCARD_COMMAND_GET_RESPONSE_ROOT_LIST_ENTRY_FLAGS:
-                case SDCARD_COMMAND_GET_RESPONSE_ROOT_LIST_NAME_LENGTH:
-                case SDCARD_COMMAND_GET_RESPONSE_ROOT_LIST_NAME_BYTE:
+                case SDCARD_COMMAND_GET_RESPONSE_LIST_READY:
+                case SDCARD_COMMAND_GET_RESPONSE_LIST_COUNT:
+                case SDCARD_COMMAND_GET_RESPONSE_LIST_ENTRY_ID:
+                case SDCARD_COMMAND_GET_RESPONSE_LIST_ENTRY_FLAGS:
+                case SDCARD_COMMAND_GET_RESPONSE_LIST_NAME_LENGTH:
+                case SDCARD_COMMAND_GET_RESPONSE_LIST_NAME_BYTE:
                 case SDCARD_COMMAND_GET_RESPONSE_FILE_OP_READY:
                 case SDCARD_COMMAND_GET_RESPONSE_FILE_CHUNK_LENGTH_LO:
                 case SDCARD_COMMAND_GET_RESPONSE_FILE_CHUNK_LENGTH_HI:
@@ -385,6 +458,7 @@ static void write_handler(uint16_t address, uint8_t *data)
                 case SDCARD_COMMAND_GET_RESPONSE_FILE_SIZE_B2:
                 case SDCARD_COMMAND_GET_RESPONSE_FILE_SIZE_B3:
                 case SDCARD_COMMAND_GET_RESPONSE_FILE_READ_RESULT:
+                case SDCARD_COMMAND_GET_RESPONSE_CWD_RESULT:
                     cmd_byte = *data;
                     break;
                 default:
@@ -404,13 +478,13 @@ static void read_handler(uint16_t address, uint8_t *data)
         {
             switch (cmd_byte)
             {
-                case SDCARD_COMMAND_GET_RESPONSE_ROOT_LIST_READY:
+                case SDCARD_COMMAND_GET_RESPONSE_LIST_READY:
                     *data = private_data.root_list_ready;
                     break;
-                case SDCARD_COMMAND_GET_RESPONSE_ROOT_LIST_COUNT:
+                case SDCARD_COMMAND_GET_RESPONSE_LIST_COUNT:
                     *data = private_data.root_list_count;
                     break;
-                case SDCARD_COMMAND_GET_RESPONSE_ROOT_LIST_ENTRY_ID:
+                case SDCARD_COMMAND_GET_RESPONSE_LIST_ENTRY_ID:
                     if (private_data.root_list_entry_sel < private_data.root_list_count)
                     {
                         *data = private_data.root_entries[private_data.root_list_entry_sel].id;
@@ -420,7 +494,7 @@ static void read_handler(uint16_t address, uint8_t *data)
                         *data = 0;
                     }
                     break;
-                case SDCARD_COMMAND_GET_RESPONSE_ROOT_LIST_ENTRY_FLAGS:
+                case SDCARD_COMMAND_GET_RESPONSE_LIST_ENTRY_FLAGS:
                     if (private_data.root_list_entry_sel < private_data.root_list_count)
                     {
                         *data = private_data.root_entries[private_data.root_list_entry_sel].flags;
@@ -430,7 +504,7 @@ static void read_handler(uint16_t address, uint8_t *data)
                         *data = 0;
                     }
                     break;
-                case SDCARD_COMMAND_GET_RESPONSE_ROOT_LIST_NAME_LENGTH:
+                case SDCARD_COMMAND_GET_RESPONSE_LIST_NAME_LENGTH:
                     if (private_data.root_list_entry_sel < private_data.root_list_count)
                     {
                         *data = (uint8_t)strlen(
@@ -441,7 +515,7 @@ static void read_handler(uint16_t address, uint8_t *data)
                         *data = 0;
                     }
                     break;
-                case SDCARD_COMMAND_GET_RESPONSE_ROOT_LIST_NAME_BYTE:
+                case SDCARD_COMMAND_GET_RESPONSE_LIST_NAME_BYTE:
                     if (private_data.root_list_entry_sel < private_data.root_list_count)
                     {
                         const char *nm =
@@ -500,6 +574,9 @@ static void read_handler(uint16_t address, uint8_t *data)
                 case SDCARD_COMMAND_GET_RESPONSE_FILE_READ_RESULT:
                     *data = private_data.file_read_result;
                     break;
+                case SDCARD_COMMAND_GET_RESPONSE_CWD_RESULT:
+                    *data = private_data.cwd_result;
+                    break;
                 default:
                     *data = 0xff;
                     break;
@@ -512,11 +589,13 @@ static void read_handler(uint16_t address, uint8_t *data)
 static void powerup(void)
 {
     cmd_byte = SDCARD_COMMAND_NONE;
+    cwd_reset_to_root();
 }
 
 static void init()
 {
     memset(&private_data, 0, sizeof(private_data));
+    cwd_reset_to_root();
     private_data.file_op_ready = 1;
     modxo_queue_init(&private_data.queue, (void *)private_data.buffer, sizeof(private_data.buffer[0]), SDCARD_QUEUE_BUFFER_LEN);
 
