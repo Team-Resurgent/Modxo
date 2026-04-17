@@ -85,6 +85,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     legacy_display
     superio
     flashrom
+    lpc_mem_window
     expansion
     sdcard
 )
