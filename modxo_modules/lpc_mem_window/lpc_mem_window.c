@@ -114,6 +114,9 @@ uint8_t peek_window_type() {
 	else if(window->read == echo_memread_handler) {
 		return LPC_MEM_WIN_TYPE_ECHO;
 	}
+	else if(window->read == sdcard_memread_handler) {
+		return LPC_MEM_WIN_TYPE_SDCARD;
+	}
 
 	return 0;
 }
