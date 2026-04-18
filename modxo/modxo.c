@@ -111,7 +111,7 @@ void modxo_shutdown()
 
 void modxo_reset()
 {
-    RUN_MODXO_HANDLERS(powerup);//Modxo after LPC 3.3v  goes high (When usb is connected)
+    RUN_MODXO_HANDLERS(powerup);//Modxo after LPC 3.3v goes high
 }
 
 void modxo_init(void)

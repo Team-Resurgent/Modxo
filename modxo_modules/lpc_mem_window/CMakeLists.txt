@@ -4,7 +4,7 @@ add_library(${LIB_NAME} STATIC ${CMAKE_CURRENT_LIST_DIR}/${LIB_NAME}.c)
 
 target_include_directories(${LIB_NAME}  PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 target_include_directories(${LIB_NAME}  PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
-target_link_libraries(${LIB_NAME}  PUBLIC modxo pico_rand)
+target_link_libraries(${LIB_NAME}  PUBLIC modxo pico_rand modxo_sd_card )
 
 # Board file definitions for PSRAM
 if(DEFINED PSRAM_CS1 AND (PICO_PLATFORM MATCHES "rp2350*"))
@@ -24,4 +24,5 @@ target_sources(${LIB_NAME} PRIVATE
     handlers/rng.c
     handlers/int_ram.c
     handlers/echo.c
+    handlers/sdcard.c
 )

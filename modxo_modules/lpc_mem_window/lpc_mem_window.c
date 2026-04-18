@@ -82,6 +82,12 @@ void setup_handler(uint8_t type) {
 		window->control = echo_handler_control;
 		break;
 
+	case LPC_MEM_WIN_TYPE_SDCARD:
+		window->read = sdcard_memread_handler;
+		window->write = sdcard_memwrite_handler;
+		window->control = sdcard_handler_control;
+		break;
+
 	default:
 		window->read = NULL;
 		window->write = NULL;
@@ -236,6 +242,7 @@ void run_handler_powerups() {
 	rng_handler_powerup();
 	int_ram_handler_powerup();
 	echo_handler_powerup();
+	sdcard_handler_powerup();
 }
 
 void powerup() {
@@ -251,10 +258,17 @@ void powerup() {
 
 void init() {
 	lpc_interface_add_io_handler(LPC_MEM_WIN_IO_BASE, 0xFFF8, lpc_mem_win_read_handler, lpc_mem_win_write_handler);		
+
+	sdcard_handler_init();
+}
+
+void core0_poll() {
+	sdcard_handler_poll();
 }
 
 MODXO_TASK lpc_mem_window_hdlr = {
 	.init = init,
 	.powerup = powerup,
+    .core0_poll = core0_poll
 };
 

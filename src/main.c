@@ -40,7 +40,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <ws2812.h>
 #include <legacy_display.h>
 #include <expansion.h>
-#include <sdcard.h>
 #include <LPC47M152.h>
 #include <uart_16550.h>
 #include <modxo/lpc_interface.h>
@@ -169,7 +168,6 @@ void register_handlers()
     modxo_register_handler(&ws2812_hdlr);
     modxo_register_handler(&legacy_display_hdlr);
     modxo_register_handler(&expansion_hdlr);
-    modxo_register_handler(&sdcard_hdlr);
 }
 
 int main(void)

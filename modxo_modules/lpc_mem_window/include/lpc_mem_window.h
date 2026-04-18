@@ -25,6 +25,7 @@
 #define LPC_MEM_WIN_TYPE_INTERNAL_RAM                 2
 #define LPC_MEM_WIN_TYPE_RNG                          3
 #define LPC_MEM_WIN_TYPE_ECHO                         4
+#define LPC_MEM_WIN_TYPE_SDCARD                       5
 
 #define LPC_MEM_WIN_FLAG_WRITE_ENABLED                (1 << 0)
 #define LPC_MEM_WIN_FLAG_READ_ENABLED                 (1 << 1)
@@ -71,4 +72,9 @@ bool echo_memwrite_handler(uint32_t addr, uint8_t *data, uint8_t window_id);
 uint8_t echo_handler_control(uint8_t cmd, uint8_t data, bool is_read);
 void echo_handler_powerup();
 
-
+bool sdcard_memread_handler(uint32_t addr, uint8_t *data, uint8_t window_id);
+bool sdcard_memwrite_handler(uint32_t addr, uint8_t *data, uint8_t window_id);
+uint8_t sdcard_handler_control(uint8_t cmd, uint8_t data, bool is_read);
+void sdcard_handler_poll();
+void sdcard_handler_powerup();
+void sdcard_handler_init();

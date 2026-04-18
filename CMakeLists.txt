@@ -87,7 +87,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     flashrom
     lpc_mem_window
     expansion
-    sdcard
 )
 
 set(PICO_DEFAULT_BINARY_TYPE copy_to_ram)
