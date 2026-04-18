@@ -261,8 +261,6 @@ void powerup() {
 
 void init() {
 	lpc_interface_add_io_handler(LPC_MEM_WIN_IO_BASE, 0xFFF8, lpc_mem_win_read_handler, lpc_mem_win_write_handler);		
-
-	sdcard_handler_init();
 }
 
 void core0_poll() {
