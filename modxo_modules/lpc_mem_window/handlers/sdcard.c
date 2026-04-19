@@ -48,7 +48,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SDCARD_QUEUE_BUFFER_LEN 1024
 #define SDCARD_PATH_MAX 280
 
-#define SDCARD_FILE_CHUNK_SIZE 4096
+#define SDCARD_FILE_CHUNK_SIZE_SHIFT 12
+#define SDCARD_FILE_CHUNK_SIZE (1 << SDCARD_FILE_CHUNK_SIZE_SHIFT)
 
 #define SDCARD_CWD_RESULT_OK 0
 #define SDCARD_CWD_RESULT_BAD_INDEX 1
@@ -467,7 +468,7 @@ bool sdcard_memread_handler(uint32_t addr, uint8_t *data, uint8_t window_id)
     }
     else if (private_data.payload_type == PAYLOAD_TYPE_FILE_SD_SECTOR)
     {
-        uint32_t sector = offset / SDCARD_FILE_CHUNK_SIZE;
+        uint32_t sector = offset >> SDCARD_FILE_CHUNK_SIZE_SHIFT;
         uint32_t sector_length = 0;
         sdcard_file_read_sector(sector, &sector_length);
         uint32_t sector_offset = offset & (SDCARD_FILE_CHUNK_SIZE - 1);
@@ -477,7 +478,7 @@ bool sdcard_memread_handler(uint32_t addr, uint8_t *data, uint8_t window_id)
     else if (private_data.payload_type == PAYLOAD_TYPE_FILE_SD_BIOS)
     {
         uint32_t mirror = offset & (private_data.open_file_size - 1);
-        uint32_t sector = mirror / SDCARD_FILE_CHUNK_SIZE;
+        uint32_t sector = mirror >> SDCARD_FILE_CHUNK_SIZE_SHIFT;
         uint32_t sector_length = 0;
         sdcard_file_read_sector(sector, &sector_length);
         uint32_t sector_offset = mirror & (SDCARD_FILE_CHUNK_SIZE - 1);
