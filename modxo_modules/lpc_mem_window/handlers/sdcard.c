@@ -56,13 +56,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SDCARD_CWD_RESULT_PATH_TOO_LONG 3
 #define SDCARD_CWD_RESULT_AT_ROOT 4
 
-#define SDCARD_FILE_READ_RESULT_IDLE 0 
-#define SDCARD_FILE_READ_RESULT_OK 1
-#define SDCARD_FILE_READ_RESULT_ERROR 2
-#define SDCARD_FILE_READ_RESULT_INVALID_INDEX 3
-#define SDCARD_FILE_READ_RESULT_IS_DIRECTORY 4
-
-
+#define SDCARD_FILE_RESULT_IDLE 0 
+#define SDCARD_FILE_RESULT_OK 1
+#define SDCARD_FILE_RESULT_ERROR 2
+#define SDCARD_FILE_RESULT_INVALID_INDEX 3
+#define SDCARD_FILE_RESULT_IS_DIRECTORY 4
 
 #define SDCARD_COMMAND_NONE 0
 
@@ -220,12 +218,12 @@ void sdcard_remount()
     if (file_result != FR_OK)
     {
         private_data.sd_fat_mounted = 0;
-        private_data.remount_result = SDCARD_FILE_READ_RESULT_ERROR;
+        private_data.remount_result = SDCARD_FILE_RESULT_ERROR;
         private_data.remount_ready = 1;
         return;
     }
     private_data.sd_fat_mounted = 1;
-    private_data.remount_result = SDCARD_FILE_READ_RESULT_OK;
+    private_data.remount_result = SDCARD_FILE_RESULT_OK;
     private_data.remount_ready = 1;
 }
 
@@ -240,7 +238,7 @@ void sdcard_dir_list()
         file_result = f_mount(&private_data.fatfs, "0:", 1);
         if (file_result != FR_OK)
         {
-            private_data.file_list_result = SDCARD_FILE_READ_RESULT_ERROR;
+            private_data.file_list_result = SDCARD_FILE_RESULT_ERROR;
             private_data.file_list_ready = 1;
             return;
         }
@@ -287,7 +285,7 @@ void sdcard_dir_list()
     f_closedir(&directory);
     private_data.file_list_count = file_count;
     private_data.file_list_ready = 1;
-    private_data.file_list_result = SDCARD_FILE_READ_RESULT_OK;
+    private_data.file_list_result = SDCARD_FILE_RESULT_OK;
 }
 
 void sdcard_file_open()
@@ -300,14 +298,14 @@ void sdcard_file_open()
 
     if (private_data.open_file_index >= private_data.file_list_count) {
         private_data.open_file_ready = 1;
-        private_data.open_file_result = SDCARD_FILE_READ_RESULT_INVALID_INDEX;
+        private_data.open_file_result = SDCARD_FILE_RESULT_INVALID_INDEX;
         return;
     }
 
     if (private_data.file_entries[private_data.open_file_index].flags  & AM_DIR)
     {
         private_data.open_file_ready = 1;
-        private_data.open_file_result = SDCARD_FILE_READ_RESULT_IS_DIRECTORY;
+        private_data.open_file_result = SDCARD_FILE_RESULT_IS_DIRECTORY;
         return;
     }
 
@@ -317,7 +315,7 @@ void sdcard_file_open()
         if (file_result != FR_OK)
         {
             private_data.open_file_ready = 1;
-            private_data.open_file_result = SDCARD_FILE_READ_RESULT_ERROR;
+            private_data.open_file_result = SDCARD_FILE_RESULT_ERROR;
             return;
         }
         private_data.sd_fat_mounted = 1;
@@ -337,19 +335,19 @@ void sdcard_file_open()
     if (fr != FR_OK)
     {
         private_data.open_file_ready = 1;
-        private_data.open_file_result = SDCARD_FILE_READ_RESULT_ERROR;
+        private_data.open_file_result = SDCARD_FILE_RESULT_ERROR;
         return;
     }
 
     private_data.open_file_size = private_data.file_entries[private_data.open_file_index].file_size;
     private_data.open_file_ready = 1;
-    private_data.open_file_result = SDCARD_FILE_READ_RESULT_OK;
+    private_data.open_file_result = SDCARD_FILE_RESULT_OK;
 }
 
 uint8_t sdcard_file_close()
 {
     FRESULT fr = f_close(&private_data.open_file);
-    return fr == FR_OK ? SDCARD_FILE_READ_RESULT_OK : SDCARD_FILE_READ_RESULT_ERROR;
+    return fr == FR_OK ? SDCARD_FILE_RESULT_OK : SDCARD_FILE_RESULT_ERROR;
 }
 
 uint8_t sdcard_file_read_sector(uint32_t sector_index, uint32_t* sector_length)
@@ -362,7 +360,7 @@ uint8_t sdcard_file_read_sector(uint32_t sector_index, uint32_t* sector_length)
         if (file_result != FR_OK)
         {
             *sector_length = 0;
-            return SDCARD_FILE_READ_RESULT_ERROR;
+            return SDCARD_FILE_RESULT_ERROR;
         }
         private_data.sd_fat_mounted = 1;
     }
@@ -370,14 +368,14 @@ uint8_t sdcard_file_read_sector(uint32_t sector_index, uint32_t* sector_length)
     if (private_data.open_file.obj.fs == NULL)
     {
         *sector_length = 0;
-        return SDCARD_FILE_READ_RESULT_ERROR;
+        return SDCARD_FILE_RESULT_ERROR;
     }
 
     uint32_t max_sector_index = (private_data.open_file_size + SDCARD_FILE_CHUNK_SIZE - 1u) / SDCARD_FILE_CHUNK_SIZE;
     if (sector_index > max_sector_index)
     {
         *sector_length = 0;
-        return SDCARD_FILE_READ_RESULT_ERROR;
+        return SDCARD_FILE_RESULT_ERROR;
     }
 
     if (private_data.cached_sector_index = 0xffffffff || private_data.cached_sector_index != sector_index)
@@ -389,7 +387,7 @@ uint8_t sdcard_file_read_sector(uint32_t sector_index, uint32_t* sector_length)
         if (file_result != FR_OK)
         {
             *sector_length = 0;
-            return SDCARD_FILE_READ_RESULT_ERROR;
+            return SDCARD_FILE_RESULT_ERROR;
         }
 
         UINT bytes_read = 0;
@@ -398,7 +396,7 @@ uint8_t sdcard_file_read_sector(uint32_t sector_index, uint32_t* sector_length)
         if (file_result != FR_OK)
         {
             *sector_length = 0;
-            return SDCARD_FILE_READ_RESULT_ERROR;
+            return SDCARD_FILE_RESULT_ERROR;
         }
 
         private_data.cached_sector_index = sector_index;
@@ -406,7 +404,7 @@ uint8_t sdcard_file_read_sector(uint32_t sector_index, uint32_t* sector_length)
     }
 
     *sector_length = private_data.cached_sector_length;
-    return SDCARD_FILE_READ_RESULT_OK;
+    return SDCARD_FILE_RESULT_OK;
 }
 
 #else /* !SD_CARD_SPI_ENABLE */
@@ -545,7 +543,7 @@ uint8_t sdcard_handler_control_set(uint8_t cmd, uint8_t data)
 	{
         case SDCARD_COMMAND_REQUEST_REMOUNT:
             private_data.remount_ready = 0;
-            private_data.remount_result = SDCARD_FILE_READ_RESULT_IDLE;
+            private_data.remount_result = SDCARD_FILE_RESULT_IDLE;
             sdcard_queue_command(cmd, data);
             break;
         case SDCARD_COMMAND_REQUEST_FILE_LIST:
@@ -553,7 +551,7 @@ uint8_t sdcard_handler_control_set(uint8_t cmd, uint8_t data)
             private_data.file_list_count = 0;
             private_data.file_list_name_index = 0;
             private_data.file_list_ready = 0;
-            private_data.file_list_result = SDCARD_FILE_READ_RESULT_IDLE;
+            private_data.file_list_result = SDCARD_FILE_RESULT_IDLE;
             sdcard_queue_command(cmd, data);
             break;
         case SDCARD_COMMAND_REQUEST_OPEN_FILE:
@@ -561,7 +559,7 @@ uint8_t sdcard_handler_control_set(uint8_t cmd, uint8_t data)
             private_data.open_file_index = data;
             private_data.open_file_size = 0;
             private_data.open_file_ready = 0;
-            private_data.open_file_result = SDCARD_FILE_READ_RESULT_IDLE;
+            private_data.open_file_result = SDCARD_FILE_RESULT_IDLE;
             sdcard_queue_command(cmd, data);
             break;
         case SDCARD_COMMAND_GET_FILE_MAME_FROM_INDEX:
