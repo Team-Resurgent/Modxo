@@ -82,41 +82,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define SDCARD_COMMAND_FILE_READ_SECTOR 9 // set long value for sector index, sets long to length read
 
-#define SDCARD_COMMAND_CWD 10
-#define SDCARD_COMMAND_CWD_ROOT 11
-#define SDCARD_COMMAND_CWD_PARENT 12
+#define SDCARD_COMMAND_CWD_ROOT 10
+#define SDCARD_COMMAND_CWD_PARENT 11
+#define SDCARD_COMMAND_SET_CWD_FROM_INDEX 12
+#define SDCARD_COMMAND_GET_FILE_MAME_FROM_INDEX 13
+#define SDCARD_COMMAND_GET_FILE_SIZE_FROM_INDEX 14
+#define SDCARD_COMMAND_GET_FILE_FLAGS_FROM_INDEX 15
 
-#define SDCARD_COMMAND_SET_FILE_LIST_SELECTED_INDEX 13
-#define SDCARD_COMMAND_SET_PAYLOAD_TYPE 14
-
-//todo get file struct
-
-
-
-
-
-
-// #define SDCARD_COMMAND_SET_LIST_ENTRY_INDEX 32
-// #define SDCARD_COMMAND_SET_LIST_NAME_INDEX 33
-// #define SDCARD_COMMAND_SET_FILE_CHUNK_READ_INDEX 36
-// #define SDCARD_COMMAND_SET_CWD_PARENT 37
-// #define SDCARD_COMMAND_SET_CWD 38
-
-// // IO Read — directory listing (current CWD)
-
-
-
-
-// #define SDCARD_COMMAND_GET_RESPONSE_LIST_ENTRY_FLAGS 67
-// #define SDCARD_COMMAND_GET_RESPONSE_LIST_NAME_BYTE 69
-
-// // IO Read — file data (chunk up to SDCARD_FILE_CHUNK_SIZE bytes, file up to SDCARD_FILE_MAX_SIZE)
-
-// #define SDCARD_COMMAND_GET_RESPONSE_FILE_OP_READY 70 
-// #define SDCARD_COMMAND_GET_RESPONSE_FILE_SECTOR_SIZE 71
-// #define SDCARD_COMMAND_GET_RESPONSE_FILE_SIZE 74 
-// #define SDCARD_COMMAND_GET_RESPONSE_FILE_READ_RESULT 78
-// #define SDCARD_COMMAND_GET_RESPONSE_CWD_RESULT 79
+#define SDCARD_COMMAND_SET_PAYLOAD_TYPE 16
 
 #pragma pack(push, 1)
 typedef union
@@ -151,7 +124,7 @@ typedef struct
 
     uint32_t file_list_offset;
     uint8_t file_list_count;
-    uint8_t file_list_selected_index;
+    uint8_t file_list_name_index;
     uint8_t file_list_ready;
     uint8_t file_list_result;
     sdcard_file_entry_t file_entries[SDCARD_MAX_ENTRIES];
@@ -455,7 +428,6 @@ void sdcard_queue_command(uint8_t cmd, uint8_t data)
     _item.data.cmd = (uint8_t)cmd;
     _item.data.param1 = (uint8_t)data;
     modxo_queue_insert(&private_data.queue, &_item);
-    __sev();
 }
 
 bool sdcard_memread_handler(uint32_t addr, uint8_t *data, uint8_t window_id) 
@@ -465,9 +437,9 @@ bool sdcard_memread_handler(uint32_t addr, uint8_t *data, uint8_t window_id)
 
     if (private_data.payload_type == PAYLOAD_TYPE_FILE_NAME)
     {
-        if (private_data.file_list_selected_index < private_data.file_list_count) {
-            uint16_t length = private_data.file_entries[private_data.file_list_selected_index].file_name_length;
-            *data = offset < length ? private_data.file_entries[private_data.file_list_selected_index].name[offset] : 0;
+        if (private_data.file_list_name_index < private_data.file_list_count) {
+            uint16_t length = private_data.file_entries[private_data.file_list_name_index].file_name_length;
+            *data = offset < length ? private_data.file_entries[private_data.file_list_name_index].name[offset] : 0;
             return true;
         }
     }
@@ -522,26 +494,16 @@ uint8_t sdcard_handler_control_peek(uint8_t cmd, uint8_t data)
         case SDCARD_COMMAND_FILE_READ_SECTOR:
             return sdcard_file_read_sector(current_long_val, &current_long_val);
 
-        case SDCARD_COMMAND_CWD:
-            return sdcard_cwd(data);
         case SDCARD_COMMAND_CWD_ROOT:
             return sdcard_cwd_root();
         case SDCARD_COMMAND_CWD_PARENT:
             return sdcard_cwd_parent();
 
+        case SDCARD_COMMAND_SET_CWD_FROM_INDEX:
+            return sdcard_cwd(data);
+        case SDCARD_COMMAND_GET_FILE_FLAGS_FROM_INDEX:
+            return data < private_data.file_list_count ? private_data.file_entries[data].flags : 0;
 
-        // case SDCARD_COMMAND_GET_RESPONSE_LIST_ENTRY_ID:
-        //     if (private_data.root_list_entry_sel < private_data.file_list_count)
-        //     {
-        //         return private_data.file_entries[private_data.root_list_entry_sel].id;
-        //     }
-        //     break;
-        // case SDCARD_COMMAND_GET_RESPONSE_LIST_ENTRY_FLAGS:
-        //     if (private_data.root_list_entry_sel < private_data.file_list_count)
-        //     {
-        //         return private_data.file_entries[private_data.root_list_entry_sel].flags;
-        //     }
-        //     break;
 	}
 	return 0;
 }
@@ -553,7 +515,7 @@ uint8_t sdcard_handler_control_set(uint8_t cmd, uint8_t data)
         case SDCARD_COMMAND_REQUEST_FILE_LIST:
             private_data.file_list_offset = current_long_val;
             private_data.file_list_count = 0;
-            private_data.file_list_selected_index = 0;
+            private_data.file_list_name_index = 0;
             private_data.file_list_ready = 0;
             private_data.file_list_result = SDCARD_FILE_READ_RESULT_IDLE;
             sdcard_queue_command(cmd, data);
@@ -566,20 +528,15 @@ uint8_t sdcard_handler_control_set(uint8_t cmd, uint8_t data)
             private_data.open_file_result = SDCARD_FILE_READ_RESULT_IDLE;
             sdcard_queue_command(cmd, data);
             break;
-        case SDCARD_COMMAND_SET_FILE_LIST_SELECTED_INDEX:
-            private_data.file_list_selected_index = data;
+        case SDCARD_COMMAND_GET_FILE_MAME_FROM_INDEX:
+            private_data.file_list_name_index = data;
             break;
         case SDCARD_COMMAND_SET_PAYLOAD_TYPE:
             private_data.payload_type = data;
             break;
-
-
-        // case SDCARD_COMMAND_GET_RESPONSE_LIST_NAME_LENGTH:
-        //     if (private_data.root_list_entry_sel < private_data.root_list_count)
-        //     {
-        //         current_long_val = strlen(private_data.root_entries[private_data.root_list_entry_sel].name);
-        //     }
-        //     break;
+        case SDCARD_COMMAND_GET_FILE_SIZE_FROM_INDEX:
+            current_long_val = data < private_data.file_list_count ? private_data.file_entries[data].file_size : 0;
+            break;
 	}
 	return 0;
 }
