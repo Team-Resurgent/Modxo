@@ -476,7 +476,7 @@ bool sdcard_memread_handler(uint32_t addr, uint8_t *data, uint8_t window_id)
     }
     else if (private_data.payload_type == PAYLOAD_TYPE_FILE_SD_BIOS)
     {
-        uint32_t mirror = offset & ((256 * 1024) - 1); // change this to bios size
+        uint32_t mirror = offset & (private_data.open_file_size - 1);
         uint32_t sector = mirror / SDCARD_FILE_CHUNK_SIZE;
         uint32_t sector_length = 0;
         sdcard_file_read_sector(sector, &sector_length);
