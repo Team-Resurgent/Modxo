@@ -348,8 +348,8 @@ void sdcard_file_open()
 
 uint8_t sdcard_file_close()
 {
-    f_close(&private_data.open_file);
-    return SDCARD_FILE_READ_RESULT_OK;
+    FRESULT fr = f_close(&private_data.open_file);
+    return fr == FR_OK ? SDCARD_FILE_READ_RESULT_OK : SDCARD_FILE_READ_RESULT_ERROR;
 }
 
 uint8_t sdcard_file_read_sector(uint32_t sector_index, uint32_t* sector_length)
