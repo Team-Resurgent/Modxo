@@ -377,7 +377,7 @@ uint8_t sdcard_file_read_sector(uint32_t sector_index, uint32_t* sector_length)
         return SDCARD_FILE_RESULT_ERROR;
     }
 
-    if (private_data.cached_sector_index = 0xffffffff || private_data.cached_sector_index != sector_index)
+    if (private_data.cached_sector_index == 0xffffffff || private_data.cached_sector_index != sector_index)
     {
         uint32_t offset = sector_index * (uint32_t)SDCARD_FILE_CHUNK_SIZE;
         uint32_t remaining = private_data.open_file_size - offset;
