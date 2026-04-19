@@ -91,6 +91,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define SDCARD_COMMAND_SET_PAYLOAD_TYPE 16
 
+#define PAYLOAD_TYPE_NONE 0
+#define PAYLOAD_TYPE_FILE_NAME 1
+#define PAYLOAD_TYPE_FILE_SD_SECTOR 2
+#define PAYLOAD_TYPE_FILE_SD_BIOS 3
+
 #pragma pack(push, 1)
 typedef union
 {
@@ -139,7 +144,6 @@ typedef struct
     uint32_t cached_sector_length;
     uint8_t cached_sector_buffer[SDCARD_FILE_CHUNK_SIZE];
 
-
     char cwd[SDCARD_PATH_MAX];
     uint8_t payload_type;
 
@@ -150,14 +154,6 @@ typedef struct
 } sdcard_state_t;
 
 static sdcard_state_t private_data;
-
-
-uint32_t sdcard_window_offsets[NUM_LPC_MEM_WINDOWS];
-
-#define PAYLOAD_TYPE_NONE 0
-#define PAYLOAD_TYPE_FILE_NAME 1
-#define PAYLOAD_TYPE_FILE_SD_SECTOR 2
-#define PAYLOAD_TYPE_FILE_SD_BIOS 3
 
 uint8_t sdcard_cwd(uint8_t index)
 {
