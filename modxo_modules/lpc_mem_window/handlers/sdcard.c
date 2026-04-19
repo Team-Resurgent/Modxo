@@ -558,6 +558,9 @@ uint8_t sdcard_handler_control_set(uint8_t cmd, uint8_t data)
         case SDCARD_COMMAND_SET_FILE_LIST_SELECTED_INDEX:
             private_data.file_list_selected_index = data;
             break;
+        case SDCARD_COMMAND_SET_PAYLOAD_TYPE:
+            private_data.payload_type = data;
+            break;
 
 
         // case SDCARD_COMMAND_GET_RESPONSE_LIST_NAME_LENGTH:
