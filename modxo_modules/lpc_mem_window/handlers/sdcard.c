@@ -424,6 +424,7 @@ void sdcard_queue_command(uint8_t cmd, uint8_t data)
     _item.data.cmd = (uint8_t)cmd;
     _item.data.param1 = (uint8_t)data;
     modxo_queue_insert(&private_data.queue, &_item);
+    __sev();
 }
 
 bool sdcard_memread_handler(uint32_t addr, uint8_t *data, uint8_t window_id) 
