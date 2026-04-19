@@ -47,7 +47,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SDCARD_MAX_ENTRIES 8
 #define SDCARD_QUEUE_BUFFER_LEN 1024
 #define SDCARD_PATH_MAX 280
-#define SDCARD_LIST_FLAG_DIRECTORY 0x01
 
 #define SDCARD_FILE_CHUNK_SIZE 4096
 
@@ -169,7 +168,7 @@ uint8_t sdcard_cwd(uint8_t index)
         return SDCARD_CWD_RESULT_BAD_INDEX;
     }
 
-    if (!(private_data.file_entries[index].flags & SDCARD_LIST_FLAG_DIRECTORY))
+    if (!(private_data.file_entries[index].flags & AM_DIR))
     {
         return SDCARD_CWD_RESULT_NOT_DIRECTORY;
     }
@@ -272,8 +271,8 @@ void sdcard_dir_list()
         {
             sdcard_file_entry_t* file_entry = &private_data.file_entries[file_count];
             file_entry->id = current_offset;
-            file_entry->flags = (file_info.fattrib & AM_DIR) ? (uint8_t)SDCARD_LIST_FLAG_DIRECTORY : 0;
-            file_entry->file_size = file_entry->flags == SDCARD_LIST_FLAG_DIRECTORY ? 0 : (uint32_t)file_info.fsize;
+            file_entry->flags = file_info.fattrib;
+            file_entry->file_size = (file_info.fattrib & AM_DIR) ? 0 : (uint32_t)file_info.fsize;
             strncpy(file_entry->name, file_info.fname, SDCARD_PATH_MAX);
             file_entry->file_name_length = strlen(private_data.file_entries[file_count].name);
 
@@ -305,7 +304,7 @@ void sdcard_file_open()
         return;
     }
 
-    if (private_data.file_entries[private_data.open_file_index].flags == SDCARD_LIST_FLAG_DIRECTORY)
+    if (private_data.file_entries[private_data.open_file_index].flags  & AM_DIR)
     {
         private_data.open_file_ready = 1;
         private_data.open_file_result = SDCARD_FILE_READ_RESULT_IS_DIRECTORY;
