@@ -13,6 +13,7 @@ uint8_t current_lpc_mem_win_cmd;
 uint32_t current_long_val;
 uint8_t current_window_id;
 uint8_t current_win_hdlr_cmd;
+uint8_t current_win_hdlr_data;
 
 
 
@@ -82,6 +83,12 @@ void setup_handler(uint8_t type) {
 		window->control = echo_handler_control;
 		break;
 
+	case LPC_MEM_WIN_TYPE_HEAP:
+		window->read = heap_memread_handler;
+		window->write = heap_memwrite_handler;
+		window->control = heap_handler_control;
+		break;
+
 	case LPC_MEM_WIN_TYPE_SDCARD:
 		window->read = sdcard_memread_handler;
 		window->write = sdcard_memwrite_handler;
@@ -114,11 +121,14 @@ uint8_t peek_window_type() {
 	else if(window->read == echo_memread_handler) {
 		return LPC_MEM_WIN_TYPE_ECHO;
 	}
+	else if(window->read == heap_memread_handler) {
+		return LPC_MEM_WIN_TYPE_HEAP;
+	}
 	else if(window->read == sdcard_memread_handler) {
 		return LPC_MEM_WIN_TYPE_SDCARD;
 	}
 
-	return 0;
+	return LPC_MEM_WIN_TYPE_NONE;
 }
 
 void send_command(uint8_t data) {
@@ -158,6 +168,10 @@ void send_command(uint8_t data) {
 	case LPC_MEM_WIN_CMD_WIN_CTRL_CMD:
 		current_win_hdlr_cmd = data;
 		break;
+
+	case LPC_MEM_WIN_CMD_WIN_CTRL_DATA:
+		current_win_hdlr_data = data;
+		break;
 	}
 }
 
@@ -190,11 +204,15 @@ uint8_t peek_command() {
 		break;
 
 	case LPC_MEM_WIN_CMD_WIN_CTRL:
-		if(window->control) return window->control(current_win_hdlr_cmd, 0, true);
+		if(window->control) return window->control(current_win_hdlr_cmd, current_win_hdlr_data, true);
 		break;
 
 	case LPC_MEM_WIN_CMD_WIN_CTRL_CMD:
 		return current_win_hdlr_cmd;
+		break;
+
+	case LPC_MEM_WIN_CMD_WIN_CTRL_DATA:
+		return current_win_hdlr_data;
 		break;
 	}
 
@@ -245,6 +263,7 @@ void run_handler_powerups() {
 	rng_handler_powerup();
 	int_ram_handler_powerup();
 	echo_handler_powerup();
+	heap_handler_powerup();
 	sdcard_handler_powerup();
 }
 
@@ -254,6 +273,7 @@ void powerup() {
 	current_long_val = 0;
 	current_lpc_mem_win_cmd = 0;
 	current_win_hdlr_cmd = 0;
+	current_win_hdlr_data = 0;
 	lpc_mem_window_enabled = false;
 
 	run_handler_powerups();
@@ -272,4 +292,3 @@ MODXO_TASK lpc_mem_window_hdlr = {
 	.powerup = powerup,
     .core0_poll = core0_poll
 };
-

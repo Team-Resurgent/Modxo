@@ -19,6 +19,7 @@
 #define LPC_MEM_WIN_CMD_WIN_FLAGS                     5
 #define LPC_MEM_WIN_CMD_WIN_CTRL                      6
 #define LPC_MEM_WIN_CMD_WIN_CTRL_CMD                  7
+#define LPC_MEM_WIN_CMD_WIN_CTRL_DATA                 8
 
 #define LPC_MEM_WIN_TYPE_NONE                         0
 #define LPC_MEM_WIN_TYPE_PSRAM                        1
@@ -26,6 +27,7 @@
 #define LPC_MEM_WIN_TYPE_RNG                          3
 #define LPC_MEM_WIN_TYPE_ECHO                         4
 #define LPC_MEM_WIN_TYPE_SDCARD                       5
+#define LPC_MEM_WIN_TYPE_HEAP                         6
 
 #define LPC_MEM_WIN_FLAG_WRITE_ENABLED                (1 << 0)
 #define LPC_MEM_WIN_FLAG_READ_ENABLED                 (1 << 1)
@@ -46,6 +48,7 @@ extern uint8_t current_lpc_mem_win_cmd;
 extern uint32_t current_long_val;
 extern uint8_t current_window_id;
 extern uint8_t current_win_hdlr_cmd;
+extern uint8_t current_win_hdlr_data;
 extern uint8_t lpc_mem_window_enabled;
 
 
@@ -61,6 +64,11 @@ bool int_ram_memread_handler(uint32_t addr, uint8_t *data, uint8_t window_id);
 bool int_ram_memwrite_handler(uint32_t addr, uint8_t *data, uint8_t window_id);
 uint8_t int_ram_handler_control(uint8_t cmd, uint8_t data, bool is_read);
 void int_ram_handler_powerup();
+
+bool heap_memread_handler(uint32_t addr, uint8_t *data, uint8_t window_id);
+bool heap_memwrite_handler(uint32_t addr, uint8_t *data, uint8_t window_id);
+uint8_t heap_handler_control(uint8_t cmd, uint8_t data, bool is_read);
+void heap_handler_powerup();
 
 bool rng_memread_handler(uint32_t addr, uint8_t *data, uint8_t window_id);
 bool rng_memwrite_handler(uint32_t addr, uint8_t *data, uint8_t window_id);
