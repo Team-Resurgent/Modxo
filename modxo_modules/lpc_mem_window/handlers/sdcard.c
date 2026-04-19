@@ -67,29 +67,33 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define SDCARD_COMMAND_NONE 0
 
-#define SDCARD_COMMAND_REQUEST_FILE_LIST 1 // set long value for offset
-#define SDCARD_COMMAND_RESPONSE_FILE_LIST_COUNT 2 
-#define SDCARD_COMMAND_RESPONSE_FILE_LIST_READY 3
-#define SDCARD_COMMAND_RESPONSE_FILE_LIST_RESULT 4
+#define SDCARD_COMMAND_REQUEST_REMOUNT 1
+#define SDCARD_COMMAND_RESPONSE_REMOUNT_READY 2
+#define SDCARD_COMMAND_RESPONSE_REMOUNT_RESULT 3
+
+#define SDCARD_COMMAND_REQUEST_FILE_LIST 4 // set long value for offset
+#define SDCARD_COMMAND_RESPONSE_FILE_LIST_COUNT 5 
+#define SDCARD_COMMAND_RESPONSE_FILE_LIST_READY 6
+#define SDCARD_COMMAND_RESPONSE_FILE_LIST_RESULT 7
 
 // need to have commands to get elements from list
 
-#define SDCARD_COMMAND_REQUEST_OPEN_FILE 5 // data = index of list
-#define SDCARD_COMMAND_RESPONSE_OPEN_FILE_READY 6
-#define SDCARD_COMMAND_RESPONSE_OPEN_FILE_RESULT 7
+#define SDCARD_COMMAND_REQUEST_OPEN_FILE 8 // data = index of list
+#define SDCARD_COMMAND_RESPONSE_OPEN_FILE_READY 9
+#define SDCARD_COMMAND_RESPONSE_OPEN_FILE_RESULT 10
 
-#define SDCARD_COMMAND_CLOSE_FILE 8
+#define SDCARD_COMMAND_CLOSE_FILE 11
 
-#define SDCARD_COMMAND_FILE_READ_SECTOR 9 // set long value for sector index, sets long to length read
+#define SDCARD_COMMAND_FILE_READ_SECTOR 12 // set long value for sector index, sets long to length read
 
-#define SDCARD_COMMAND_CWD_ROOT 10
-#define SDCARD_COMMAND_CWD_PARENT 11
-#define SDCARD_COMMAND_SET_CWD_FROM_INDEX 12
-#define SDCARD_COMMAND_GET_FILE_MAME_FROM_INDEX 13
-#define SDCARD_COMMAND_GET_FILE_SIZE_FROM_INDEX 14
-#define SDCARD_COMMAND_GET_FILE_FLAGS_FROM_INDEX 15
+#define SDCARD_COMMAND_CWD_ROOT 13
+#define SDCARD_COMMAND_CWD_PARENT 14
+#define SDCARD_COMMAND_SET_CWD_FROM_INDEX 15
+#define SDCARD_COMMAND_GET_FILE_MAME_FROM_INDEX 16
+#define SDCARD_COMMAND_GET_FILE_SIZE_FROM_INDEX 17
+#define SDCARD_COMMAND_GET_FILE_FLAGS_FROM_INDEX 18
 
-#define SDCARD_COMMAND_SET_PAYLOAD_TYPE 16
+#define SDCARD_COMMAND_SET_PAYLOAD_TYPE 19
 
 #define PAYLOAD_TYPE_NONE 0
 #define PAYLOAD_TYPE_FILE_NAME 1
@@ -126,6 +130,9 @@ typedef struct
 {
     MODXO_QUEUE_ITEM_T buffer[SDCARD_QUEUE_BUFFER_LEN];
     MODXO_QUEUE_T queue;
+
+    uint8_t remount_ready;
+    uint8_t remount_result;
 
     uint32_t file_list_offset;
     uint8_t file_list_count;
@@ -205,6 +212,23 @@ uint8_t sdcard_cwd_parent()
 }
 
 #if SD_CARD_SPI_ENABLE
+
+void sdcard_remount()
+{
+    f_mount(NULL, "0:", 1);
+
+    FRESULT file_result = f_mount(&private_data.fatfs, "0:", 1);
+    if (file_result != FR_OK)
+    {
+        private_data.sd_fat_mounted = 0;
+        private_data.remount_result = SDCARD_FILE_READ_RESULT_ERROR;
+        private_data.remount_ready = 1;
+        return;
+    }
+    private_data.sd_fat_mounted = 1;
+    private_data.remount_result = SDCARD_FILE_READ_RESULT_OK;
+    private_data.remount_ready = 1;
+}
 
 void sdcard_dir_list()
 {
@@ -388,6 +412,12 @@ uint8_t sdcard_file_read_sector(uint32_t sector_index, uint32_t* sector_length)
 
 #else /* !SD_CARD_SPI_ENABLE */
 
+void sdcard_remount()
+{
+    private_data.remount_ready = 1;
+    private_data.remount_result = SDCARD_FILE_READ_RESULT_OK
+}
+
 void sdcard_dir_list()
 {
     private_data.file_list_ready = 1;
@@ -473,6 +503,11 @@ uint8_t sdcard_handler_control_peek(uint8_t cmd, uint8_t data)
 {
 	switch(cmd) 
 	{
+        case SDCARD_COMMAND_RESPONSE_REMOUNT_READY:
+            return private_data.remount_ready;
+        case SDCARD_COMMAND_RESPONSE_REMOUNT_RESULT:
+            return private_data.remount_result;
+
         case SDCARD_COMMAND_RESPONSE_FILE_LIST_COUNT:
             return private_data.file_list_count;
         case SDCARD_COMMAND_RESPONSE_FILE_LIST_READY:
@@ -509,6 +544,11 @@ uint8_t sdcard_handler_control_set(uint8_t cmd, uint8_t data)
 {
 	switch(cmd) 
 	{
+        case SDCARD_COMMAND_REQUEST_REMOUNT:
+            private_data.remount_ready = 0;
+            private_data.remount_result = SDCARD_FILE_READ_RESULT_IDLE;
+            sdcard_queue_command(cmd, data);
+            break;
         case SDCARD_COMMAND_REQUEST_FILE_LIST:
             private_data.file_list_offset = current_long_val;
             private_data.file_list_count = 0;
@@ -554,6 +594,9 @@ void sdcard_handler_poll()
             rx_cmd.raw = _item.data.raw;
             switch (rx_cmd.cmd)
             {
+                case SDCARD_COMMAND_REQUEST_REMOUNT:
+                    sdcard_remount();
+                    break;
                 case SDCARD_COMMAND_REQUEST_FILE_LIST:
                     sdcard_dir_list();
                     break;
