@@ -222,7 +222,7 @@ uint8_t sdcard_cwd_parent()
 
 void sdcard_flash_sector(void)
 {
-    const uint32_t flash_offset = private_data.flash_sector_offset & (SDCARD_FILE_CHUNK_SIZE - 1u);
+    const uint32_t flash_offset = private_data.flash_sector_offset;
 	
     const uint8_t *flash_existing = (const uint8_t *)(XIP_BASE + flash_offset);
     if (memcmp(flash_existing, private_data.cached_sector_buffer, SDCARD_FILE_CHUNK_SIZE) == 0)
