@@ -225,7 +225,7 @@ void sdcard_flash_sector(void)
 
     uint32_t ints = save_and_disable_interrupts();
     flash_range_erase(flash_offset, SDCARD_FILE_CHUNK_SIZE);
-    flash_range_program(flash_offset, SDCARD_FILE_CHUNK_SIZE);
+    flash_range_program(flash_offset, private_data.cached_sector_buffer, SDCARD_FILE_CHUNK_SIZE);
     restore_interrupts(ints);
 
     private_data.flash_sector_result = SDCARD_FILE_RESULT_OK;
