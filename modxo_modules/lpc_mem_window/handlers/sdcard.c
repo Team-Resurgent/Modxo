@@ -38,6 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <pico/stdlib.h>
 #include "pico/multicore.h"
 #include <hardware/flash.h>
+#include <hardware/regs/addressmap.h>
 #include <hardware/sync.h>
 
 #include <modxo_pinout.h>
@@ -222,6 +223,14 @@ uint8_t sdcard_cwd_parent()
 void sdcard_flash_sector(void)
 {
     const uint32_t flash_offset = private_data.flash_sector_offset & (SDCARD_FILE_CHUNK_SIZE - 1u);
+	
+    const uint8_t *flash_existing = (const uint8_t *)(XIP_BASE + flash_offset);
+    if (memcmp(flash_existing, private_data.cached_sector_buffer, SDCARD_FILE_CHUNK_SIZE) == 0)
+    {
+        private_data.flash_sector_result = SDCARD_FILE_RESULT_OK;
+        private_data.flash_sector_ready = 1;
+        return;
+    }
 
     uint32_t ints = save_and_disable_interrupts();
     flash_range_erase(flash_offset, SDCARD_FILE_CHUNK_SIZE);
