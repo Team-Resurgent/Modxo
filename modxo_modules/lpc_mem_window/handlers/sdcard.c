@@ -37,6 +37,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string.h>
 #include <pico/stdlib.h>
 #include "pico/multicore.h"
+#include <hardware/flash.h>
+#include <hardware/sync.h>
 
 #include <modxo_pinout.h>
 
@@ -48,7 +50,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SDCARD_QUEUE_BUFFER_LEN 1024
 #define SDCARD_PATH_MAX 280
 
-#define SDCARD_FILE_CHUNK_SIZE_SHIFT 9
+#define SDCARD_FILE_CHUNK_SIZE_SHIFT 12
 #define SDCARD_FILE_CHUNK_SIZE (1 << SDCARD_FILE_CHUNK_SIZE_SHIFT)
 
 #define SDCARD_CWD_RESULT_OK 0
@@ -78,18 +80,22 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SDCARD_COMMAND_RESPONSE_OPEN_FILE_READY 9
 #define SDCARD_COMMAND_RESPONSE_OPEN_FILE_RESULT 10
 
-#define SDCARD_COMMAND_CLOSE_FILE 11
+#define SDCARD_COMMAND_REQUEST_FLASH_SECTOR 11 // flashes loaded sector at current_long offset
+#define SDCARD_COMMAND_RESPONSE_FLASH_SECTOR_READY 12
+#define SDCARD_COMMAND_RESPONSE_FLASH_SECTOR_RESULT 13
 
-#define SDCARD_COMMAND_FILE_READ_SECTOR 12 // set long value for sector index, sets long to length read
+#define SDCARD_COMMAND_CLOSE_FILE 14
 
-#define SDCARD_COMMAND_CWD_ROOT 13
-#define SDCARD_COMMAND_CWD_PARENT 14
-#define SDCARD_COMMAND_SET_CWD_FROM_INDEX 15
-#define SDCARD_COMMAND_GET_FILE_MAME_FROM_INDEX 16
-#define SDCARD_COMMAND_GET_FILE_SIZE_FROM_INDEX 17
-#define SDCARD_COMMAND_GET_FILE_FLAGS_FROM_INDEX 18
+#define SDCARD_COMMAND_FILE_READ_SECTOR 15 // set long value for sector index, sets long to length read
 
-#define SDCARD_COMMAND_SET_PAYLOAD_TYPE 19
+#define SDCARD_COMMAND_CWD_ROOT 16
+#define SDCARD_COMMAND_CWD_PARENT 17
+#define SDCARD_COMMAND_SET_CWD_FROM_INDEX 18
+#define SDCARD_COMMAND_GET_FILE_MAME_FROM_INDEX 19
+#define SDCARD_COMMAND_GET_FILE_SIZE_FROM_INDEX 20
+#define SDCARD_COMMAND_GET_FILE_FLAGS_FROM_INDEX 21
+
+#define SDCARD_COMMAND_SET_PAYLOAD_TYPE 22
 
 #define PAYLOAD_TYPE_NONE 0
 #define PAYLOAD_TYPE_FILE_NAME 1
@@ -129,6 +135,10 @@ typedef struct
 
     uint8_t remount_ready;
     uint8_t remount_result;
+
+    uint32_t flash_sector_offset;
+    uint8_t flash_sector_ready;
+    uint8_t flash_sector_result;
 
     uint32_t file_list_offset;
     uint8_t file_list_count;
@@ -208,6 +218,19 @@ uint8_t sdcard_cwd_parent()
 }
 
 #if SD_CARD_SPI_ENABLE
+
+void sdcard_flash_sector(void)
+{
+    const uint32_t flash_offset = private_data.flash_sector_offset & (SDCARD_FILE_CHUNK_SIZE - 1u);
+
+    uint32_t ints = save_and_disable_interrupts();
+    flash_range_erase(flash_offset, SDCARD_FILE_CHUNK_SIZE);
+    flash_range_program(flash_offset, SDCARD_FILE_CHUNK_SIZE);
+    restore_interrupts(ints);
+
+    private_data.flash_sector_result = SDCARD_FILE_RESULT_OK;
+    private_data.flash_sector_ready = 1;
+}
 
 void sdcard_remount()
 {
@@ -408,34 +431,40 @@ uint8_t sdcard_file_read_sector(uint32_t sector_index, uint32_t* sector_length)
 
 #else /* !SD_CARD_SPI_ENABLE */
 
+void sdcard_flash_sector(void)
+{
+    private_data.flash_sector_ready = 1;
+    private_data.flash_sector_result = SDCARD_FILE_RESULT_OK;
+}
+
 void sdcard_remount()
 {
     private_data.remount_ready = 1;
-    private_data.remount_result = SDCARD_FILE_READ_RESULT_OK
+    private_data.remount_result = SDCARD_FILE_RESULT_OK;
 }
 
 void sdcard_dir_list()
 {
     private_data.file_list_ready = 1;
-    private_data.file_list_result = SDCARD_FILE_READ_RESULT_OK
+    private_data.file_list_result = SDCARD_FILE_RESULT_OK;
 }
 
 void sdcard_file_open()
 {
     private_data.open_file_ready = 1;
-    private_data.open_file_result = SDCARD_FILE_READ_RESULT_OK;
+    private_data.open_file_result = SDCARD_FILE_RESULT_OK;
 }
 
 uint8_t sdcard_file_close()
 {
-    return SDCARD_FILE_READ_RESULT_OK;
+    return SDCARD_FILE_RESULT_OK;
 }
 
 uint8_t sdcard_file_read_sector(uint32_t sectot_index, uint32_t* sector_length)
 {
-    (void*)sectot_index;
+    (void)sectot_index;
     *sector_length = 0;
-    return SDCARD_FILE_READ_RESULT_OK;
+    return SDCARD_FILE_RESULT_OK;
 }
 
 #endif
@@ -516,6 +545,11 @@ uint8_t sdcard_handler_control_peek(uint8_t cmd, uint8_t data)
         case SDCARD_COMMAND_RESPONSE_OPEN_FILE_RESULT:
             return private_data.open_file_result;
 
+        case SDCARD_COMMAND_RESPONSE_FLASH_SECTOR_READY:
+            return private_data.flash_sector_ready;
+        case SDCARD_COMMAND_RESPONSE_FLASH_SECTOR_RESULT:
+            return private_data.flash_sector_result;
+
         case SDCARD_COMMAND_CLOSE_FILE:
             return sdcard_file_close();
 
@@ -540,6 +574,12 @@ uint8_t sdcard_handler_control_set(uint8_t cmd, uint8_t data)
 {
 	switch(cmd) 
 	{
+        case SDCARD_COMMAND_REQUEST_FLASH_SECTOR:
+            private_data.flash_sector_offset = current_long_val;
+            private_data.flash_sector_ready = 0;
+            private_data.flash_sector_result = SDCARD_FILE_RESULT_IDLE;
+            sdcard_queue_command(cmd, data);
+            break;
         case SDCARD_COMMAND_REQUEST_REMOUNT:
             private_data.remount_ready = 0;
             private_data.remount_result = SDCARD_FILE_RESULT_IDLE;
@@ -590,6 +630,9 @@ void sdcard_handler_poll()
             rx_cmd.raw = _item.data.raw;
             switch (rx_cmd.cmd)
             {
+                case SDCARD_COMMAND_REQUEST_FLASH_SECTOR:
+                    sdcard_flash_sector();
+                    break;
                 case SDCARD_COMMAND_REQUEST_REMOUNT:
                     sdcard_remount();
                     break;
