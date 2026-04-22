@@ -27,7 +27,7 @@ set(PICO_BOARD pico CACHE STRING "Board type")
 
 if(NOT DEFINED MODXO_PINOUT)
     if(PICO_BOARD EQUAL pico2)
-        set(MODXO_PINOUT "official_pico2")
+        set(MODXO_PINOUT "test_board")
     else()
         set(MODXO_PINOUT "test_board")
     endif()
