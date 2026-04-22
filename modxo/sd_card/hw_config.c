@@ -25,10 +25,10 @@ static sd_sdio_if_t sdio_if = {
     .D1_gpio = SD_CARD_SDIO_D0 + 1,
     .D2_gpio = SD_CARD_SDIO_D0 + 2,
     .D3_gpio = SD_CARD_SDIO_D0 + 3,
-    .SDIO_PIO = pio2,
-    .DMA_IRQ_num = SD_CARD_SDIO_DMA_IRQ ? DMA_IRQ_1 : DMA_IRQ_0,
+    .SDIO_PIO = SD_CARD_SDIO_PIO,
+    .DMA_IRQ_num = SD_CARD_SDIO_DMA_IRQ,
     .use_exclusive_DMA_IRQ_handler = false,
-    .baud_rate = SD_CARD_SDIO_BAUD_RATE,
+    .baud_rate = 125 * 1000 * 1000 / 6,
     .set_drive_strength = false,
 };
 
