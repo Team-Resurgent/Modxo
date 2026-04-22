@@ -73,6 +73,7 @@ endforeach()
 #Source files
 target_sources(${PROJECT_NAME} PRIVATE
     src/main.c
+    src/hw_config.c
 )
 
 # Link to pico_stdlib (gpio, time, etc. functions)
@@ -80,7 +81,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     pico_stdlib
     pico_multicore
     modxo
-    modxo_sd_card
+    no-OS-FatFS-SD-SDIO-SPI-RPi-Pico
     ws2812
     legacy_display
     superio

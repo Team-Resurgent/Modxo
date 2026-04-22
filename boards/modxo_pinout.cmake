@@ -7,14 +7,6 @@
 #Default pin values, so the pinout files can skip them if not used
 set(LED_STATUS_PIN PICO_DEFAULT_LED_PIN)
 
-# SD SDIO (FatFS): 0 = SPI in hw_config.c; 1 = SDIO (D1..D3 must be D0+1..+3; CLK follows rp2040_sdio.pio).
-set(SD_CARD_USE_SDIO 0)
-set(SD_CARD_SDIO_CMD 0)
-set(SD_CARD_SDIO_D0 0)
-set(SD_CARD_SDIO_PIO pio1)
-set(SD_CARD_SDIO_DMA_IRQ DMA_IRQ_1)
-set(SD_CARD_SDIO_BAUD_RATE 0)
-
 set(LED_STRIP1_PWR 31) #Not Used
 set(LED_STRIP1 31) #Not Used
 set(LED_STRIP2 31) #Not Used
