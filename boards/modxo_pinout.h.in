@@ -45,7 +45,6 @@ Copyright (c) 2024, Shalx <Alejandro L. Huitron shalxmva@gmail.com>
 #define SD_CARD_SDIO_D0 @SD_CARD_SDIO_D0@
 #define SD_CARD_SDIO_PIO @SD_CARD_SDIO_PIO@
 #define SD_CARD_SDIO_DMA_IRQ @SD_CARD_SDIO_DMA_IRQ@
-#define SD_CARD_SDIO_BAUD_RATE @SD_CARD_SDIO_BAUD_RATE@
 
 //UART GPIOs
 #define UART_ENABLE @UART_ENABLE@

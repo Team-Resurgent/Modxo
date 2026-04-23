@@ -128,7 +128,7 @@ int main() {
     // See FatFs - Generic FAT Filesystem Module, "Application Interface",
     // http://elm-chan.org/fsw/ff/00index_e.html
     FATFS fs;
-    FRESULT fr = f_mount(&fs, "0:", 1);
+    FRESULT fr = f_mount(&fs, "", 1);
     if (FR_OK != fr) {
         panic("f_mount error: %s (%d)\n", FRESULT_str(fr), fr);
         return -1;

@@ -243,9 +243,9 @@ void sdcard_flash_sector(void)
 
 void sdcard_remount()
 {
-    f_mount(NULL, "0:", 1);
+    f_unmount("");
 
-    FRESULT file_result = f_mount(&private_data.fatfs, "0:", 1);
+    FRESULT file_result = f_mount(&private_data.fatfs, "", 1);
     if (file_result != FR_OK)
     {
         private_data.sd_fat_mounted = 0;
@@ -266,7 +266,7 @@ void sdcard_dir_list()
 
     if (!private_data.sd_fat_mounted)
     {
-        file_result = f_mount(&private_data.fatfs, "0:", 1);
+        file_result = f_mount(&private_data.fatfs, "", 1);
         if (file_result != FR_OK)
         {
             private_data.file_list_result = SDCARD_FILE_RESULT_ERROR;
@@ -342,7 +342,7 @@ void sdcard_file_open()
 
     if (!private_data.sd_fat_mounted)
     {
-        file_result = f_mount(&private_data.fatfs, "0:", 1);
+        file_result = f_mount(&private_data.fatfs, "", 1);
         if (file_result != FR_OK)
         {
             private_data.open_file_ready = 1;
@@ -353,9 +353,9 @@ void sdcard_file_open()
     }
 
     char path[SDCARD_PATH_MAX];
-    if (strcmp(private_data.cwd, "0:") == 0)
+    if (strcmp(private_data.cwd, "") == 0)
     {
-        snprintf(path, sizeof(path), "0:/%s", private_data.file_entries[private_data.open_file_index].name);
+        snprintf(path, sizeof(path), "/%s", private_data.file_entries[private_data.open_file_index].name);
     }
     else
     {
@@ -387,7 +387,7 @@ uint8_t sdcard_file_read_sector(uint32_t sector_index, uint32_t* sector_length)
 
     if (!private_data.sd_fat_mounted)
     {
-        file_result = f_mount(&private_data.fatfs, "0:", 1);
+        file_result = f_mount(&private_data.fatfs, "", 1);
         if (file_result != FR_OK)
         {
             *sector_length = 0;

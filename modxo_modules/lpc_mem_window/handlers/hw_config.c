@@ -25,7 +25,6 @@ static sd_sdio_if_t sdio_if = {
 static sd_card_t sd_card = {
     .type = SD_IF_SDIO,
     .sdio_if_p = &sdio_if,
-    .use_card_detect = false,
 };
 
 #elif SD_CARD_SPI_ENABLE
@@ -35,7 +34,7 @@ static spi_t spi = {
     .sck_gpio = SD_CARD_SPI_CLK,
     .mosi_gpio = SD_CARD_SPI_MOSI,
     .miso_gpio = SD_CARD_SPI_MISO,
-    .baud_rate = 0,
+    .baud_rate = 125 * 1000 * 1000 / 6,
 };
 
 static sd_spi_if_t spi_if = {

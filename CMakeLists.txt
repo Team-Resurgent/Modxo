@@ -73,7 +73,6 @@ endforeach()
 #Source files
 target_sources(${PROJECT_NAME} PRIVATE
     src/main.c
-    src/hw_config.c
 )
 
 # Link to pico_stdlib (gpio, time, etc. functions)

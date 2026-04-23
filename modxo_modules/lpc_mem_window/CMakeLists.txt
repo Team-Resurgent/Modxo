@@ -26,4 +26,5 @@ target_sources(${LIB_NAME} PRIVATE
     handlers/echo.c
     handlers/heap.c
     handlers/sdcard.c
+    handlers/hw_config.c
 )
