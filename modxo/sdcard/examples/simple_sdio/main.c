@@ -48,7 +48,7 @@ static sd_sdio_if_t sdio_if = {
     .CMD_gpio = 11,
     .D0_gpio = 12,
     .SDIO_PIO = pio2,
-    .baud_rate = 25 * 1000 * 1000 / 1  // 20833333 Hz
+    .baud_rate = 125 * 1000 * 1000 / 6
 };
 
 /* Hardware Configuration of the SD Card socket "object" */
