@@ -814,6 +814,22 @@ static block_dev_err_t read_bytes(sd_card_t *sd_card_p, uint8_t *buffer, uint32_
  * read. It then checks the CRC16 checksum for the last block and returns the
  * error code.
  */
+#define CACHE_SIZE 300 // Define the size of the cache
+
+typedef struct {
+    uint32_t sector_number; // Sector number
+    uint8_t data[512];      // Data buffer for the sector
+    bool valid;             // Validity flag
+} CacheEntry;
+
+static CacheEntry cache[CACHE_SIZE]; // Cache array
+
+void init_cache() {
+    for (int i = 0; i < CACHE_SIZE; i++) {
+        cache[i].valid = false; // Mark all entries as invalid
+    }
+}
+
 static block_dev_err_t in_sd_read_blocks(sd_card_t *sd_card_p, uint8_t *buffer,
                                          const uint32_t data_address,
                                          const uint32_t num_rd_blks) {
@@ -891,23 +907,63 @@ static block_dev_err_t in_sd_read_blocks(sd_card_t *sd_card_p, uint8_t *buffer,
     }
     return status;
 }
+
 static block_dev_err_t sd_read_blocks(sd_card_t *sd_card_p, uint8_t *buffer,
                                       uint32_t data_address, uint32_t num_rd_blks) {
     TRACE_PRINTF("sd_read_blocks(0x%p, 0x%lx, 0x%lx)\n", buffer, data_address, num_rd_blks);
     sd_acquire(sd_card_p);
-    unsigned retries = sd_timeouts.sd_command_retries;
-    block_dev_err_t status;
-    do {
-        status = in_sd_read_blocks(sd_card_p, buffer, data_address, num_rd_blks);
-        if (status != SD_BLOCK_DEVICE_ERROR_NONE) {
-            if (SD_BLOCK_DEVICE_ERROR_NONE !=
-                    sd_cmd(sd_card_p, CMD12_STOP_TRANSMISSION, 0x0, false, 0))
+
+    block_dev_err_t status = SD_BLOCK_DEVICE_ERROR_NONE;
+
+    for (uint32_t i = 0; i < num_rd_blks; i++) {
+        uint32_t current_block = data_address + i;
+        uint8_t *buf_ptr = buffer + (i * sd_block_size);
+        bool found_in_cache = false;
+
+        // Check if this block is already in the cache
+        for (int j = 0; j < CACHE_SIZE; j++) {
+            if (cache[j].valid && cache[j].sector_number == current_block) {
+                memcpy(buf_ptr, cache[j].data, sd_block_size);
+                found_in_cache = true;
+                //printf("cache hit!\n");
                 break;
+            }
         }
-    } while (--retries && status != SD_BLOCK_DEVICE_ERROR_NONE);
+
+        if (!found_in_cache) {
+            unsigned retries = sd_timeouts.sd_command_retries;
+            uint8_t temp_buf[sd_block_size];
+            //printf("no cache hit :<\n");
+
+            do {
+                status = in_sd_read_blocks(sd_card_p, temp_buf, current_block, 1);
+                if (status == SD_BLOCK_DEVICE_ERROR_NONE) {
+                    memcpy(buf_ptr, temp_buf, sd_block_size);
+
+                    // Store in cache
+                    for (int j = 0; j < CACHE_SIZE; j++) {
+                        if (!cache[j].valid) {
+                            cache[j].sector_number = current_block;
+                            memcpy(cache[j].data, temp_buf, sd_block_size);
+                            cache[j].valid = true;
+                            break;
+                        }
+                    }
+                } else {
+                    sd_cmd(sd_card_p, CMD12_STOP_TRANSMISSION, 0x0, false, 0);
+                }
+            } while (--retries && status != SD_BLOCK_DEVICE_ERROR_NONE);
+
+            if (status != SD_BLOCK_DEVICE_ERROR_NONE) {
+                break; // Stop if we couldn't read a block
+            }
+        }
+    }
+
     sd_release(sd_card_p);
     return status;
 }
+
 
 /**
  * @brief Send the numbers of the well written (without errors) blocks.
