@@ -48,7 +48,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #endif
 
 #define SDCARD_MAX_ENTRIES 8
-#define SDCARD_QUEUE_BUFFER_LEN 1024
+#define SDCARD_QUEUE_BUFFER_LEN 8
 #define SDCARD_PATH_MAX 280
 
 #define SDCARD_FILE_CHUNK_SIZE_SHIFT 12
@@ -98,10 +98,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define SDCARD_COMMAND_SET_PAYLOAD_TYPE 22
 
-#define PAYLOAD_TYPE_NONE 0
-#define PAYLOAD_TYPE_FILE_NAME 1
-#define PAYLOAD_TYPE_FILE_SD_SECTOR 2
-#define PAYLOAD_TYPE_FILE_SD_BIOS 3
+#define SDCARD_PAYLOAD_TYPE_NONE 0
+#define SDCARD_PAYLOAD_TYPE_FILE_NAME 1
+#define SDCARD_PAYLOAD_TYPE_FILE_SD_SECTOR 2
+#define SDCARD_PAYLOAD_TYPE_FILE_SD_BIOS 3
 
 #pragma pack(push, 1)
 typedef union
@@ -499,13 +499,13 @@ bool sdcard_memread_handler(uint32_t addr, uint8_t *data, uint8_t window_id)
     uint32_t sector = mirror >> SDCARD_FILE_CHUNK_SIZE_SHIFT;
 
     // Shortcut for cache buffer reads
-    if (private_data.payload_type == PAYLOAD_TYPE_FILE_SD_BIOS && private_data.cached_sector_index != 0xffffffff && private_data.cached_sector_index == sector) {
+    if (private_data.payload_type == SDCARD_PAYLOAD_TYPE_FILE_SD_BIOS && private_data.cached_sector_index != 0xffffffff && private_data.cached_sector_index == sector) {
         uint32_t sector_offset = mirror & (SDCARD_FILE_CHUNK_SIZE - 1);
         *data = private_data.cached_sector_buffer[sector_offset];
         return true;
     }
 
-    if (private_data.payload_type == PAYLOAD_TYPE_FILE_NAME)
+    if (private_data.payload_type == SDCARD_PAYLOAD_TYPE_FILE_NAME)
     {
         if (private_data.file_list_name_index < private_data.file_list_count) {
             uint16_t length = private_data.file_entries[private_data.file_list_name_index].file_name_length;
@@ -513,7 +513,7 @@ bool sdcard_memread_handler(uint32_t addr, uint8_t *data, uint8_t window_id)
             return true;
         }
     }
-    else if (private_data.payload_type == PAYLOAD_TYPE_FILE_SD_SECTOR)
+    else if (private_data.payload_type == SDCARD_PAYLOAD_TYPE_FILE_SD_SECTOR)
     {
         uint32_t sector = offset >> SDCARD_FILE_CHUNK_SIZE_SHIFT;
         uint32_t sector_length = 0;
@@ -522,7 +522,7 @@ bool sdcard_memread_handler(uint32_t addr, uint8_t *data, uint8_t window_id)
         *data = sector_offset < sector_length ? private_data.cached_sector_buffer[sector_offset] : 0;
         return true;
     }
-    else if (private_data.payload_type == PAYLOAD_TYPE_FILE_SD_BIOS)
+    else if (private_data.payload_type == SDCARD_PAYLOAD_TYPE_FILE_SD_BIOS)
     {
         uint32_t sector_length = 0;
         sdcard_file_read_sector(sector, &sector_length);

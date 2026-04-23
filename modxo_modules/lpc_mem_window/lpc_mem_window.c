@@ -95,6 +95,12 @@ void setup_handler(uint8_t type) {
 		window->control = sdcard_handler_control;
 		break;
 
+	case LPC_MEM_WIN_TYPE_EXPANSION:
+		window->read = expansion_memread_handler;
+		window->write = expansion_memwrite_handler;
+		window->control = expansion_handler_control;
+		break;
+
 	default:
 		window->read = NULL;
 		window->write = NULL;
@@ -126,6 +132,9 @@ uint8_t peek_window_type() {
 	}
 	else if(window->read == sdcard_memread_handler) {
 		return LPC_MEM_WIN_TYPE_SDCARD;
+	}
+	else if(window->read == expansion_memread_handler) {
+		return LPC_MEM_WIN_TYPE_EXPANSION;
 	}
 
 	return LPC_MEM_WIN_TYPE_NONE;
@@ -265,6 +274,7 @@ void run_handler_powerups() {
 	echo_handler_powerup();
 	heap_handler_powerup();
 	sdcard_handler_powerup();
+	expansion_handler_powerup();
 }
 
 void powerup() {
@@ -285,6 +295,7 @@ void init() {
 
 void core0_poll() {
 	sdcard_handler_poll();
+	expansion_handler_poll();
 }
 
 MODXO_TASK lpc_mem_window_hdlr = {
