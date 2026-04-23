@@ -34,7 +34,7 @@ static spi_t spi = {
     .sck_gpio = SD_CARD_SPI_CLK,
     .mosi_gpio = SD_CARD_SPI_MOSI,
     .miso_gpio = SD_CARD_SPI_MISO,
-    .baud_rate = 60 * 1000 * 1000,
+    .baud_rate = 266 * 1000 * 1000 / 2,
 };
 
 static sd_spi_if_t spi_if = {
