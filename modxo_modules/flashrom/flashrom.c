@@ -30,6 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "hardware/irq.h"
 #include "hardware/structs/bus_ctrl.h"
 #include <modxo/lpc_interface.h>
+#include <lpc_mem_window.h>
 #include <modxo.h>
 
 #include <flashrom.h>
@@ -140,13 +141,17 @@ static void read_handler(uint16_t address, uint8_t *data)
 
 static void flashrom_memread_handler(uint32_t address, uint8_t *data)
 {
-    register uint32_t mem_data;
-    *data = flash_rom_data[address & flash_rom_mask];
+    if(!lpc_mem_window_enabled || !lpc_mem_window_custom_read_handler(address, data)) {
+        register uint32_t mem_data;
+        *data = flash_rom_data[address & flash_rom_mask];
+    }
 }
 
 static void flashrom_memwrite_handler(uint32_t address, uint8_t *data)
 {
-    flash_write_buffer[address & (FLASH_WRITE_PAGE_SIZE - 1)] = *data;
+    if(!lpc_mem_window_enabled || !lpc_mem_window_custom_write_handler(address, data)) {
+        flash_write_buffer[address & (FLASH_WRITE_PAGE_SIZE - 1)] = *data;
+    }
 }
 
 static void powerup(void)
@@ -158,16 +163,6 @@ static void powerup(void)
     password_index = 0;
 }
 
-static void dummy_read_handler(uint16_t address, uint8_t *data)
-{
-    *data = 0xFF;
-}
-
-static void dummy_write_handler(uint16_t address, uint8_t *data)
-{
-    // Do nothing
-}
-
 static void init(void)
 {
     powerup();
@@ -177,7 +172,6 @@ static void init(void)
     lpc_interface_add_io_handler(MODXO_REGISTER_BANKING, 0xFFFE, read_handler, write_handler);
     lpc_interface_add_io_handler(MODXO_REGISTER_MEM_ERASE, 0xFFFF, read_handler, write_handler);
     lpc_interface_add_io_handler(MODXO_REGISTER_MEM_FLUSH, 0xFFFF, read_handler, write_handler);
-    lpc_interface_add_io_handler(0x1900, 0xFFF0, dummy_read_handler, dummy_write_handler);
 }
 
 static void program_sector(uint8_t sector_number)

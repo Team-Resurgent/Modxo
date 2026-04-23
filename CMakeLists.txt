@@ -15,9 +15,9 @@ if(WIN32)
 else()
     set(USERHOME $ENV{HOME})
 endif()
-set(sdkVersion 2.0.0)
-set(toolchainVersion 13_2_Rel1)
-set(picotoolVersion 2.0.0)
+set(sdkVersion 2.2.0)
+set(toolchainVersion 14_2_Rel1)
+set(picotoolVersion 2.2.0-a4)
 set(picoVscode ${USERHOME}/.pico-sdk/cmake/pico-vscode.cmake)
 if (EXISTS ${picoVscode})
     include(${picoVscode})
@@ -80,10 +80,12 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     pico_stdlib
     pico_multicore
     modxo
+    no-OS-FatFS-SD-SDIO-SPI-RPi-Pico
     ws2812
     legacy_display
     superio
     flashrom
+    lpc_mem_window
     expansion
 )
 

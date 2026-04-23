@@ -18,19 +18,19 @@
 			}
 		},
 		"terminal.integrated.env.windows": {
-			"PICO_SDK_PATH": "${env:USERPROFILE}/.pico-sdk/sdk/1.5.1",
-			"PICO_TOOLCHAIN_PATH": "${env:USERPROFILE}/.pico-sdk/toolchain/1.5.1",
-			"Path": "${env:USERPROFILE}/.pico-sdk/toolchain/13_2_Rel1/bin;${env:USERPROFILE}/.pico-sdk/cmake/v3.28.0-rc6/bin;${env:USERPROFILE}/.pico-sdk/ninja/v1.11.1;${env:PATH}"
+			"PICO_SDK_PATH": "${env:USERPROFILE}/.pico-sdk/sdk/2.2.0",
+			"PICO_TOOLCHAIN_PATH": "${env:USERPROFILE}/.pico-sdk/toolchain/14_2_Rel1",
+			"Path": "${env:USERPROFILE}/.pico-sdk/toolchain/14_2_Rel1/bin;${env:USERPROFILE}/.pico-sdk/cmake/v3.28.0-rc6/bin;${env:USERPROFILE}/.pico-sdk/ninja/v1.11.1;${env:USERPROFILE}/.pico-sdk/picotool/2.2.0-a4/picotool;${env:PATH}"
 		},
 		"terminal.integrated.env.osx": {
-			"PICO_SDK_PATH": "${env:HOME}/.pico-sdk/sdk/1.5.1",
-			"PICO_TOOLCHAIN_PATH": "${env:HOME}/.pico-sdk/toolchain/13_2_Rel1",
-			"PATH": "${env:HOME}/.pico-sdk/toolchain/13_2_Rel1/bin:${env:HOME}/.pico-sdk/cmake/v3.28.0-rc6/bin:${env:HOME}/.pico-sdk/ninja/v1.11.1:${env:PATH}"
+			"PICO_SDK_PATH": "${env:HOME}/.pico-sdk/sdk/2.2.0",
+			"PICO_TOOLCHAIN_PATH": "${env:HOME}/.pico-sdk/toolchain/14_2_Rel1",
+			"PATH": "${env:HOME}/.pico-sdk/toolchain/14_2_Rel1/bin:${env:HOME}/.pico-sdk/cmake/v3.28.0-rc6/bin:${env:HOME}/.pico-sdk/ninja/v1.11.1:${env:HOME}/.pico-sdk/picotool/2.2.0-a4/picotool:${env:PATH}"
 		},
 		"terminal.integrated.env.linux": {
-			"PICO_SDK_PATH": "${env:HOME}/.pico-sdk/sdk/1.5.1",
-			"PICO_TOOLCHAIN_PATH": "${env:HOME}/.pico-sdk/toolchain/13_2_Rel1",
-			"PATH": "${env:HOME}/.pico-sdk/toolchain/13_2_Rel1/bin:${env:HOME}/.pico-sdk/cmake/v3.28.0-rc6/bin:${env:HOME}/.pico-sdk/ninja/v1.11.1:${env:PATH}"
+			"PICO_SDK_PATH": "${env:HOME}/.pico-sdk/sdk/2.2.0",
+			"PICO_TOOLCHAIN_PATH": "${env:HOME}/.pico-sdk/toolchain/14_2_Rel1",
+			"PATH": "${env:HOME}/.pico-sdk/toolchain/14_2_Rel1/bin:${env:HOME}/.pico-sdk/cmake/v3.28.0-rc6/bin:${env:HOME}/.pico-sdk/ninja/v1.11.1:${env:HOME}/.pico-sdk/picotool/2.2.0-a4/picotool:${env:PATH}"
 		},
 		"raspberry-pi-pico.cmakeAutoConfigure": true,
 		"raspberry-pi-pico.useCmakeTools": false,

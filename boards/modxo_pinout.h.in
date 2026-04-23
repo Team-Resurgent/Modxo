@@ -40,6 +40,12 @@ Copyright (c) 2024, Shalx <Alejandro L. Huitron shalxmva@gmail.com>
 #define SD_CARD_SPI_MISO @SD_CARD_SPI_MISO@
 #define SD_CARD_SPI_MOSI @SD_CARD_SPI_MOSI@
 
+#define SD_CARD_USE_SDIO @SD_CARD_USE_SDIO@
+#define SD_CARD_SDIO_CMD @SD_CARD_SDIO_CMD@
+#define SD_CARD_SDIO_D0 @SD_CARD_SDIO_D0@
+#define SD_CARD_SDIO_PIO @SD_CARD_SDIO_PIO@
+#define SD_CARD_SDIO_DMA_IRQ @SD_CARD_SDIO_DMA_IRQ@
+
 //UART GPIOs
 #define UART_ENABLE @UART_ENABLE@
 #define UART_INST @UART_INST@

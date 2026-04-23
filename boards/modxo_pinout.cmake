@@ -15,6 +15,10 @@ set(LED_STRIP4 31) #Not Used
 set(BOARD_LED_BRIGHTNESS_ADJUST 1) #Default
 set(BOARD_FLASH_SIZE 16777216)
 
+set(SD_CARD_USE_SDIO false) #Not Used
+set(SD_CARD_SDIO_CMD 31) #Not Used
+set(SD_CARD_SDIO_D0 31) #Not Used
+
 #pinout selector
 set(BOARD_PINOUT_FILE "${CMAKE_CURRENT_LIST_DIR}/${MODXO_PINOUT}.cmake")
 if( EXISTS ${BOARD_PINOUT_FILE})
