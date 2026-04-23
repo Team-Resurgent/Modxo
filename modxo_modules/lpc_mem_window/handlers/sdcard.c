@@ -306,10 +306,9 @@ void sdcard_dir_list()
             file_entry->file_name_length = strlen(private_data.file_entries[file_count].name);
 
             file_count++;
-
-            file_result = f_findnext(&directory, &file_info);
         }
 
+        file_result = f_findnext(&directory, &file_info);
         current_offset++;
     }
 
