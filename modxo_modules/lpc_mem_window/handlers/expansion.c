@@ -210,7 +210,7 @@ bool expansion_memwrite_handler(uint32_t addr, uint8_t *data, uint8_t window_id)
     {
         if (private_data.payload_type == EXPANSION_PAYLOAD_TYPE_OUTGOING)
         {
-            private_data.incoming_values_buffer[offset]  = *data;
+            private_data.outgoing_values_buffer[offset]  = *data;
             return true;
         }
     }
