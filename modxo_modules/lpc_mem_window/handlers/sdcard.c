@@ -220,7 +220,7 @@ uint8_t sdcard_cwd_parent()
 
 #if SD_CARD_SPI_ENABLE
 
-void sdcard_flash_sector(void)
+void sdcard_flash_sector()
 {
     const uint32_t flash_offset = private_data.flash_sector_offset;
 	
@@ -245,7 +245,7 @@ void sdcard_remount()
 {
     f_unmount("");
 
-    FRESULT file_result = f_mount(&private_data.fatfs, "", 1);
+    FRESULT file_result = f_mount(&private_data.fatfs, "0:", 1);
     if (file_result != FR_OK)
     {
         private_data.sd_fat_mounted = 0;
@@ -266,7 +266,7 @@ void sdcard_dir_list()
 
     if (!private_data.sd_fat_mounted)
     {
-        file_result = f_mount(&private_data.fatfs, "", 1);
+        file_result = f_mount(&private_data.fatfs, "0:", 1);
         if (file_result != FR_OK)
         {
             private_data.file_list_result = SDCARD_FILE_RESULT_ERROR;
@@ -341,7 +341,7 @@ void sdcard_file_open()
 
     if (!private_data.sd_fat_mounted)
     {
-        file_result = f_mount(&private_data.fatfs, "", 1);
+        file_result = f_mount(&private_data.fatfs, "0:", 1);
         if (file_result != FR_OK)
         {
             private_data.open_file_ready = 1;
@@ -386,7 +386,7 @@ uint8_t sdcard_file_read_sector(uint32_t sector_index, uint32_t* sector_length)
 
     if (!private_data.sd_fat_mounted)
     {
-        file_result = f_mount(&private_data.fatfs, "", 1);
+        file_result = f_mount(&private_data.fatfs, "0:", 1);
         if (file_result != FR_OK)
         {
             *sector_length = 0;
@@ -402,7 +402,7 @@ uint8_t sdcard_file_read_sector(uint32_t sector_index, uint32_t* sector_length)
     }
 
     uint32_t max_sector_index = (private_data.open_file_size + SDCARD_FILE_CHUNK_SIZE - 1u) / SDCARD_FILE_CHUNK_SIZE;
-    if (sector_index > max_sector_index)
+    if (sector_index >= max_sector_index)
     {
         *sector_length = 0;
         return SDCARD_FILE_RESULT_ERROR;
@@ -667,9 +667,8 @@ void sdcard_handler_poll()
 
 void sdcard_handler_powerup() 
 {
-    sdcard_cwd_root();
-
     memset(&private_data, 0, sizeof(private_data));
+	sdcard_cwd_root();
     private_data.cached_sector_index = 0xffffffff;
     modxo_queue_init(&private_data.queue, (void *)private_data.buffer, sizeof(private_data.buffer[0]), SDCARD_QUEUE_BUFFER_LEN);
 }

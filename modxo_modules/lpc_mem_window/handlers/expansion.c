@@ -139,7 +139,7 @@ void expansion_receive_incoming_buffer()
 
     if (private_data.incoming_values_length > EXPANSION_MAX_BUFFER_LEN) {
         private_data.incoming_values_result = EXPANSION_RESULT_INVALID_LEN;
-        private_data.outgoing_values_ready = 1;
+        private_data.incoming_values_ready = 1;
         return;
     }
 
@@ -155,17 +155,12 @@ void expansion_receive_incoming_buffer()
 
 void expansion_send_outgoing_buffer()
 {
-    if (private_data.outgoing_values_length > EXPANSION_MAX_BUFFER_LEN) {
-        private_data.outgoing_values_result = EXPANSION_RESULT_INVALID_LEN;
-        private_data.outgoing_values_ready = 1;
-        return;
-    }
-
     uint8_t length_size = sizeof(private_data.outgoing_values_length);
 
     if (i2c_write_timeout_us(EXPANSION_PORT_I2C_INST, private_data.outgoing_values_address, (uint8_t*)&private_data.outgoing_values_length, length_size, false, EXPANSION_TIMEOUT_US) != length_size) {
         private_data.outgoing_values_result = EXPANSION_RESULT_TIMEOUT;
         private_data.outgoing_values_ready = 1;
+        return; 
     }
 
     if (private_data.outgoing_values_length > 0 && i2c_write_timeout_us(EXPANSION_PORT_I2C_INST, private_data.outgoing_values_address, private_data.outgoing_values_buffer, private_data.outgoing_values_length, false, EXPANSION_TIMEOUT_US) != private_data.outgoing_values_length) {
@@ -220,6 +215,8 @@ bool expansion_memwrite_handler(uint32_t addr, uint8_t *data, uint8_t window_id)
 
 uint8_t expansion_handler_control_peek(uint8_t cmd, uint8_t data) 
 {
+    (void)data;
+    
 	switch(cmd) 
 	{
         case EXPANSION_COMMAND_RESPONSE_I2C_ADDRESS_EXIST_READY:
@@ -257,10 +254,15 @@ uint8_t expansion_handler_control_set(uint8_t cmd, uint8_t data)
             expansion_queue_command(cmd, data);
             break;
         case EXPANSION_COMMAND_REQUEST_SEND_OUTGOING_VALUES:
+            if (current_long_val > EXPANSION_MAX_BUFFER_LEN) {
+                private_data.outgoing_values_result = EXPANSION_RESULT_INVALID_LEN;
+                private_data.outgoing_values_ready = 1;
+                break;
+            }
             private_data.outgoing_values_address = data & 0x7f;
             private_data.outgoing_values_ready = 0;
             private_data.outgoing_values_result = EXPANSION_RESULT_IDLE;
-            private_data.outgoing_values_length = current_long_val;
+            private_data.outgoing_values_length = (uint16_t)current_long_val;
             expansion_queue_command(cmd, data);
             break;
         case EXPANSION_COMMAND_SET_PAYLOAD_TYPE:
