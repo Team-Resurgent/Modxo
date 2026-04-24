@@ -92,7 +92,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SDCARD_COMMAND_CWD_ROOT 16
 #define SDCARD_COMMAND_CWD_PARENT 17
 #define SDCARD_COMMAND_SET_CWD_FROM_INDEX 18
-#define SDCARD_COMMAND_GET_FILE_MAME_FROM_INDEX 19
+#define SDCARD_COMMAND_GET_FILE_NAME_FROM_INDEX 19
 #define SDCARD_COMMAND_GET_FILE_SIZE_FROM_INDEX 20
 #define SDCARD_COMMAND_GET_FILE_FLAGS_FROM_INDEX 21
 
@@ -223,7 +223,6 @@ uint8_t sdcard_cwd_parent()
 void sdcard_flash_sector()
 {
     const uint32_t flash_offset = private_data.flash_sector_offset;
-	
     const uint8_t *flash_existing = (const uint8_t *)(XIP_BASE + flash_offset);
     if (memcmp(flash_existing, private_data.cached_sector_buffer, SDCARD_FILE_CHUNK_SIZE) == 0)
     {
@@ -243,7 +242,7 @@ void sdcard_flash_sector()
 
 void sdcard_remount()
 {
-    f_unmount("");
+    f_unmount("0:");
 
     FRESULT file_result = f_mount(&private_data.fatfs, "0:", 1);
     if (file_result != FR_OK)
@@ -302,8 +301,9 @@ void sdcard_dir_list()
             file_entry->id = current_offset;
             file_entry->flags = file_info.fattrib;
             file_entry->file_size = (file_info.fattrib & AM_DIR) ? 0 : (uint32_t)file_info.fsize;
-            strncpy(file_entry->name, file_info.fname, SDCARD_PATH_MAX);
-            file_entry->file_name_length = strlen(private_data.file_entries[file_count].name);
+            strncpy(file_entry->name, file_info.fname, SDCARD_PATH_MAX - 1u);
+            file_entry->name[SDCARD_PATH_MAX - 1u] = '\0';
+            file_entry->file_name_length = (uint16_t)strlen(file_entry->name);
 
             file_count++;
         }
@@ -468,9 +468,9 @@ uint8_t sdcard_file_close()
     return SDCARD_FILE_RESULT_OK;
 }
 
-uint8_t sdcard_file_read_sector(uint32_t sectot_index, uint32_t* sector_length)
+uint8_t sdcard_file_read_sector(uint32_t sector_index, uint32_t* sector_length)
 {
-    (void)sectot_index;
+    (void)sector_index;
     *sector_length = 0;
     return SDCARD_FILE_RESULT_OK;
 }
@@ -495,13 +495,19 @@ bool sdcard_memread_handler(uint32_t addr, uint8_t *data, uint8_t window_id)
     uint32_t offset = (addr - lpc_mem_windows[window_id].base_addr);
     offset = offset & (lpc_mem_windows[window_id].length - 1);
 
-    uint32_t mirror = offset & (private_data.open_file_size - 1);
-    uint32_t sector = mirror >> SDCARD_FILE_CHUNK_SIZE_SHIFT;
-
-    // Shortcut for cache buffer reads
-    if (private_data.payload_type == SDCARD_PAYLOAD_TYPE_FILE_SD_BIOS && private_data.cached_sector_index != 0xffffffff && private_data.cached_sector_index == sector) {
+    if (private_data.payload_type == SDCARD_PAYLOAD_TYPE_FILE_SD_BIOS)
+    {
+        uint32_t mirror = offset & (private_data.open_file_size - 1u);
+        uint32_t sector = mirror >> SDCARD_FILE_CHUNK_SIZE_SHIFT;
+        if (private_data.cached_sector_index != 0xffffffff && private_data.cached_sector_index == sector) {
+            uint32_t sector_offset = mirror & (SDCARD_FILE_CHUNK_SIZE - 1);
+            *data = private_data.cached_sector_buffer[sector_offset];
+            return true;
+        }
+        uint32_t sector_length = 0;
+        sdcard_file_read_sector(sector, &sector_length);
         uint32_t sector_offset = mirror & (SDCARD_FILE_CHUNK_SIZE - 1);
-        *data = private_data.cached_sector_buffer[sector_offset];
+        *data = sector_offset < sector_length ? private_data.cached_sector_buffer[sector_offset] : 0;
         return true;
     }
 
@@ -510,24 +516,16 @@ bool sdcard_memread_handler(uint32_t addr, uint8_t *data, uint8_t window_id)
         if (private_data.file_list_name_index < private_data.file_list_count) {
             uint16_t length = private_data.file_entries[private_data.file_list_name_index].file_name_length;
             *data = offset < length ? private_data.file_entries[private_data.file_list_name_index].name[offset] : 0;
-            return true;
         }
+		return true;
     }
-    else if (private_data.payload_type == SDCARD_PAYLOAD_TYPE_FILE_SD_SECTOR)
+
+    if (private_data.payload_type == SDCARD_PAYLOAD_TYPE_FILE_SD_SECTOR)
     {
-        uint32_t sector = offset >> SDCARD_FILE_CHUNK_SIZE_SHIFT;
         uint32_t sector_length = 0;
-        sdcard_file_read_sector(sector, &sector_length);
+        sdcard_file_read_sector(offset >> SDCARD_FILE_CHUNK_SIZE_SHIFT, &sector_length);
         uint32_t sector_offset = offset & (SDCARD_FILE_CHUNK_SIZE - 1);
         *data = sector_offset < sector_length ? private_data.cached_sector_buffer[sector_offset] : 0;
-        return true;
-    }
-    else if (private_data.payload_type == SDCARD_PAYLOAD_TYPE_FILE_SD_BIOS)
-    {
-        uint32_t sector_length = 0;
-        sdcard_file_read_sector(sector, &sector_length);
-        uint32_t sector_offset = mirror & (SDCARD_FILE_CHUNK_SIZE - 1);
-        *data = private_data.cached_sector_buffer[sector_offset];
         return true;
     }
 
@@ -617,7 +615,7 @@ uint8_t sdcard_handler_control_set(uint8_t cmd, uint8_t data)
             private_data.open_file_result = SDCARD_FILE_RESULT_IDLE;
             sdcard_queue_command(cmd, data);
             break;
-        case SDCARD_COMMAND_GET_FILE_MAME_FROM_INDEX:
+        case SDCARD_COMMAND_GET_FILE_NAME_FROM_INDEX:
             private_data.file_list_name_index = data;
             break;
         case SDCARD_COMMAND_SET_PAYLOAD_TYPE:
