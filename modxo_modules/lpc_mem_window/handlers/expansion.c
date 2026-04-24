@@ -137,7 +137,7 @@ void expansion_receive_incoming_buffer()
         return; 
     }
 
-    if (private_data.incoming_values_length <= EXPANSION_MAX_BUFFER_LEN) {
+    if (private_data.incoming_values_length > EXPANSION_MAX_BUFFER_LEN) {
         private_data.incoming_values_result = EXPANSION_RESULT_INVALID_LEN;
         private_data.outgoing_values_ready = 1;
         return;
@@ -155,7 +155,7 @@ void expansion_receive_incoming_buffer()
 
 void expansion_send_outgoing_buffer()
 {
-    if (private_data.outgoing_values_length <= EXPANSION_MAX_BUFFER_LEN) {
+    if (private_data.outgoing_values_length > EXPANSION_MAX_BUFFER_LEN) {
         private_data.outgoing_values_result = EXPANSION_RESULT_INVALID_LEN;
         private_data.outgoing_values_ready = 1;
         return;
