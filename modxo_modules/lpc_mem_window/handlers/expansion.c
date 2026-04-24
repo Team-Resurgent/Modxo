@@ -165,7 +165,7 @@ void expansion_send_outgoing_buffer()
     private_data.outgoing_values_ready = 1;
 }
 
-bool epansion_memread_handler(uint32_t addr, uint8_t *data, uint8_t window_id) 
+bool expansion_memread_handler(uint32_t addr, uint8_t *data, uint8_t window_id) 
 {
     uint32_t offset = (addr - lpc_mem_windows[window_id].base_addr);
     offset = offset & (lpc_mem_windows[window_id].length - 1);
