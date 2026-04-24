@@ -63,7 +63,7 @@ jobs:
         run: sudo apt install cmake gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
 
       - name: Get Pico SDK
-        run: git clone --branch 2.0.0 --recurse-submodules https://github.com/raspberrypi/pico-sdk.git
+        run: git clone --branch 2.2.0 --recurse-submodules https://github.com/raspberrypi/pico-sdk.git
 
       - name: Create Build Folder
         run: |
