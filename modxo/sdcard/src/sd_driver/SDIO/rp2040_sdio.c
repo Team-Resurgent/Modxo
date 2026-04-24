@@ -829,10 +829,12 @@ bool rp2040_sdio_init(sd_card_t *sd_card_p, float clk_div) {
     typedef enum gpio_function gpio_function_t;
 #endif
    gpio_function_t fn;
-    if (pio2 == SDIO_PIO) 
-        fn = GPIO_FUNC_PIO2;
-    else if (pio1 == SDIO_PIO) 
+    if (pio1 == SDIO_PIO) 
         fn = GPIO_FUNC_PIO1;
+#if PICO_RP2350
+    else if (pio2 == SDIO_PIO) 
+        fn = GPIO_FUNC_PIO2;
+#endif
     else
         fn = GPIO_FUNC_PIO0; 
     gpio_set_function(SDIO_CMD, fn);
