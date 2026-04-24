@@ -10,8 +10,6 @@ Copyright (c) 2024, Shalx <Alejandro L. Huitron shalxmva@gmail.com>
 
 #include <modxo_pinout.h>
 
-#define MODXO_REGISTER_EXPANSION_COMMAND 0xDEA0
-#define MODXO_REGISTER_EXPANSION_DATA 0xDEA1
 #define MODXO_REGISTER_NVM_CONFIG_SEL 0xDEA4
 #define MODXO_REGISTER_NVM_CONFIG_VAL 0xDEA5
 #define MODXO_REGISTER_VOLATILE_CONFIG_SEL 0xDEA6
