@@ -57,6 +57,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define EXPANSION_RESULT_IDLE 0 
 #define EXPANSION_RESULT_OK 1
 #define EXPANSION_RESULT_TIMEOUT 2
+#define EXPANSION_RESULT_INVALID_LEN 3
 
 #define EXPANSION_PAYLOAD_TYPE_NONE 0
 #define EXPANSION_PAYLOAD_TYPE_INCOMING 1
@@ -136,6 +137,12 @@ void expansion_receive_incoming_buffer()
         return; 
     }
 
+    if (private_data.incoming_values_length <= EXPANSION_MAX_BUFFER_LEN) {
+        private_data.incoming_values_result = EXPANSION_RESULT_INVALID_LEN;
+        private_data.outgoing_values_ready = 1;
+        return;
+    }
+
     if (private_data.incoming_values_length > 0 && i2c_read_timeout_us(EXPANSION_PORT_I2C_INST, private_data.incoming_values_address, private_data.incoming_values_buffer, private_data.incoming_values_length, false, EXPANSION_TIMEOUT_US) != private_data.incoming_values_length) { 
         private_data.incoming_values_result = EXPANSION_RESULT_TIMEOUT; 
         private_data.incoming_values_ready = 1; 
@@ -148,6 +155,12 @@ void expansion_receive_incoming_buffer()
 
 void expansion_send_outgoing_buffer()
 {
+    if (private_data.outgoing_values_length <= EXPANSION_MAX_BUFFER_LEN) {
+        private_data.outgoing_values_result = EXPANSION_RESULT_INVALID_LEN;
+        private_data.outgoing_values_ready = 1;
+        return;
+    }
+
     uint8_t length_size = sizeof(private_data.outgoing_values_length);
 
     if (i2c_write_timeout_us(EXPANSION_PORT_I2C_INST, private_data.outgoing_values_address, (uint8_t*)&private_data.outgoing_values_length, length_size, false, EXPANSION_TIMEOUT_US) != length_size) {
