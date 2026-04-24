@@ -152,7 +152,9 @@ typedef struct
     uint32_t open_file_size;
     uint8_t open_file_ready;
     uint8_t open_file_result;
+#if SD_CARD_SPI_ENABLE
     FIL open_file;
+#endif
 
     uint32_t cached_sector_index;
     uint32_t cached_sector_length;
