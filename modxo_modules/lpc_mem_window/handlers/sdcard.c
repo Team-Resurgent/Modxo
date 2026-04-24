@@ -171,29 +171,6 @@ typedef struct
 
 static sdcard_state_t private_data;
 
-uint8_t sdcard_cwd(uint8_t index)
-{
-    if (index >= private_data.file_list_count)
-    {
-        return SDCARD_CWD_RESULT_BAD_INDEX;
-    }
-
-    if (!(private_data.file_entries[index].flags & AM_DIR))
-    {
-        return SDCARD_CWD_RESULT_NOT_DIRECTORY;
-    }
-
-    const char *nm = private_data.file_entries[index].name;
-    size_t clen = strlen(private_data.cwd);
-    size_t nlen = strlen(nm);
-    if (clen + 1u + nlen >= sizeof(private_data.cwd))
-    {
-        return SDCARD_CWD_RESULT_PATH_TOO_LONG;
-    }
-    snprintf(private_data.cwd + clen, sizeof(private_data.cwd) - clen, "/%s", nm);
-    return SDCARD_CWD_RESULT_OK;
-}
-
 uint8_t sdcard_cwd_root()
 {
     private_data.cwd[0] = '0';
@@ -221,6 +198,29 @@ uint8_t sdcard_cwd_parent()
 }
 
 #if SD_CARD_SPI_ENABLE
+
+uint8_t sdcard_cwd(uint8_t index)
+{
+    if (index >= private_data.file_list_count)
+    {
+        return SDCARD_CWD_RESULT_BAD_INDEX;
+    }
+
+    if (!(private_data.file_entries[index].flags & AM_DIR))
+    {
+        return SDCARD_CWD_RESULT_NOT_DIRECTORY;
+    }
+
+    const char *nm = private_data.file_entries[index].name;
+    size_t clen = strlen(private_data.cwd);
+    size_t nlen = strlen(nm);
+    if (clen + 1u + nlen >= sizeof(private_data.cwd))
+    {
+        return SDCARD_CWD_RESULT_PATH_TOO_LONG;
+    }
+    snprintf(private_data.cwd + clen, sizeof(private_data.cwd) - clen, "/%s", nm);
+    return SDCARD_CWD_RESULT_OK;
+}
 
 void sdcard_flash_sector()
 {
@@ -440,6 +440,11 @@ uint8_t sdcard_file_read_sector(uint32_t sector_index, uint32_t* sector_length)
 }
 
 #else /* !SD_CARD_SPI_ENABLE */
+
+uint8_t sdcard_cwd(uint8_t index)
+{
+    return SDCARD_CWD_RESULT_OK;
+}
 
 void sdcard_flash_sector(void)
 {
