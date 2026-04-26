@@ -39,6 +39,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <hardware/flash.h>
 #include <hardware/regs/addressmap.h>
 #include <hardware/sync.h>
+#include <expansion_i2c.h>
 
 #include <modxo_pinout.h>
 
@@ -123,7 +124,7 @@ void expansion_queue_command(uint8_t cmd, uint8_t data)
 void expansion_does_address_exist()
 {
     uint8_t temp = 0;
-    private_data.i2c_address_exists_result = (i2c_write_timeout_us(EXPANSION_PORT_I2C_INST, private_data.i2c_address_exists_address, (uint8_t*)&temp, 1, false, EXPANSION_TIMEOUT_US) >= 0) ? 1 : 0;
+    private_data.i2c_address_exists_result = (expansion_i2c_write_timeout_us(private_data.i2c_address_exists_address, (uint8_t*)&temp, 1, false, EXPANSION_TIMEOUT_US) >= 0) ? 1 : 0;
     private_data.i2c_address_exists_ready = 1;
 }
 
@@ -131,7 +132,7 @@ void expansion_receive_incoming_buffer()
 {
     uint8_t length_size = sizeof(private_data.incoming_values_length);
 
-    if (i2c_read_timeout_us(EXPANSION_PORT_I2C_INST, private_data.incoming_values_address, (uint8_t*)&private_data.incoming_values_length, length_size, false, EXPANSION_TIMEOUT_US) != length_size) { 
+    if (expansion_i2c_read_timeout_us(private_data.incoming_values_address, (uint8_t*)&private_data.incoming_values_length, length_size, false, EXPANSION_TIMEOUT_US) != length_size) { 
         private_data.incoming_values_result = EXPANSION_RESULT_TIMEOUT; 
         private_data.incoming_values_ready = 1; 
         return; 
@@ -143,7 +144,7 @@ void expansion_receive_incoming_buffer()
         return;
     }
 
-    if (private_data.incoming_values_length > 0 && i2c_read_timeout_us(EXPANSION_PORT_I2C_INST, private_data.incoming_values_address, private_data.incoming_values_buffer, private_data.incoming_values_length, false, EXPANSION_TIMEOUT_US) != private_data.incoming_values_length) { 
+    if (private_data.incoming_values_length > 0 && expansion_i2c_read_timeout_us(private_data.incoming_values_address, private_data.incoming_values_buffer, private_data.incoming_values_length, false, EXPANSION_TIMEOUT_US) != private_data.incoming_values_length) { 
         private_data.incoming_values_result = EXPANSION_RESULT_TIMEOUT; 
         private_data.incoming_values_ready = 1; 
         return; 
@@ -157,13 +158,13 @@ void expansion_send_outgoing_buffer()
 {
     uint8_t length_size = sizeof(private_data.outgoing_values_length);
 
-    if (i2c_write_timeout_us(EXPANSION_PORT_I2C_INST, private_data.outgoing_values_address, (uint8_t*)&private_data.outgoing_values_length, length_size, false, EXPANSION_TIMEOUT_US) != length_size) {
+    if (expansion_i2c_write_timeout_us(private_data.outgoing_values_address, (uint8_t*)&private_data.outgoing_values_length, length_size, false, EXPANSION_TIMEOUT_US) != length_size) {
         private_data.outgoing_values_result = EXPANSION_RESULT_TIMEOUT;
         private_data.outgoing_values_ready = 1;
         return; 
     }
 
-    if (private_data.outgoing_values_length > 0 && i2c_write_timeout_us(EXPANSION_PORT_I2C_INST, private_data.outgoing_values_address, private_data.outgoing_values_buffer, private_data.outgoing_values_length, false, EXPANSION_TIMEOUT_US) != private_data.outgoing_values_length) {
+    if (private_data.outgoing_values_length > 0 && expansion_i2c_write_timeout_us(private_data.outgoing_values_address, private_data.outgoing_values_buffer, private_data.outgoing_values_length, false, EXPANSION_TIMEOUT_US) != private_data.outgoing_values_length) {
         private_data.outgoing_values_result = EXPANSION_RESULT_TIMEOUT;
         private_data.outgoing_values_ready = 1;
         return;
