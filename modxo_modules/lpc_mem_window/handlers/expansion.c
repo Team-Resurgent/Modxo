@@ -47,13 +47,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define EXPANSION_COMMAND_REQUEST_I2C_ADDRESS_EXIST 1 
 #define EXPANSION_COMMAND_RESPONSE_I2C_ADDRESS_EXIST_READY 2
 #define EXPANSION_COMMAND_RESPONSE_I2C_ADDRESS_EXIST_RESULT 3
-#define EXPANSION_COMMAND_REQUEST_RECEIVE_INCOMING_VALUES 4
-#define EXPANSION_COMMAND_RESPONSE_RECEIVE_INCOMING_VALUES_READY 5 
-#define EXPANSION_COMMAND_RESPONSE_RECEIVE_INCOMING_VALUES_RESULT 6 // sets current long to length 
-#define EXPANSION_COMMAND_REQUEST_SEND_OUTGOING_VALUES 7 // Set current long to length
-#define EXPANSION_COMMAND_RESPONSE_SEND_OUTGOING_VALUES_READY 8 
-#define EXPANSION_COMMAND_RESPONSE_SEND_OUTGOING_VALUES_RESULT 9 
-#define EXPANSION_COMMAND_SET_PAYLOAD_TYPE 10
+#define EXPANSION_COMMAND_REQUEST_SEND_RECIEVE 4 // Set current long to length
+#define EXPANSION_COMMAND_RESPONSE_SEND_RECIEVE_READY 5 
+#define EXPANSION_COMMAND_RESPONSE_SEND_RESULT 6 
+#define EXPANSION_COMMAND_RESPONSE_RECIEVE_RESULT 7 // Sets current long to length
+#define EXPANSION_COMMAND_SET_PAYLOAD_TYPE 8
 
 #define EXPANSION_RESULT_IDLE 0 
 #define EXPANSION_RESULT_OK 1
@@ -92,17 +90,14 @@ static struct
     uint8_t i2c_address_exists_ready;
     uint8_t i2c_address_exists_result;
 
-    uint8_t incoming_values_address;
-    uint8_t incoming_values_ready;
-    uint8_t incoming_values_result;
-    uint16_t incoming_values_length;
-    uint8_t incoming_values_buffer[EXPANSION_MAX_BUFFER_LEN];
-
-    uint8_t outgoing_values_address;
-    uint8_t outgoing_values_ready;
-    uint8_t outgoing_values_result;
+    uint8_t send_recieve_address;
+    uint8_t send_recieve_ready;
+    uint8_t send_result;
     uint16_t outgoing_values_length;
     uint8_t outgoing_values_buffer[EXPANSION_MAX_BUFFER_LEN];
+    uint8_t recieve_result;
+    uint16_t incoming_values_length;
+    uint8_t incoming_values_buffer[EXPANSION_MAX_BUFFER_LEN];
 
     uint8_t payload_type;
 
@@ -128,50 +123,48 @@ void expansion_does_address_exist()
     private_data.i2c_address_exists_ready = 1;
 }
 
-void expansion_receive_incoming_buffer()
+void expansion_send_recieve_buffer()
 {
-    uint8_t length_size = sizeof(private_data.incoming_values_length);
+    uint8_t length_size;
 
-    if (expansion_i2c_read_timeout_us(private_data.incoming_values_address, (uint8_t*)&private_data.incoming_values_length, length_size, false, EXPANSION_TIMEOUT_US) != length_size) { 
-        private_data.incoming_values_result = EXPANSION_RESULT_TIMEOUT; 
-        private_data.incoming_values_ready = 1; 
+    length_size = sizeof(private_data.outgoing_values_length);
+
+    if (expansion_i2c_write_timeout_us(private_data.send_recieve_address, (uint8_t*)&private_data.outgoing_values_length, length_size, false, EXPANSION_TIMEOUT_US) != length_size) {
+        private_data.send_result = EXPANSION_RESULT_TIMEOUT;
+        private_data.send_recieve_ready = 1;
+        return; 
+    }
+
+    if (private_data.outgoing_values_length > 0 && expansion_i2c_write_timeout_us(private_data.send_recieve_address, private_data.outgoing_values_buffer, private_data.outgoing_values_length, false, EXPANSION_TIMEOUT_US) != private_data.outgoing_values_length) {
+        private_data.send_result = EXPANSION_RESULT_TIMEOUT;
+        private_data.send_recieve_ready = 1;
+        return;
+    }
+
+    private_data.send_result = EXPANSION_RESULT_OK;
+        
+    length_size = sizeof(private_data.incoming_values_length);
+
+    if (expansion_i2c_read_timeout_us(private_data.send_recieve_address, (uint8_t*)&private_data.incoming_values_length, length_size, false, EXPANSION_TIMEOUT_US) != length_size) { 
+        private_data.recieve_result = EXPANSION_RESULT_TIMEOUT; 
+        private_data.send_recieve_ready = 1; 
         return; 
     }
 
     if (private_data.incoming_values_length > EXPANSION_MAX_BUFFER_LEN) {
-        private_data.incoming_values_result = EXPANSION_RESULT_INVALID_LEN;
-        private_data.incoming_values_ready = 1;
+        private_data.recieve_result = EXPANSION_RESULT_INVALID_LEN;
+        private_data.send_recieve_ready = 1;
         return;
     }
 
-    if (private_data.incoming_values_length > 0 && expansion_i2c_read_timeout_us(private_data.incoming_values_address, private_data.incoming_values_buffer, private_data.incoming_values_length, false, EXPANSION_TIMEOUT_US) != private_data.incoming_values_length) { 
-        private_data.incoming_values_result = EXPANSION_RESULT_TIMEOUT; 
-        private_data.incoming_values_ready = 1; 
+    if (private_data.incoming_values_length > 0 && expansion_i2c_read_timeout_us(private_data.send_recieve_address, private_data.incoming_values_buffer, private_data.incoming_values_length, false, EXPANSION_TIMEOUT_US) != private_data.incoming_values_length) { 
+        private_data.recieve_result = EXPANSION_RESULT_TIMEOUT; 
+        private_data.send_recieve_ready = 1; 
         return; 
     }
 
-    private_data.incoming_values_result = EXPANSION_RESULT_OK; 
-    private_data.incoming_values_ready = 1;
-}
-
-void expansion_send_outgoing_buffer()
-{
-    uint8_t length_size = sizeof(private_data.outgoing_values_length);
-
-    if (expansion_i2c_write_timeout_us(private_data.outgoing_values_address, (uint8_t*)&private_data.outgoing_values_length, length_size, false, EXPANSION_TIMEOUT_US) != length_size) {
-        private_data.outgoing_values_result = EXPANSION_RESULT_TIMEOUT;
-        private_data.outgoing_values_ready = 1;
-        return; 
-    }
-
-    if (private_data.outgoing_values_length > 0 && expansion_i2c_write_timeout_us(private_data.outgoing_values_address, private_data.outgoing_values_buffer, private_data.outgoing_values_length, false, EXPANSION_TIMEOUT_US) != private_data.outgoing_values_length) {
-        private_data.outgoing_values_result = EXPANSION_RESULT_TIMEOUT;
-        private_data.outgoing_values_ready = 1;
-        return;
-    }
-        
-    private_data.outgoing_values_result = EXPANSION_RESULT_OK;
-    private_data.outgoing_values_ready = 1;
+    private_data.recieve_result = EXPANSION_RESULT_OK;
+    private_data.send_recieve_ready = 1;
 }
 
 bool expansion_memread_handler(uint32_t addr, uint8_t *data, uint8_t window_id) 
@@ -224,15 +217,13 @@ uint8_t expansion_handler_control_peek(uint8_t cmd, uint8_t data)
             return private_data.i2c_address_exists_ready;
         case EXPANSION_COMMAND_RESPONSE_I2C_ADDRESS_EXIST_RESULT:
             return private_data.i2c_address_exists_result;
-        case EXPANSION_COMMAND_RESPONSE_RECEIVE_INCOMING_VALUES_READY:
-            return private_data.incoming_values_ready;
-        case EXPANSION_COMMAND_RESPONSE_RECEIVE_INCOMING_VALUES_RESULT:
+        case EXPANSION_COMMAND_RESPONSE_SEND_RECIEVE_READY:
+            return private_data.send_recieve_ready;
+        case EXPANSION_COMMAND_RESPONSE_SEND_RESULT:
+            return private_data.send_result;
+        case EXPANSION_COMMAND_RESPONSE_RECIEVE_RESULT:
             current_long_val = private_data.incoming_values_length;
-            return private_data.incoming_values_result;
-        case EXPANSION_COMMAND_RESPONSE_SEND_OUTGOING_VALUES_READY:
-            return private_data.outgoing_values_ready;
-        case EXPANSION_COMMAND_RESPONSE_SEND_OUTGOING_VALUES_RESULT:
-            return private_data.outgoing_values_result;
+            return private_data.recieve_result;
 	}
 	return 0;
 }
@@ -247,22 +238,17 @@ uint8_t expansion_handler_control_set(uint8_t cmd, uint8_t data)
             private_data.i2c_address_exists_result = EXPANSION_RESULT_IDLE;
             expansion_queue_command(cmd, data);
             break;
-        case EXPANSION_COMMAND_REQUEST_RECEIVE_INCOMING_VALUES:
-            private_data.incoming_values_address = data & 0x7f;
-            private_data.incoming_values_ready = 0;
-            private_data.incoming_values_result = EXPANSION_RESULT_IDLE;
-            private_data.incoming_values_length = 0;
-            expansion_queue_command(cmd, data);
-            break;
-        case EXPANSION_COMMAND_REQUEST_SEND_OUTGOING_VALUES:
+        case EXPANSION_COMMAND_REQUEST_SEND_RECIEVE:
             if (current_long_val > EXPANSION_MAX_BUFFER_LEN) {
-                private_data.outgoing_values_result = EXPANSION_RESULT_INVALID_LEN;
-                private_data.outgoing_values_ready = 1;
+                private_data.send_recieve_ready = 1;
+                private_data.send_result = EXPANSION_RESULT_INVALID_LEN;
+                private_data.recieve_result = EXPANSION_RESULT_IDLE;
                 break;
             }
-            private_data.outgoing_values_address = data & 0x7f;
-            private_data.outgoing_values_ready = 0;
-            private_data.outgoing_values_result = EXPANSION_RESULT_IDLE;
+            private_data.send_recieve_address = data & 0x7f;
+            private_data.send_recieve_ready = 0;
+            private_data.send_result = EXPANSION_RESULT_IDLE;
+            private_data.recieve_result = EXPANSION_RESULT_IDLE;
             private_data.outgoing_values_length = (uint16_t)current_long_val;
             expansion_queue_command(cmd, data);
             break;
@@ -292,11 +278,8 @@ void expansion_handler_poll()
                 case EXPANSION_COMMAND_REQUEST_I2C_ADDRESS_EXIST:
                     expansion_does_address_exist();
                     break;
-                case EXPANSION_COMMAND_REQUEST_RECEIVE_INCOMING_VALUES:
-                    expansion_receive_incoming_buffer();
-                    break; 
-                case EXPANSION_COMMAND_REQUEST_SEND_OUTGOING_VALUES:
-                    expansion_send_outgoing_buffer();
+                case EXPANSION_COMMAND_REQUEST_SEND_RECIEVE:
+                    expansion_send_recieve_buffer();
                     break;
             }
         }
@@ -307,8 +290,4 @@ void expansion_handler_powerup()
 {
     memset(&private_data, 0, sizeof(private_data));
     modxo_queue_init(&private_data.queue, (void *)private_data.buffer, sizeof(private_data.buffer[0]), EXPANSION_QUEUE_BUFFER_LEN);
-
-    i2c_init(EXPANSION_PORT_I2C_INST, 400 * 1000);
-    gpio_set_function(EXPANSION_PORT_I2C_SDA, GPIO_FUNC_I2C);
-    gpio_set_function(EXPANSION_PORT_I2C_SCL, GPIO_FUNC_I2C);
 }
