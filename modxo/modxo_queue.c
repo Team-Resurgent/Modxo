@@ -46,7 +46,8 @@ void __not_in_flash_func(modxo_queue_insert)(MODXO_QUEUE_T *queue, void *item)
    else
    {
       void *address = item_address(queue, queue->rear);
-      memcpy(address, item, queue->item_size);
+      if (queue->item_size > 0)
+         memcpy(address, item, queue->item_size);
    }
 }
 
@@ -58,7 +59,8 @@ bool __not_in_flash_func(modxo_queue_remove)(MODXO_QUEUE_T *queue, void *item)
       void *address;
       queue->front = (queue->front + 1) % queue->total_items;
       address = item_address(queue, queue->front);
-      memcpy(item, address, queue->item_size);
+      if (queue->item_size > 0)
+         memcpy(item, address, queue->item_size);
       return true;
    }
 
@@ -69,7 +71,7 @@ bool __not_in_flash_func(modxo_queue_init)(MODXO_QUEUE_T *queue, void *buffer, u
 {
    bool retv = false;
 
-   if (queue != NULL)
+   if (queue != NULL && buffer != NULL && item_size > 0)
    {
       queue->buffer = buffer;
       queue->item_size = item_size;
