@@ -14,7 +14,7 @@ void expansion_i2c_init()
         return;
     }
     initialized = true;
-    i2c_init(EXPANSION_PORT_I2C_INST, 400 * 1000);
+    i2c_init(EXPANSION_PORT_I2C_INST, 100 * 1000);
     gpio_set_function(EXPANSION_PORT_I2C_SDA, GPIO_FUNC_I2C);
     gpio_set_function(EXPANSION_PORT_I2C_SCL, GPIO_FUNC_I2C);
 }
