@@ -523,6 +523,30 @@ void sdcard_create_dir_from_path()
     private_data.path_create_ready = 1;
 }
 
+static FRESULT sdcard_set_open_file_size(uint32_t size)
+{
+    FRESULT fr;
+
+    if (size == 0)
+    {
+        return FR_OK;
+    }
+
+    fr = f_lseek(&private_data.open_file, (FSIZE_t)size);
+    if (fr != FR_OK)
+    {
+        return fr;
+    }
+
+    fr = f_lseek(&private_data.open_file, 0);
+    if (fr != FR_OK)
+    {
+        return fr;
+    }
+
+    return f_sync(&private_data.open_file);
+}
+
 void sdcard_create_file_from_path()
 {
     if (!sdcard_ensure_mounted())
@@ -543,16 +567,13 @@ void sdcard_create_file_from_path()
         return;
     }
 
-    if (private_data.path_create_file_size > 0)
+    fr = sdcard_set_open_file_size(private_data.path_create_file_size);
+    if (fr != FR_OK)
     {
-        fr = f_expand(&private_data.open_file, (FSIZE_t)private_data.path_create_file_size, 1);
-        if (fr != FR_OK)
-        {
-            f_close(&private_data.open_file);
-            private_data.path_create_result = SDCARD_FILE_RESULT_ERROR;
-            private_data.path_create_ready = 1;
-            return;
-        }
+        f_close(&private_data.open_file);
+        private_data.path_create_result = SDCARD_FILE_RESULT_ERROR;
+        private_data.path_create_ready = 1;
+        return;
     }
 
     private_data.open_file_size = (uint32_t)f_size(&private_data.open_file);
@@ -749,8 +770,7 @@ void sdcard_file_write_chunk()
         return;
     }
 
-    if (file_offset > private_data.open_file_size ||
-        length > private_data.open_file_size - file_offset)
+    if (file_offset > private_data.open_file_size || length > private_data.open_file_size - file_offset)
     {
         private_data.file_write_result = SDCARD_FILE_RESULT_ERROR;
         private_data.file_write_ready = 1;
