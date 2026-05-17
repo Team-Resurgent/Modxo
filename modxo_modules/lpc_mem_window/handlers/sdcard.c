@@ -77,7 +77,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SDCARD_COMMAND_RESPONSE_FILE_LIST_READY 6
 #define SDCARD_COMMAND_RESPONSE_FILE_LIST_RESULT 7
 
-#define SDCARD_COMMAND_REQUEST_OPEN_FILE 8 // data = index of list
+#define SDCARD_COMMAND_REQUEST_OPEN_FILE_FROM_INDEX 8 // data = index of list
 #define SDCARD_COMMAND_REQUEST_OPEN_FILE_FROM_PATH 9
 #define SDCARD_COMMAND_RESPONSE_OPEN_FILE_READY 10
 #define SDCARD_COMMAND_RESPONSE_OPEN_FILE_RESULT 11
@@ -1066,7 +1066,7 @@ uint8_t sdcard_handler_control_set(uint8_t cmd, uint8_t data)
             private_data.file_list_result = SDCARD_FILE_RESULT_IDLE;
             sdcard_queue_command(cmd, data);
             break;
-        case SDCARD_COMMAND_REQUEST_OPEN_FILE:
+        case SDCARD_COMMAND_REQUEST_OPEN_FILE_FROM_INDEX:
             private_data.cached_chunk_index = 0xffffffff;
             private_data.open_file_index = data;
             private_data.open_file_size = 0;
@@ -1164,7 +1164,7 @@ void sdcard_handler_poll()
                 case SDCARD_COMMAND_REQUEST_FILE_LIST:
                     sdcard_dir_list();
                     break;
-                case SDCARD_COMMAND_REQUEST_OPEN_FILE:
+                case SDCARD_COMMAND_REQUEST_OPEN_FILE_FROM_INDEX:
                     sdcard_file_open();
                     break;
                 case SDCARD_COMMAND_REQUEST_OPEN_FILE_FROM_PATH:
