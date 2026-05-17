@@ -78,31 +78,33 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SDCARD_COMMAND_RESPONSE_FILE_LIST_RESULT 7
 
 #define SDCARD_COMMAND_REQUEST_OPEN_FILE 8 // data = index of list
-#define SDCARD_COMMAND_RESPONSE_OPEN_FILE_READY 9
-#define SDCARD_COMMAND_RESPONSE_OPEN_FILE_RESULT 10
+#define SDCARD_COMMAND_REQUEST_OPEN_FILE_FROM_PATH 9
+#define SDCARD_COMMAND_RESPONSE_OPEN_FILE_READY 10
+#define SDCARD_COMMAND_RESPONSE_OPEN_FILE_RESULT 11
 
-#define SDCARD_COMMAND_REQUEST_FLASH_CHUNK 11 // flashes loaded chunk at current_long offset
-#define SDCARD_COMMAND_RESPONSE_FLASH_CHUNK_READY 12
-#define SDCARD_COMMAND_RESPONSE_FLASH_CHUNK_RESULT 13
+#define SDCARD_COMMAND_REQUEST_FLASH_CHUNK 12 // flashes loaded chunk at current_long offset
+#define SDCARD_COMMAND_RESPONSE_FLASH_CHUNK_READY 13
+#define SDCARD_COMMAND_RESPONSE_FLASH_CHUNK_RESULT 14
 
-#define SDCARD_COMMAND_CLOSE_FILE 14
+#define SDCARD_COMMAND_CLOSE_FILE 15
 
-#define SDCARD_COMMAND_FILE_READ_CHUNK 15 // set long value for chunk index, sets long to length read
+#define SDCARD_COMMAND_FILE_READ_CHUNK 16 // set long value for chunk index, sets long to length read
 
-#define SDCARD_COMMAND_CWD_ROOT 16
-#define SDCARD_COMMAND_CWD_PARENT 17
-#define SDCARD_COMMAND_SET_CWD_FROM_INDEX 18
-#define SDCARD_COMMAND_GET_FILE_NAME_FROM_INDEX 19
-#define SDCARD_COMMAND_GET_FILE_SIZE_FROM_INDEX 20
-#define SDCARD_COMMAND_GET_FILE_FLAGS_FROM_INDEX 21
+#define SDCARD_COMMAND_CWD_ROOT 17
+#define SDCARD_COMMAND_CWD_PARENT 18
+#define SDCARD_COMMAND_SET_CWD_FROM_INDEX 19
+#define SDCARD_COMMAND_GET_FILE_NAME_FROM_INDEX 20
+#define SDCARD_COMMAND_GET_FILE_SIZE_FROM_INDEX 21
+#define SDCARD_COMMAND_GET_FILE_FLAGS_FROM_INDEX 22
 
-#define SDCARD_COMMAND_SET_PAYLOAD_TYPE 22
+#define SDCARD_COMMAND_SET_PAYLOAD_TYPE 23
 
 #define SDCARD_PAYLOAD_TYPE_NONE 0
 #define SDCARD_PAYLOAD_TYPE_FILE_NAME 1
 #define SDCARD_PAYLOAD_TYPE_FILE_SD_CHUNK 2
 #define SDCARD_PAYLOAD_TYPE_FILE_SD_BIOS 3
 #define SDCARD_PAYLOAD_TYPE_CWD 4
+#define SDCARD_PAYLOAD_TYPE_PATH 5
 
 #pragma pack(push, 1)
 typedef union
@@ -162,6 +164,7 @@ typedef struct
     uint8_t cached_chunk_buffer[SDCARD_FILE_CHUNK_SIZE];
 
     char cwd[SDCARD_PATH_MAX];
+    char path[SDCARD_PATH_MAX];
     uint8_t payload_type;
 
 #if SD_CARD_SPI_ENABLE
@@ -377,6 +380,39 @@ void sdcard_file_open()
     private_data.open_file_result = SDCARD_FILE_RESULT_OK;
 }
 
+void sdcard_file_open_from_path()
+{
+    FRESULT file_result;
+    DIR directory;
+    FILINFO file_info;
+
+    f_close(&private_data.open_file);
+
+    if (!private_data.sd_fat_mounted)
+    {
+        file_result = f_mount(&private_data.fatfs, "0:", 1);
+        if (file_result != FR_OK)
+        {
+            private_data.open_file_ready = 1;
+            private_data.open_file_result = SDCARD_FILE_RESULT_ERROR;
+            return;
+        }
+        private_data.sd_fat_mounted = 1;
+    }
+
+    FRESULT fr = f_open(&private_data.open_file, private_data.path, FA_READ);
+    if (fr != FR_OK)
+    {
+        private_data.open_file_ready = 1;
+        private_data.open_file_result = SDCARD_FILE_RESULT_ERROR;
+        return;
+    }
+
+    private_data.open_file_size = private_data.file_entries[private_data.open_file_index].file_size;
+    private_data.open_file_ready = 1;
+    private_data.open_file_result = SDCARD_FILE_RESULT_OK;
+}
+
 uint8_t sdcard_file_close()
 {
     FRESULT fr = f_close(&private_data.open_file);
@@ -471,6 +507,12 @@ void sdcard_file_open()
     private_data.open_file_result = SDCARD_FILE_RESULT_OK;
 }
 
+void sdcard_file_open_from_path()
+{
+    private_data.open_file_ready = 1;
+    private_data.open_file_result = SDCARD_FILE_RESULT_OK;
+}
+
 uint8_t sdcard_file_close()
 {
     return SDCARD_FILE_RESULT_OK;
@@ -545,6 +587,14 @@ bool sdcard_memread_handler(uint32_t addr, uint8_t *data, uint8_t window_id)
             return true;
         }
     }
+    else if (private_data.payload_type == SDCARD_PAYLOAD_TYPE_PATH)
+    {
+        if (offset < SDCARD_PATH_MAX)
+        {
+            *data = private_data.path[offset];
+            return true;
+        }
+    }
 
     *data = 0;
 	return true;
@@ -560,6 +610,14 @@ bool sdcard_memwrite_handler(uint32_t addr, uint8_t *data, uint8_t window_id)
         if (offset < SDCARD_PATH_MAX)
         {
             private_data.cwd[offset] = *data;
+            return true;
+        }
+    }
+    else if (private_data.payload_type == SDCARD_PAYLOAD_TYPE_PATH)
+    {
+        if (offset < SDCARD_PATH_MAX)
+        {
+            private_data.path[offset] = *data;
             return true;
         }
     }
@@ -644,6 +702,13 @@ uint8_t sdcard_handler_control_set(uint8_t cmd, uint8_t data)
             private_data.open_file_result = SDCARD_FILE_RESULT_IDLE;
             sdcard_queue_command(cmd, data);
             break;
+        case SDCARD_COMMAND_REQUEST_OPEN_FILE_FROM_PATH:
+            private_data.cached_chunk_index = 0xffffffff;
+            private_data.open_file_size = 0;
+            private_data.open_file_ready = 0;
+            private_data.open_file_result = SDCARD_FILE_RESULT_IDLE;
+            sdcard_queue_command(cmd, data);
+            break;
         case SDCARD_COMMAND_GET_FILE_NAME_FROM_INDEX:
             private_data.file_list_name_index = data;
             break;
@@ -684,6 +749,9 @@ void sdcard_handler_poll()
                     break;
                 case SDCARD_COMMAND_REQUEST_OPEN_FILE:
                     sdcard_file_open();
+                    break;
+                case SDCARD_COMMAND_REQUEST_OPEN_FILE_FROM_PATH:
+                    sdcard_file_open_from_path();
                     break;
                 default:
                     break;
