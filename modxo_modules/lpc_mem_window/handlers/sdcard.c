@@ -102,6 +102,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SDCARD_PAYLOAD_TYPE_FILE_NAME 1
 #define SDCARD_PAYLOAD_TYPE_FILE_SD_SECTOR 2
 #define SDCARD_PAYLOAD_TYPE_FILE_SD_BIOS 3
+#define SDCARD_PAYLOAD_TYPE_CWD 4
 
 #pragma pack(push, 1)
 typedef union
@@ -536,12 +537,33 @@ bool sdcard_memread_handler(uint32_t addr, uint8_t *data, uint8_t window_id)
         return true;
     }
 
+    if (private_data.payload_type == SDCARD_PAYLOAD_TYPE_CWD)
+    {
+        if (offset < SDCARD_PATH_MAX)
+        {
+            *data = private_data.cwd[offset];
+            return true;
+        }
+    }
+
     *data = 0;
 	return true;
 }
 
 bool sdcard_memwrite_handler(uint32_t addr, uint8_t *data, uint8_t window_id) 
 {
+    uint32_t offset = (addr - lpc_mem_windows[window_id].base_addr);
+    offset = offset & (lpc_mem_windows[window_id].length - 1);
+
+    if (private_data.payload_type == SDCARD_PAYLOAD_TYPE_CWD)
+    {
+        if (offset < SDCARD_PATH_MAX)
+        {
+            private_data.cwd[offset] = *data;
+            return true;
+        }
+    }
+
 	return true;
 }
 

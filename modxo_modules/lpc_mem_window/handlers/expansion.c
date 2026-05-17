@@ -172,14 +172,17 @@ bool expansion_memread_handler(uint32_t addr, uint8_t *data, uint8_t window_id)
     uint32_t offset = (addr - lpc_mem_windows[window_id].base_addr);
     offset = offset & (lpc_mem_windows[window_id].length - 1);
 
-    if (offset < EXPANSION_MAX_BUFFER_LEN)
+    if (private_data.payload_type == EXPANSION_PAYLOAD_TYPE_INCOMING)
     {
-        if (private_data.payload_type == EXPANSION_PAYLOAD_TYPE_INCOMING)
+        if (offset < EXPANSION_MAX_BUFFER_LEN)
         {
             *data = private_data.incoming_values_buffer[offset];
             return true;
         }
-        else if (private_data.payload_type == EXPANSION_PAYLOAD_TYPE_OUTGOING)
+    }
+    else if (private_data.payload_type == EXPANSION_PAYLOAD_TYPE_OUTGOING)
+    {
+        if (offset < EXPANSION_MAX_BUFFER_LEN)
         {
             *data = private_data.outgoing_values_buffer[offset];
             return true;
