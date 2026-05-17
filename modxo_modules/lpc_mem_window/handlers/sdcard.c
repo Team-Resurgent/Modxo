@@ -100,14 +100,26 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SDCARD_COMMAND_RESPONSE_FILE_INFO_RESULT 23
 #define SDCARD_COMMAND_GET_FILE_INFO_SIZE 24
 #define SDCARD_COMMAND_GET_FILE_INFO_FLAGS 25
+#define SDCARD_COMMAND_GET_FILE_INFO_MODIFIED 26
+#define SDCARD_COMMAND_GET_FILE_INFO_CREATED 27
 
-#define SDCARD_COMMAND_REQUEST_VOLUME_SPACE 27
-#define SDCARD_COMMAND_RESPONSE_VOLUME_SPACE_READY 28
-#define SDCARD_COMMAND_RESPONSE_VOLUME_SPACE_RESULT 29
-#define SDCARD_COMMAND_GET_VOLUME_FREE 30
-#define SDCARD_COMMAND_GET_VOLUME_TOTAL 31
+#define SDCARD_COMMAND_REQUEST_VOLUME_SPACE 28
+#define SDCARD_COMMAND_RESPONSE_VOLUME_SPACE_READY 29
+#define SDCARD_COMMAND_RESPONSE_VOLUME_SPACE_RESULT 30
+#define SDCARD_COMMAND_GET_VOLUME_FREE 31
+#define SDCARD_COMMAND_GET_VOLUME_TOTAL 32
 
-#define SDCARD_COMMAND_SET_PAYLOAD_TYPE 32
+#define SDCARD_COMMAND_REQUEST_CREATE_DIR_FROM_PATH 34
+#define SDCARD_COMMAND_REQUEST_CREATE_FILE_FROM_PATH 35
+#define SDCARD_COMMAND_RESPONSE_PATH_CREATE_READY 36
+#define SDCARD_COMMAND_RESPONSE_PATH_CREATE_RESULT 37
+
+#define SDCARD_COMMAND_SET_FILE_WRITE_CHUNK_SIZE 39
+#define SDCARD_COMMAND_REQUEST_WRITE_FILE_CHUNK 40
+#define SDCARD_COMMAND_RESPONSE_FILE_WRITE_READY 41
+#define SDCARD_COMMAND_RESPONSE_FILE_WRITE_RESULT 42
+
+#define SDCARD_COMMAND_SET_PAYLOAD_TYPE 43
 
 #define SDCARD_VOLUME_SPACE_DWORD_LOW 0
 #define SDCARD_VOLUME_SPACE_DWORD_HIGH 1
@@ -185,11 +197,22 @@ typedef struct
     uint32_t file_info_size;
     char file_info_name[SDCARD_PATH_MAX];
     uint16_t file_info_name_length;
+    uint32_t file_info_modified;
+    uint32_t file_info_created;
 
     uint8_t volume_space_ready;
     uint8_t volume_space_result;
     uint64_t volume_free_bytes;
     uint64_t volume_total_bytes;
+
+    uint8_t path_create_ready;
+    uint8_t path_create_result;
+    uint32_t path_create_file_size;
+
+    uint32_t write_chunk_offset;
+    uint32_t write_chunk_size;
+    uint8_t file_write_ready;
+    uint8_t file_write_result;
 
     uint8_t payload_type;
 
@@ -426,7 +449,7 @@ void sdcard_file_open()
         snprintf(path, sizeof(path), "%s/%s", private_data.cwd, private_data.file_entries[private_data.open_file_index].name);
     }
 
-    FRESULT fr = f_open(&private_data.open_file, path, FA_READ);
+    FRESULT fr = f_open(&private_data.open_file, path, FA_READ | FA_WRITE);
     if (fr != FR_OK)
     {
         private_data.open_file_ready = 1;
@@ -459,7 +482,7 @@ void sdcard_file_open_from_path()
         private_data.sd_fat_mounted = 1;
     }
 
-    FRESULT fr = f_open(&private_data.open_file, private_data.path, FA_READ);
+    FRESULT fr = f_open(&private_data.open_file, private_data.path, FA_READ | FA_WRITE);
     if (fr != FR_OK)
     {
         private_data.open_file_ready = 1;
@@ -472,23 +495,97 @@ void sdcard_file_open_from_path()
     private_data.open_file_result = SDCARD_FILE_RESULT_OK;
 }
 
+static bool sdcard_ensure_mounted(void)
+{
+    if (private_data.sd_fat_mounted)
+    {
+        return true;
+    }
+    if (f_mount(&private_data.fatfs, "0:", 1) != FR_OK)
+    {
+        return false;
+    }
+    private_data.sd_fat_mounted = 1;
+    return true;
+}
+
+void sdcard_create_dir_from_path()
+{
+    if (!sdcard_ensure_mounted())
+    {
+        private_data.path_create_result = SDCARD_FILE_RESULT_ERROR;
+        private_data.path_create_ready = 1;
+        return;
+    }
+
+    FRESULT fr = f_mkdir(private_data.path);
+    private_data.path_create_result = (fr == FR_OK) ? SDCARD_FILE_RESULT_OK : SDCARD_FILE_RESULT_ERROR;
+    private_data.path_create_ready = 1;
+}
+
+void sdcard_create_file_from_path()
+{
+    if (!sdcard_ensure_mounted())
+    {
+        private_data.path_create_result = SDCARD_FILE_RESULT_ERROR;
+        private_data.path_create_ready = 1;
+        return;
+    }
+
+    f_close(&private_data.open_file);
+    private_data.cached_chunk_index = 0xffffffff;
+
+    FRESULT fr = f_open(&private_data.open_file, private_data.path, FA_WRITE | FA_CREATE_ALWAYS);
+    if (fr != FR_OK)
+    {
+        private_data.path_create_result = SDCARD_FILE_RESULT_ERROR;
+        private_data.path_create_ready = 1;
+        return;
+    }
+
+    if (private_data.path_create_file_size > 0)
+    {
+        fr = f_expand(&private_data.open_file, (FSIZE_t)private_data.path_create_file_size, 1);
+        if (fr != FR_OK)
+        {
+            f_close(&private_data.open_file);
+            private_data.path_create_result = SDCARD_FILE_RESULT_ERROR;
+            private_data.path_create_ready = 1;
+            return;
+        }
+    }
+
+    private_data.open_file_size = (uint32_t)f_size(&private_data.open_file);
+    private_data.path_create_result = SDCARD_FILE_RESULT_OK;
+    private_data.path_create_ready = 1;
+}
+
+static uint32_t sdcard_pack_fatfs_datetime(WORD fdate, WORD ftime)
+{
+    return ((uint32_t)fdate << 16) | (uint32_t)ftime;
+}
+
 static void sdcard_file_info_fail(void)
 {
     private_data.file_info_flags = 0;
     private_data.file_info_size = 0;
     private_data.file_info_name[0] = '\0';
     private_data.file_info_name_length = 0;
+    private_data.file_info_modified = 0;
+    private_data.file_info_created = 0;
     private_data.file_info_result = SDCARD_FILE_RESULT_ERROR;
     private_data.file_info_ready = 1;
 }
 
-static void sdcard_file_info_apply(const FILINFO *file_info)
+static void sdcard_file_info_apply(const FILINFO *file_info, uint32_t created_packed)
 {
     private_data.file_info_flags = file_info->fattrib;
     private_data.file_info_size = (file_info->fattrib & AM_DIR) ? 0 : (uint32_t)file_info->fsize;
     strncpy(private_data.file_info_name, file_info->fname, SDCARD_PATH_MAX - 1u);
     private_data.file_info_name[SDCARD_PATH_MAX - 1u] = '\0';
     private_data.file_info_name_length = (uint16_t)strlen(private_data.file_info_name);
+    private_data.file_info_modified = sdcard_pack_fatfs_datetime(file_info->fdate, file_info->ftime);
+    private_data.file_info_created = created_packed;
     private_data.file_info_result = SDCARD_FILE_RESULT_OK;
     private_data.file_info_ready = 1;
 }
@@ -509,13 +606,14 @@ static void sdcard_file_info_stat(const char *path)
     }
 
     memset(&file_info, 0, sizeof(file_info));
-    if (f_stat(path, &file_info) != FR_OK)
+    DWORD crtime = 0;
+    if (f_stat_ex(path, &file_info, &crtime) != FR_OK)
     {
         sdcard_file_info_fail();
         return;
     }
 
-    sdcard_file_info_apply(&file_info);
+    sdcard_file_info_apply(&file_info, (uint32_t)crtime);
 }
 
 void sdcard_file_info_from_path()
@@ -608,6 +706,87 @@ uint8_t sdcard_file_read_chunk(uint32_t chunk_index, uint32_t* chunk_length)
     return SDCARD_FILE_RESULT_OK;
 }
 
+static void sdcard_invalidate_read_cache_for_range(uint32_t file_offset, uint32_t length)
+{
+    if (private_data.cached_chunk_index == 0xffffffff)
+    {
+        return;
+    }
+
+    uint32_t range_end = file_offset + length;
+    uint32_t cache_start = private_data.cached_chunk_index * (uint32_t)SDCARD_FILE_CHUNK_SIZE;
+    uint32_t cache_end = cache_start + (uint32_t)SDCARD_FILE_CHUNK_SIZE;
+
+    if (file_offset < cache_end && range_end > cache_start)
+    {
+        private_data.cached_chunk_index = 0xffffffff;
+    }
+}
+
+void sdcard_file_write_chunk()
+{
+    if (!sdcard_ensure_mounted())
+    {
+        private_data.file_write_result = SDCARD_FILE_RESULT_ERROR;
+        private_data.file_write_ready = 1;
+        return;
+    }
+
+    if (private_data.open_file.obj.fs == NULL || !(private_data.open_file.flag & FA_WRITE))
+    {
+        private_data.file_write_result = SDCARD_FILE_RESULT_ERROR;
+        private_data.file_write_ready = 1;
+        return;
+    }
+
+    uint32_t file_offset = private_data.write_chunk_offset;
+    uint32_t length = private_data.write_chunk_size;
+
+    if (length == 0 || length > SDCARD_FILE_CHUNK_SIZE)
+    {
+        private_data.file_write_result = SDCARD_FILE_RESULT_ERROR;
+        private_data.file_write_ready = 1;
+        return;
+    }
+
+    if (file_offset > private_data.open_file_size ||
+        length > private_data.open_file_size - file_offset)
+    {
+        private_data.file_write_result = SDCARD_FILE_RESULT_ERROR;
+        private_data.file_write_ready = 1;
+        return;
+    }
+
+    FRESULT file_result = f_lseek(&private_data.open_file, (FSIZE_t)file_offset);
+    if (file_result != FR_OK)
+    {
+        private_data.file_write_result = SDCARD_FILE_RESULT_ERROR;
+        private_data.file_write_ready = 1;
+        return;
+    }
+
+    UINT bytes_written = 0;
+    file_result = f_write(&private_data.open_file, private_data.cached_chunk_buffer, (UINT)length, &bytes_written);
+    if (file_result != FR_OK || bytes_written != length)
+    {
+        private_data.file_write_result = SDCARD_FILE_RESULT_ERROR;
+        private_data.file_write_ready = 1;
+        return;
+    }
+
+    file_result = f_sync(&private_data.open_file);
+    if (file_result != FR_OK)
+    {
+        private_data.file_write_result = SDCARD_FILE_RESULT_ERROR;
+        private_data.file_write_ready = 1;
+        return;
+    }
+
+    sdcard_invalidate_read_cache_for_range(file_offset, length);
+    private_data.file_write_result = SDCARD_FILE_RESULT_OK;
+    private_data.file_write_ready = 1;
+}
+
 #else /* !SD_CARD_SPI_ENABLE */
 
 uint8_t sdcard_cwd(uint8_t index)
@@ -662,6 +841,24 @@ void sdcard_volume_space()
 {
     private_data.volume_space_ready = 1;
     private_data.volume_space_result = SDCARD_FILE_RESULT_OK;
+}
+
+void sdcard_create_dir_from_path()
+{
+    private_data.path_create_ready = 1;
+    private_data.path_create_result = SDCARD_FILE_RESULT_OK;
+}
+
+void sdcard_create_file_from_path()
+{
+    private_data.path_create_ready = 1;
+    private_data.path_create_result = SDCARD_FILE_RESULT_OK;
+}
+
+void sdcard_file_write_chunk()
+{
+    private_data.file_write_ready = 1;
+    private_data.file_write_result = SDCARD_FILE_RESULT_OK;
 }
 
 uint8_t sdcard_file_close()
@@ -769,6 +966,14 @@ bool sdcard_memwrite_handler(uint32_t addr, uint8_t *data, uint8_t window_id)
             return true;
         }
     }
+    else if (private_data.payload_type == SDCARD_PAYLOAD_TYPE_FILE_SD_CHUNK)
+    {
+        if (offset < SDCARD_FILE_CHUNK_SIZE)
+        {
+            private_data.cached_chunk_buffer[offset] = *data;
+            return true;
+        }
+    }
 
 	return true;
 }
@@ -808,6 +1013,16 @@ uint8_t sdcard_handler_control_peek(uint8_t cmd, uint8_t data)
             return private_data.volume_space_ready;
         case SDCARD_COMMAND_RESPONSE_VOLUME_SPACE_RESULT:
             return private_data.volume_space_result;
+
+        case SDCARD_COMMAND_RESPONSE_PATH_CREATE_READY:
+            return private_data.path_create_ready;
+        case SDCARD_COMMAND_RESPONSE_PATH_CREATE_RESULT:
+            return private_data.path_create_result;
+
+        case SDCARD_COMMAND_RESPONSE_FILE_WRITE_READY:
+            return private_data.file_write_ready;
+        case SDCARD_COMMAND_RESPONSE_FILE_WRITE_RESULT:
+            return private_data.file_write_result;
 
         case SDCARD_COMMAND_CLOSE_FILE:
             return sdcard_file_close();
@@ -872,6 +1087,12 @@ uint8_t sdcard_handler_control_set(uint8_t cmd, uint8_t data)
         case SDCARD_COMMAND_GET_FILE_INFO_SIZE:
             current_long_val = private_data.file_info_ready ? private_data.file_info_size : 0;
             break;
+        case SDCARD_COMMAND_GET_FILE_INFO_MODIFIED:
+            current_long_val = private_data.file_info_ready ? private_data.file_info_modified : 0;
+            break;
+        case SDCARD_COMMAND_GET_FILE_INFO_CREATED:
+            current_long_val = private_data.file_info_ready ? private_data.file_info_created : 0;
+            break;
         case SDCARD_COMMAND_REQUEST_FILE_INFO_FROM_INDEX:
             private_data.file_info_index = data;
             private_data.file_info_ready = 0;
@@ -888,23 +1109,31 @@ uint8_t sdcard_handler_control_set(uint8_t cmd, uint8_t data)
             private_data.volume_space_result = SDCARD_FILE_RESULT_IDLE;
             sdcard_queue_command(cmd, data);
             break;
+        case SDCARD_COMMAND_REQUEST_CREATE_DIR_FROM_PATH:
+            private_data.path_create_ready = 0;
+            private_data.path_create_result = SDCARD_FILE_RESULT_IDLE;
+            sdcard_queue_command(cmd, data);
+            break;
+        case SDCARD_COMMAND_REQUEST_CREATE_FILE_FROM_PATH:
+            private_data.path_create_file_size = current_long_val;
+            private_data.path_create_ready = 0;
+            private_data.path_create_result = SDCARD_FILE_RESULT_IDLE;
+            sdcard_queue_command(cmd, data);
+            break;
+        case SDCARD_COMMAND_SET_FILE_WRITE_CHUNK_SIZE:
+            private_data.write_chunk_size = current_long_val;
+            break;
+        case SDCARD_COMMAND_REQUEST_WRITE_FILE_CHUNK:
+            private_data.write_chunk_offset = current_long_val;
+            private_data.file_write_ready = 0;
+            private_data.file_write_result = SDCARD_FILE_RESULT_IDLE;
+            sdcard_queue_command(cmd, data);
+            break;
         case SDCARD_COMMAND_GET_VOLUME_FREE:
-            if (private_data.volume_space_ready) {
-                current_long_val = (uint32_t)((data == SDCARD_VOLUME_SPACE_DWORD_HIGH)
-                    ? (private_data.volume_free_bytes >> 32)
-                    : private_data.volume_free_bytes);
-            } else {
-                current_long_val = 0;
-            }
+            current_long_val = (uint32_t)((data == SDCARD_VOLUME_SPACE_DWORD_HIGH) ? (private_data.volume_free_bytes >> 32) : private_data.volume_free_bytes);
             break;
         case SDCARD_COMMAND_GET_VOLUME_TOTAL:
-            if (private_data.volume_space_ready) {
-                current_long_val = (uint32_t)((data == SDCARD_VOLUME_SPACE_DWORD_HIGH)
-                    ? (private_data.volume_total_bytes >> 32)
-                    : private_data.volume_total_bytes);
-            } else {
-                current_long_val = 0;
-            }
+            current_long_val = (uint32_t)((data == SDCARD_VOLUME_SPACE_DWORD_HIGH) ? (private_data.volume_total_bytes >> 32) : private_data.volume_total_bytes);
             break;
 	}
 	return 0;
@@ -949,6 +1178,15 @@ void sdcard_handler_poll()
                     break;
                 case SDCARD_COMMAND_REQUEST_VOLUME_SPACE:
                     sdcard_volume_space();
+                    break;
+                case SDCARD_COMMAND_REQUEST_CREATE_DIR_FROM_PATH:
+                    sdcard_create_dir_from_path();
+                    break;
+                case SDCARD_COMMAND_REQUEST_CREATE_FILE_FROM_PATH:
+                    sdcard_create_file_from_path();
+                    break;
+                case SDCARD_COMMAND_REQUEST_WRITE_FILE_CHUNK:
+                    sdcard_file_write_chunk();
                     break;
                 default:
                     break;

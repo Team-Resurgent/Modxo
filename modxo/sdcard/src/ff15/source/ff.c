@@ -4808,6 +4808,47 @@ FRESULT f_stat (
 
 
 
+FRESULT f_stat_ex (
+	const TCHAR* path,	/* Pointer to the file path */
+	FILINFO* fno,		/* Pointer to file information to return */
+	DWORD* crtime		/* Pointer to creation timestamp (0:skip) */
+)
+{
+	FRESULT res;
+	DIR dj;
+	DEF_NAMBUF
+
+
+	/* Get logical drive */
+	res = mount_volume(&path, &dj.obj.fs, 0);
+	if (res == FR_OK) {
+		INIT_NAMBUF(dj.obj.fs);
+		res = follow_path(&dj, path);	/* Follow the file path */
+		if (res == FR_OK) {				/* Follow completed */
+			if (dj.fn[NSFLAG] & NS_NONAME) {	/* It is origin directory */
+				res = FR_INVALID_NAME;
+			} else {							/* Found an object */
+				if (fno) get_fileinfo(&dj, fno);
+				if (crtime) {
+#if FF_FS_EXFAT
+					if (dj.obj.fs->fs_type == FS_EXFAT) {
+						*crtime = ld_dword(dj.obj.fs->dirbuf + XDIR_CrtTime);
+					} else
+#endif
+					{
+						*crtime = ld_dword(dj.dir + DIR_CrtTime);
+					}
+				}
+			}
+		}
+		FREE_NAMBUF();
+	}
+
+	LEAVE_FF(dj.obj.fs, res);
+}
+
+
+
 #if !FF_FS_READONLY
 /*-----------------------------------------------------------------------*/
 /* Get Number of Free Clusters                                           */
