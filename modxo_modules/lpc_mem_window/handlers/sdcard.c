@@ -109,6 +109,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SDCARD_COMMAND_GET_VOLUME_FREE 31
 #define SDCARD_COMMAND_GET_VOLUME_TOTAL 32
 
+#define SDCARD_COMMAND_REQUEST_DELETE_FROM_PATH 33
+
 #define SDCARD_COMMAND_REQUEST_CREATE_DIR_FROM_PATH 34
 #define SDCARD_COMMAND_REQUEST_CREATE_FILE_FROM_PATH 35
 #define SDCARD_COMMAND_RESPONSE_PATH_CREATE_READY 36
@@ -523,6 +525,20 @@ void sdcard_create_dir_from_path()
     private_data.path_create_ready = 1;
 }
 
+void sdcard_delete_from_path()
+{
+    if (!sdcard_ensure_mounted())
+    {
+        private_data.path_create_result = SDCARD_FILE_RESULT_ERROR;
+        private_data.path_create_ready = 1;
+        return;
+    }
+
+    FRESULT fr = f_unlink(private_data.path);
+    private_data.path_create_result = (fr == FR_OK) ? SDCARD_FILE_RESULT_OK : SDCARD_FILE_RESULT_ERROR;
+    private_data.path_create_ready = 1;
+}
+
 static FRESULT sdcard_set_open_file_size(uint32_t size)
 {
     FRESULT fr;
@@ -874,6 +890,12 @@ void sdcard_create_dir_from_path()
     private_data.path_create_result = SDCARD_FILE_RESULT_OK;
 }
 
+void sdcard_delete_from_path()
+{
+    private_data.path_create_ready = 1;
+    private_data.path_create_result = SDCARD_FILE_RESULT_OK;
+}
+
 void sdcard_create_file_from_path()
 {
     private_data.path_create_ready = 1;
@@ -1134,6 +1156,7 @@ uint8_t sdcard_handler_control_set(uint8_t cmd, uint8_t data)
             private_data.volume_space_result = SDCARD_FILE_RESULT_IDLE;
             sdcard_queue_command(cmd, data);
             break;
+        case SDCARD_COMMAND_REQUEST_DELETE_FROM_PATH:
         case SDCARD_COMMAND_REQUEST_CREATE_DIR_FROM_PATH:
             private_data.path_create_ready = 0;
             private_data.path_create_result = SDCARD_FILE_RESULT_IDLE;
@@ -1203,6 +1226,9 @@ void sdcard_handler_poll()
                     break;
                 case SDCARD_COMMAND_REQUEST_VOLUME_SPACE:
                     sdcard_volume_space();
+                    break;
+                case SDCARD_COMMAND_REQUEST_DELETE_FROM_PATH:
+                    sdcard_delete_from_path();
                     break;
                 case SDCARD_COMMAND_REQUEST_CREATE_DIR_FROM_PATH:
                     sdcard_create_dir_from_path();
