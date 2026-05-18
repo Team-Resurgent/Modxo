@@ -110,18 +110,20 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SDCARD_COMMAND_GET_VOLUME_TOTAL 32
 
 #define SDCARD_COMMAND_REQUEST_DELETE_FROM_PATH 33
+#define SDCARD_COMMAND_RESPONSE_PATH_DELETE_READY 34
+#define SDCARD_COMMAND_RESPONSE_PATH_DELETE_RESULT 35
 
-#define SDCARD_COMMAND_REQUEST_CREATE_DIR_FROM_PATH 34
-#define SDCARD_COMMAND_REQUEST_CREATE_FILE_FROM_PATH 35
-#define SDCARD_COMMAND_RESPONSE_PATH_CREATE_READY 36
-#define SDCARD_COMMAND_RESPONSE_PATH_CREATE_RESULT 37
+#define SDCARD_COMMAND_REQUEST_CREATE_DIR_FROM_PATH 36
+#define SDCARD_COMMAND_REQUEST_CREATE_FILE_FROM_PATH 37
+#define SDCARD_COMMAND_RESPONSE_PATH_CREATE_READY 38
+#define SDCARD_COMMAND_RESPONSE_PATH_CREATE_RESULT 39
 
-#define SDCARD_COMMAND_SET_FILE_WRITE_CHUNK_SIZE 39
-#define SDCARD_COMMAND_REQUEST_WRITE_FILE_CHUNK 40 // set long value for chunk index before request
-#define SDCARD_COMMAND_RESPONSE_FILE_WRITE_READY 41
-#define SDCARD_COMMAND_RESPONSE_FILE_WRITE_RESULT 42
+#define SDCARD_COMMAND_SET_FILE_WRITE_CHUNK_SIZE 40
+#define SDCARD_COMMAND_REQUEST_WRITE_FILE_CHUNK 41 // set long value for chunk index before request
+#define SDCARD_COMMAND_RESPONSE_FILE_WRITE_READY 42
+#define SDCARD_COMMAND_RESPONSE_FILE_WRITE_RESULT 43
 
-#define SDCARD_COMMAND_SET_PAYLOAD_TYPE 43
+#define SDCARD_COMMAND_SET_PAYLOAD_TYPE 44
 
 #define SDCARD_VOLUME_SPACE_DWORD_LOW 0
 #define SDCARD_VOLUME_SPACE_DWORD_HIGH 1
@@ -210,6 +212,9 @@ typedef struct
     uint8_t path_create_ready;
     uint8_t path_create_result;
     uint32_t path_create_file_size;
+
+    uint8_t path_delete_ready;
+    uint8_t path_delete_result;
 
     uint32_t write_chunk_index;
     uint32_t write_chunk_size;
@@ -529,14 +534,14 @@ void sdcard_delete_from_path()
 {
     if (!sdcard_ensure_mounted())
     {
-        private_data.path_create_result = SDCARD_FILE_RESULT_ERROR;
-        private_data.path_create_ready = 1;
+        private_data.path_delete_result = SDCARD_FILE_RESULT_ERROR;
+        private_data.path_delete_ready = 1;
         return;
     }
 
     FRESULT fr = f_unlink(private_data.path);
-    private_data.path_create_result = (fr == FR_OK) ? SDCARD_FILE_RESULT_OK : SDCARD_FILE_RESULT_ERROR;
-    private_data.path_create_ready = 1;
+    private_data.path_delete_result = (fr == FR_OK) ? SDCARD_FILE_RESULT_OK : SDCARD_FILE_RESULT_ERROR;
+    private_data.path_delete_ready = 1;
 }
 
 static FRESULT sdcard_set_open_file_size(uint32_t size)
@@ -1157,6 +1162,10 @@ uint8_t sdcard_handler_control_set(uint8_t cmd, uint8_t data)
             sdcard_queue_command(cmd, data);
             break;
         case SDCARD_COMMAND_REQUEST_DELETE_FROM_PATH:
+            private_data.path_delete_ready = 0;
+            private_data.path_delete_result = SDCARD_FILE_RESULT_IDLE;
+            sdcard_queue_command(cmd, data);
+            break;
         case SDCARD_COMMAND_REQUEST_CREATE_DIR_FROM_PATH:
             private_data.path_create_ready = 0;
             private_data.path_create_result = SDCARD_FILE_RESULT_IDLE;
