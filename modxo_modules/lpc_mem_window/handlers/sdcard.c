@@ -480,11 +480,12 @@ static void sdcard_build_entry_path(uint8_t index, char *path, size_t path_size)
     }
 }
 
-void sdcard_file_open()
+void sdcard_file_open_from_index()
 {
     FRESULT file_result;
 
     f_close(&private_data.open_file);
+    private_data.cached_chunk_index = 0xffffffff;
 
     if (private_data.open_file_index >= private_data.file_list_count) {
         private_data.open_file_ready = 1;
@@ -532,6 +533,7 @@ void sdcard_file_open_from_path()
     FRESULT file_result;
 
     f_close(&private_data.open_file);
+    private_data.cached_chunk_index = 0xffffffff;
 
     if (!private_data.sd_fat_mounted)
     {
@@ -680,6 +682,7 @@ void sdcard_file_info_from_index()
 uint8_t sdcard_file_close()
 {
     FRESULT fr = f_close(&private_data.open_file);
+    private_data.cached_chunk_index = 0xffffffff;
     return fr == FR_OK ? SDCARD_FILE_RESULT_OK : SDCARD_FILE_RESULT_ERROR;
 }
 
@@ -776,7 +779,8 @@ void sdcard_file_write_chunk()
     uint32_t chunk_index = private_data.write_chunk_index;
     uint32_t length = private_data.write_chunk_size;
 
-    uint32_t max_chunk_index = (private_data.file_info_size + SDCARD_FILE_CHUNK_SIZE - 1u) / SDCARD_FILE_CHUNK_SIZE;
+    uint32_t file_size = private_data.file_info_size;
+    uint32_t max_chunk_index = (file_size + SDCARD_FILE_CHUNK_SIZE - 1u) / SDCARD_FILE_CHUNK_SIZE;
     if (chunk_index >= max_chunk_index)
     {
         private_data.file_write_result = SDCARD_FILE_RESULT_ERROR;
@@ -785,7 +789,7 @@ void sdcard_file_write_chunk()
     }
 
     uint32_t file_offset = chunk_index * (uint32_t)SDCARD_FILE_CHUNK_SIZE;
-    uint32_t remaining = private_data.file_info_size - file_offset;
+    uint32_t remaining = file_size - file_offset;
     uint32_t max_length = (remaining > SDCARD_FILE_CHUNK_SIZE) ? SDCARD_FILE_CHUNK_SIZE : remaining;
 
     if (length == 0 || length > max_length)
@@ -851,7 +855,7 @@ void sdcard_dir_list()
     private_data.file_list_result = SDCARD_FILE_RESULT_OK;
 }
 
-void sdcard_file_open()
+void sdcard_file_open_from_index()
 {
     private_data.open_file_ready = 1;
     private_data.open_file_result = SDCARD_FILE_RESULT_OK;
@@ -939,15 +943,28 @@ bool sdcard_memread_handler(uint32_t addr, uint8_t *data, uint8_t window_id)
 
     if (private_data.payload_type == SDCARD_PAYLOAD_TYPE_FILE_SD_BIOS)
     {
+        if (private_data.open_file.obj.fs == NULL || private_data.file_info_size == 0)
+        {
+            *data = 0;
+            return true;
+        }
+
         uint32_t mirror = offset & (private_data.file_info_size - 1u);
         uint32_t chunk = mirror >> SDCARD_FILE_CHUNK_SIZE_SHIFT;
-        if (private_data.cached_chunk_index != 0xffffffff && private_data.cached_chunk_index == chunk) {
+        if (private_data.cached_chunk_index != 0xffffffff && private_data.cached_chunk_index == chunk)
+        {
             uint32_t chunk_offset = mirror & (SDCARD_FILE_CHUNK_SIZE - 1);
-            *data = private_data.cached_chunk_buffer[chunk_offset];
+            *data = chunk_offset < private_data.cached_chunk_length
+                ? private_data.cached_chunk_buffer[chunk_offset]
+                : 0;
             return true;
         }
         uint32_t chunk_length = 0;
-        sdcard_file_read_chunk(chunk, &chunk_length);
+        if (sdcard_file_read_chunk(chunk, &chunk_length) != SDCARD_FILE_RESULT_OK)
+        {
+            *data = 0;
+            return true;
+        }
         uint32_t chunk_offset = mirror & (SDCARD_FILE_CHUNK_SIZE - 1);
         *data = chunk_offset < chunk_length ? private_data.cached_chunk_buffer[chunk_offset] : 0;
         return true;
@@ -961,10 +978,16 @@ bool sdcard_memread_handler(uint32_t addr, uint8_t *data, uint8_t window_id)
 
     if (private_data.payload_type == SDCARD_PAYLOAD_TYPE_FILE_SD_CHUNK)
     {
-        uint32_t chunk_length = 0;
-        sdcard_file_read_chunk(offset >> SDCARD_FILE_CHUNK_SIZE_SHIFT, &chunk_length);
+        /* Offset is byte index within the chunk loaded by FILE_READ_CHUNK (same as write staging). */
         uint32_t chunk_offset = offset & (SDCARD_FILE_CHUNK_SIZE - 1);
-        *data = chunk_offset < chunk_length ? private_data.cached_chunk_buffer[chunk_offset] : 0;
+        if (private_data.cached_chunk_index == 0xffffffff)
+        {
+            *data = 0;
+            return true;
+        }
+        *data = chunk_offset < private_data.cached_chunk_length
+            ? private_data.cached_chunk_buffer[chunk_offset]
+            : 0;
         return true;
     }
 
@@ -1215,7 +1238,7 @@ void sdcard_handler_poll()
                     sdcard_dir_list();
                     break;
                 case SDCARD_COMMAND_REQUEST_OPEN_FILE_FROM_INDEX:
-                    sdcard_file_open();
+                    sdcard_file_open_from_index();
                     break;
                 case SDCARD_COMMAND_REQUEST_OPEN_FILE_FROM_PATH:
                     sdcard_file_open_from_path();
