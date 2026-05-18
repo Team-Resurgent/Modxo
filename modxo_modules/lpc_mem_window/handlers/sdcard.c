@@ -115,7 +115,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SDCARD_COMMAND_RESPONSE_PATH_CREATE_RESULT 37
 
 #define SDCARD_COMMAND_SET_FILE_WRITE_CHUNK_SIZE 39
-#define SDCARD_COMMAND_REQUEST_WRITE_FILE_CHUNK 40
+#define SDCARD_COMMAND_REQUEST_WRITE_FILE_CHUNK 40 // set long value for chunk index before request
 #define SDCARD_COMMAND_RESPONSE_FILE_WRITE_READY 41
 #define SDCARD_COMMAND_RESPONSE_FILE_WRITE_RESULT 42
 
@@ -209,7 +209,7 @@ typedef struct
     uint8_t path_create_result;
     uint32_t path_create_file_size;
 
-    uint32_t write_chunk_offset;
+    uint32_t write_chunk_index;
     uint32_t write_chunk_size;
     uint8_t file_write_ready;
     uint8_t file_write_result;
@@ -760,17 +760,22 @@ void sdcard_file_write_chunk()
         return;
     }
 
-    uint32_t file_offset = private_data.write_chunk_offset;
+    uint32_t chunk_index = private_data.write_chunk_index;
     uint32_t length = private_data.write_chunk_size;
 
-    if (length == 0 || length > SDCARD_FILE_CHUNK_SIZE)
+    uint32_t max_chunk_index = (private_data.open_file_size + SDCARD_FILE_CHUNK_SIZE - 1u) / SDCARD_FILE_CHUNK_SIZE;
+    if (chunk_index >= max_chunk_index)
     {
         private_data.file_write_result = SDCARD_FILE_RESULT_ERROR;
         private_data.file_write_ready = 1;
         return;
     }
 
-    if (file_offset > private_data.open_file_size || length > private_data.open_file_size - file_offset)
+    uint32_t file_offset = chunk_index * (uint32_t)SDCARD_FILE_CHUNK_SIZE;
+    uint32_t remaining = private_data.open_file_size - file_offset;
+    uint32_t max_length = (remaining > SDCARD_FILE_CHUNK_SIZE) ? SDCARD_FILE_CHUNK_SIZE : remaining;
+
+    if (length == 0 || length > max_length)
     {
         private_data.file_write_result = SDCARD_FILE_RESULT_ERROR;
         private_data.file_write_ready = 1;
@@ -1144,7 +1149,7 @@ uint8_t sdcard_handler_control_set(uint8_t cmd, uint8_t data)
             private_data.write_chunk_size = current_long_val;
             break;
         case SDCARD_COMMAND_REQUEST_WRITE_FILE_CHUNK:
-            private_data.write_chunk_offset = current_long_val;
+            private_data.write_chunk_index = current_long_val;
             private_data.file_write_ready = 0;
             private_data.file_write_result = SDCARD_FILE_RESULT_IDLE;
             sdcard_queue_command(cmd, data);
