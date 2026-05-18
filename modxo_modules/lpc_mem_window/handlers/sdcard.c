@@ -180,7 +180,6 @@ typedef struct
     sdcard_file_entry_t file_entries[SDCARD_MAX_ENTRIES];
 
     uint8_t open_file_index;
-    uint32_t open_file_size;
     uint8_t open_file_ready;
     uint8_t open_file_result;
 #if SD_CARD_SPI_ENABLE
@@ -413,11 +412,77 @@ void sdcard_dir_list()
     private_data.file_list_result = SDCARD_FILE_RESULT_OK;
 }
 
+static uint32_t sdcard_pack_fatfs_datetime(WORD fdate, WORD ftime)
+{
+    return ((uint32_t)fdate << 16) | (uint32_t)ftime;
+}
+
+static void sdcard_file_info_fail(void)
+{
+    private_data.file_info_flags = 0;
+    private_data.file_info_size = 0;
+    private_data.file_info_name[0] = '\0';
+    private_data.file_info_name_length = 0;
+    private_data.file_info_modified = 0;
+    private_data.file_info_created = 0;
+    private_data.file_info_result = SDCARD_FILE_RESULT_ERROR;
+    private_data.file_info_ready = 1;
+}
+
+static void sdcard_file_info_apply(const FILINFO *file_info, uint32_t created_packed)
+{
+    private_data.file_info_flags = file_info->fattrib;
+    private_data.file_info_size = (file_info->fattrib & AM_DIR) ? 0 : (uint32_t)file_info->fsize;
+    strncpy(private_data.file_info_name, file_info->fname, SDCARD_PATH_MAX - 1u);
+    private_data.file_info_name[SDCARD_PATH_MAX - 1u] = '\0';
+    private_data.file_info_name_length = (uint16_t)strlen(private_data.file_info_name);
+    private_data.file_info_modified = sdcard_pack_fatfs_datetime(file_info->fdate, file_info->ftime);
+    private_data.file_info_created = created_packed;
+    private_data.file_info_result = SDCARD_FILE_RESULT_OK;
+    private_data.file_info_ready = 1;
+}
+
+static void sdcard_file_info_stat(const char *path)
+{
+    FILINFO file_info;
+
+    if (!private_data.sd_fat_mounted)
+    {
+        FRESULT file_result = f_mount(&private_data.fatfs, "0:", 1);
+        if (file_result != FR_OK)
+        {
+            sdcard_file_info_fail();
+            return;
+        }
+        private_data.sd_fat_mounted = 1;
+    }
+
+    memset(&file_info, 0, sizeof(file_info));
+    DWORD crtime = 0;
+    if (f_stat_ex(path, &file_info, &crtime) != FR_OK)
+    {
+        sdcard_file_info_fail();
+        return;
+    }
+
+    sdcard_file_info_apply(&file_info, (uint32_t)crtime);
+}
+
+static void sdcard_build_entry_path(uint8_t index, char *path, size_t path_size)
+{
+    if (strcmp(private_data.cwd, "") == 0)
+    {
+        snprintf(path, path_size, "/%s", private_data.file_entries[index].name);
+    }
+    else
+    {
+        snprintf(path, path_size, "%s/%s", private_data.cwd, private_data.file_entries[index].name);
+    }
+}
+
 void sdcard_file_open()
 {
     FRESULT file_result;
-    DIR directory;
-    FILINFO file_info;
 
     f_close(&private_data.open_file);
 
@@ -447,14 +512,7 @@ void sdcard_file_open()
     }
 
     char path[SDCARD_PATH_MAX];
-    if (strcmp(private_data.cwd, "") == 0)
-    {
-        snprintf(path, sizeof(path), "/%s", private_data.file_entries[private_data.open_file_index].name);
-    }
-    else
-    {
-        snprintf(path, sizeof(path), "%s/%s", private_data.cwd, private_data.file_entries[private_data.open_file_index].name);
-    }
+    sdcard_build_entry_path(private_data.open_file_index, path, sizeof(path));
 
     FRESULT fr = f_open(&private_data.open_file, path, FA_READ | FA_WRITE);
     if (fr != FR_OK)
@@ -464,7 +522,7 @@ void sdcard_file_open()
         return;
     }
 
-    private_data.open_file_size = private_data.file_entries[private_data.open_file_index].file_size;
+    sdcard_file_info_stat(path);
     private_data.open_file_ready = 1;
     private_data.open_file_result = SDCARD_FILE_RESULT_OK;
 }
@@ -472,8 +530,6 @@ void sdcard_file_open()
 void sdcard_file_open_from_path()
 {
     FRESULT file_result;
-    DIR directory;
-    FILINFO file_info;
 
     f_close(&private_data.open_file);
 
@@ -497,7 +553,7 @@ void sdcard_file_open_from_path()
         return;
     }
 
-    private_data.open_file_size = (uint32_t)f_size(&private_data.open_file);
+    sdcard_file_info_stat(private_data.path);
     private_data.open_file_ready = 1;
     private_data.open_file_result = SDCARD_FILE_RESULT_OK;
 }
@@ -597,65 +653,9 @@ void sdcard_create_file_from_path()
         return;
     }
 
-    private_data.open_file_size = (uint32_t)f_size(&private_data.open_file);
+    sdcard_file_info_stat(private_data.path);
     private_data.path_create_result = SDCARD_FILE_RESULT_OK;
     private_data.path_create_ready = 1;
-}
-
-static uint32_t sdcard_pack_fatfs_datetime(WORD fdate, WORD ftime)
-{
-    return ((uint32_t)fdate << 16) | (uint32_t)ftime;
-}
-
-static void sdcard_file_info_fail(void)
-{
-    private_data.file_info_flags = 0;
-    private_data.file_info_size = 0;
-    private_data.file_info_name[0] = '\0';
-    private_data.file_info_name_length = 0;
-    private_data.file_info_modified = 0;
-    private_data.file_info_created = 0;
-    private_data.file_info_result = SDCARD_FILE_RESULT_ERROR;
-    private_data.file_info_ready = 1;
-}
-
-static void sdcard_file_info_apply(const FILINFO *file_info, uint32_t created_packed)
-{
-    private_data.file_info_flags = file_info->fattrib;
-    private_data.file_info_size = (file_info->fattrib & AM_DIR) ? 0 : (uint32_t)file_info->fsize;
-    strncpy(private_data.file_info_name, file_info->fname, SDCARD_PATH_MAX - 1u);
-    private_data.file_info_name[SDCARD_PATH_MAX - 1u] = '\0';
-    private_data.file_info_name_length = (uint16_t)strlen(private_data.file_info_name);
-    private_data.file_info_modified = sdcard_pack_fatfs_datetime(file_info->fdate, file_info->ftime);
-    private_data.file_info_created = created_packed;
-    private_data.file_info_result = SDCARD_FILE_RESULT_OK;
-    private_data.file_info_ready = 1;
-}
-
-static void sdcard_file_info_stat(const char *path)
-{
-    FILINFO file_info;
-
-    if (!private_data.sd_fat_mounted)
-    {
-        FRESULT file_result = f_mount(&private_data.fatfs, "0:", 1);
-        if (file_result != FR_OK)
-        {
-            sdcard_file_info_fail();
-            return;
-        }
-        private_data.sd_fat_mounted = 1;
-    }
-
-    memset(&file_info, 0, sizeof(file_info));
-    DWORD crtime = 0;
-    if (f_stat_ex(path, &file_info, &crtime) != FR_OK)
-    {
-        sdcard_file_info_fail();
-        return;
-    }
-
-    sdcard_file_info_apply(&file_info, (uint32_t)crtime);
 }
 
 void sdcard_file_info_from_path()
@@ -673,15 +673,7 @@ void sdcard_file_info_from_index()
     }
 
     char path[SDCARD_PATH_MAX];
-    if (strcmp(private_data.cwd, "") == 0)
-    {
-        snprintf(path, sizeof(path), "/%s", private_data.file_entries[private_data.file_info_index].name);
-    }
-    else
-    {
-        snprintf(path, sizeof(path), "%s/%s", private_data.cwd, private_data.file_entries[private_data.file_info_index].name);
-    }
-
+    sdcard_build_entry_path(private_data.file_info_index, path, sizeof(path));
     sdcard_file_info_stat(path);
 }
 
@@ -712,7 +704,7 @@ uint8_t sdcard_file_read_chunk(uint32_t chunk_index, uint32_t* chunk_length)
         return SDCARD_FILE_RESULT_ERROR;
     }
 
-    uint32_t max_chunk_index = (private_data.open_file_size + SDCARD_FILE_CHUNK_SIZE - 1u) / SDCARD_FILE_CHUNK_SIZE;
+    uint32_t max_chunk_index = (private_data.file_info_size + SDCARD_FILE_CHUNK_SIZE - 1u) / SDCARD_FILE_CHUNK_SIZE;
     if (chunk_index >= max_chunk_index)
     {
         *chunk_length = 0;
@@ -722,7 +714,7 @@ uint8_t sdcard_file_read_chunk(uint32_t chunk_index, uint32_t* chunk_length)
     if (private_data.cached_chunk_index == 0xffffffff || private_data.cached_chunk_index != chunk_index)
     {
         uint32_t offset = chunk_index * (uint32_t)SDCARD_FILE_CHUNK_SIZE;
-        uint32_t remaining = private_data.open_file_size - offset;
+        uint32_t remaining = private_data.file_info_size - offset;
 
         file_result = f_lseek(&private_data.open_file, (FSIZE_t)offset);
         if (file_result != FR_OK)
@@ -784,7 +776,7 @@ void sdcard_file_write_chunk()
     uint32_t chunk_index = private_data.write_chunk_index;
     uint32_t length = private_data.write_chunk_size;
 
-    uint32_t max_chunk_index = (private_data.open_file_size + SDCARD_FILE_CHUNK_SIZE - 1u) / SDCARD_FILE_CHUNK_SIZE;
+    uint32_t max_chunk_index = (private_data.file_info_size + SDCARD_FILE_CHUNK_SIZE - 1u) / SDCARD_FILE_CHUNK_SIZE;
     if (chunk_index >= max_chunk_index)
     {
         private_data.file_write_result = SDCARD_FILE_RESULT_ERROR;
@@ -793,7 +785,7 @@ void sdcard_file_write_chunk()
     }
 
     uint32_t file_offset = chunk_index * (uint32_t)SDCARD_FILE_CHUNK_SIZE;
-    uint32_t remaining = private_data.open_file_size - file_offset;
+    uint32_t remaining = private_data.file_info_size - file_offset;
     uint32_t max_length = (remaining > SDCARD_FILE_CHUNK_SIZE) ? SDCARD_FILE_CHUNK_SIZE : remaining;
 
     if (length == 0 || length > max_length)
@@ -947,7 +939,7 @@ bool sdcard_memread_handler(uint32_t addr, uint8_t *data, uint8_t window_id)
 
     if (private_data.payload_type == SDCARD_PAYLOAD_TYPE_FILE_SD_BIOS)
     {
-        uint32_t mirror = offset & (private_data.open_file_size - 1u);
+        uint32_t mirror = offset & (private_data.file_info_size - 1u);
         uint32_t chunk = mirror >> SDCARD_FILE_CHUNK_SIZE_SHIFT;
         if (private_data.cached_chunk_index != 0xffffffff && private_data.cached_chunk_index == chunk) {
             uint32_t chunk_offset = mirror & (SDCARD_FILE_CHUNK_SIZE - 1);
@@ -1121,14 +1113,14 @@ uint8_t sdcard_handler_control_set(uint8_t cmd, uint8_t data)
         case SDCARD_COMMAND_REQUEST_OPEN_FILE_FROM_INDEX:
             private_data.cached_chunk_index = 0xffffffff;
             private_data.open_file_index = data;
-            private_data.open_file_size = 0;
+            private_data.file_info_ready = 0;
             private_data.open_file_ready = 0;
             private_data.open_file_result = SDCARD_FILE_RESULT_IDLE;
             sdcard_queue_command(cmd, data);
             break;
         case SDCARD_COMMAND_REQUEST_OPEN_FILE_FROM_PATH:
             private_data.cached_chunk_index = 0xffffffff;
-            private_data.open_file_size = 0;
+            private_data.file_info_ready = 0;
             private_data.open_file_ready = 0;
             private_data.open_file_result = SDCARD_FILE_RESULT_IDLE;
             sdcard_queue_command(cmd, data);
@@ -1173,6 +1165,7 @@ uint8_t sdcard_handler_control_set(uint8_t cmd, uint8_t data)
             break;
         case SDCARD_COMMAND_REQUEST_CREATE_FILE_FROM_PATH:
             private_data.path_create_file_size = current_long_val;
+            private_data.file_info_ready = 0;
             private_data.path_create_ready = 0;
             private_data.path_create_result = SDCARD_FILE_RESULT_IDLE;
             sdcard_queue_command(cmd, data);
