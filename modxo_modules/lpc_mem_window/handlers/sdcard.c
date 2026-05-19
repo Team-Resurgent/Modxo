@@ -45,7 +45,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #if SD_CARD_SPI_ENABLE
 #include "ff.h"
+#include "diskio.h"
 #endif
+
+#define SDCARD_DISK_SECTOR_SIZE 512
 
 #define SDCARD_MAX_ENTRIES 8
 #define SDCARD_QUEUE_BUFFER_LEN 8
@@ -123,10 +126,21 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SDCARD_COMMAND_RESPONSE_FILE_WRITE_READY 42
 #define SDCARD_COMMAND_RESPONSE_FILE_WRITE_RESULT 43
 
-#define SDCARD_COMMAND_SET_PAYLOAD_TYPE 44
+#define SDCARD_COMMAND_GET_DISK_SECTOR_COUNT 45 // set: data 0/1 = low/high dword of sector count
+#define SDCARD_COMMAND_REQUEST_DISK_READ_SECTOR 46
+#define SDCARD_COMMAND_RESPONSE_DISK_READ_READY 47
+#define SDCARD_COMMAND_RESPONSE_DISK_READ_RESULT 48
+#define SDCARD_COMMAND_REQUEST_DISK_WRITE_SECTOR 49
+#define SDCARD_COMMAND_RESPONSE_DISK_WRITE_READY 50
+#define SDCARD_COMMAND_RESPONSE_DISK_WRITE_RESULT 51
+
+#define SDCARD_COMMAND_SET_PAYLOAD_TYPE 52
 
 #define SDCARD_VOLUME_SPACE_DWORD_LOW 0
 #define SDCARD_VOLUME_SPACE_DWORD_HIGH 1
+
+#define SDCARD_DISK_SECTOR_DWORD_LOW 0
+#define SDCARD_DISK_SECTOR_DWORD_HIGH 1
 
 #define SDCARD_PAYLOAD_TYPE_NONE 0
 #define SDCARD_PAYLOAD_TYPE_FILE_NAME 1
@@ -134,6 +148,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SDCARD_PAYLOAD_TYPE_FILE_SD_BIOS 3
 #define SDCARD_PAYLOAD_TYPE_CWD 4
 #define SDCARD_PAYLOAD_TYPE_PATH 5
+#define SDCARD_PAYLOAD_TYPE_DISK_SECTOR 6
 
 #pragma pack(push, 1)
 typedef union
@@ -218,6 +233,13 @@ typedef struct
     uint32_t write_chunk_size;
     uint8_t file_write_ready;
     uint8_t file_write_result;
+
+    uint64_t disk_num_sectors;
+    uint32_t disk_sector_index;
+    uint8_t disk_read_ready;
+    uint8_t disk_read_result;
+    uint8_t disk_write_ready;
+    uint8_t disk_write_result;
 
     uint8_t payload_type;
 
@@ -331,6 +353,79 @@ void sdcard_volume_space()
     private_data.volume_free_bytes = (uint64_t)fre_clust * cluster_bytes;
     private_data.volume_space_result = SDCARD_FILE_RESULT_OK;
     private_data.volume_space_ready = 1;
+}
+
+static bool sdcard_disk_refresh_sector_count(void)
+{
+    LBA_t count = 0;
+
+    if (disk_ioctl(0, GET_SECTOR_COUNT, &count) != RES_OK || count == 0)
+    {
+        private_data.disk_num_sectors = 0;
+        return false;
+    }
+
+    private_data.disk_num_sectors = (uint64_t)count;
+    return true;
+}
+
+void sdcard_disk_read_sector()
+{
+    if (!sdcard_disk_refresh_sector_count())
+    {
+        private_data.disk_read_result = SDCARD_FILE_RESULT_ERROR;
+        private_data.disk_read_ready = 1;
+        return;
+    }
+
+    if ((uint64_t)private_data.disk_sector_index >= private_data.disk_num_sectors)
+    {
+        private_data.disk_read_result = SDCARD_FILE_RESULT_ERROR;
+        private_data.disk_read_ready = 1;
+        return;
+    }
+
+    if (disk_read(0, private_data.cached_chunk_buffer, (LBA_t)private_data.disk_sector_index, 1) != RES_OK)
+    {
+        private_data.disk_read_result = SDCARD_FILE_RESULT_ERROR;
+        private_data.disk_read_ready = 1;
+        return;
+    }
+
+    private_data.cached_chunk_index = 0xffffffff;
+    private_data.disk_read_result = SDCARD_FILE_RESULT_OK;
+    private_data.disk_read_ready = 1;
+}
+
+void sdcard_disk_write_sector()
+{
+    if (!sdcard_disk_refresh_sector_count())
+    {
+        private_data.disk_write_result = SDCARD_FILE_RESULT_ERROR;
+        private_data.disk_write_ready = 1;
+        return;
+    }
+
+    if ((uint64_t)private_data.disk_sector_index >= private_data.disk_num_sectors)
+    {
+        private_data.disk_write_result = SDCARD_FILE_RESULT_ERROR;
+        private_data.disk_write_ready = 1;
+        return;
+    }
+
+    disk_ioctl(0, CTRL_SYNC, NULL);
+
+    if (disk_write(0, private_data.cached_chunk_buffer, (LBA_t)private_data.disk_sector_index, 1) != RES_OK)
+    {
+        private_data.disk_write_result = SDCARD_FILE_RESULT_ERROR;
+        private_data.disk_write_ready = 1;
+        return;
+    }
+
+    disk_ioctl(0, CTRL_SYNC, NULL);
+    private_data.cached_chunk_index = 0xffffffff;
+    private_data.disk_write_result = SDCARD_FILE_RESULT_OK;
+    private_data.disk_write_ready = 1;
 }
 
 void sdcard_remount()
@@ -877,6 +972,18 @@ void sdcard_file_write_chunk()
     private_data.file_write_result = SDCARD_FILE_RESULT_OK;
 }
 
+void sdcard_disk_write_sector()
+{
+    private_data.disk_write_ready = 1;
+    private_data.disk_write_result = SDCARD_FILE_RESULT_OK;
+}
+
+void sdcard_disk_read_sector()
+{
+    private_data.disk_read_ready = 1;
+    private_data.disk_read_result = SDCARD_FILE_RESULT_OK;
+}
+
 uint8_t sdcard_file_close()
 {
     return SDCARD_FILE_RESULT_OK;
@@ -959,6 +1066,15 @@ bool sdcard_memread_handler(uint32_t addr, uint8_t *data, uint8_t window_id)
         return true;
     }
 
+    if (private_data.payload_type == SDCARD_PAYLOAD_TYPE_DISK_SECTOR)
+    {
+        if (offset < SDCARD_DISK_SECTOR_SIZE)
+        {
+            *data = private_data.cached_chunk_buffer[offset];
+            return true;
+        }
+    }
+
     if (private_data.payload_type == SDCARD_PAYLOAD_TYPE_CWD)
     {
         if (offset < SDCARD_PATH_MAX)
@@ -1004,6 +1120,14 @@ bool sdcard_memwrite_handler(uint32_t addr, uint8_t *data, uint8_t window_id)
     else if (private_data.payload_type == SDCARD_PAYLOAD_TYPE_FILE_SD_CHUNK)
     {
         if (offset < SDCARD_FILE_CHUNK_SIZE)
+        {
+            private_data.cached_chunk_buffer[offset] = *data;
+            return true;
+        }
+    }
+    else if (private_data.payload_type == SDCARD_PAYLOAD_TYPE_DISK_SECTOR)
+    {
+        if (offset < SDCARD_DISK_SECTOR_SIZE)
         {
             private_data.cached_chunk_buffer[offset] = *data;
             return true;
@@ -1058,6 +1182,16 @@ uint8_t sdcard_handler_control_peek(uint8_t cmd, uint8_t data)
             return private_data.file_write_ready;
         case SDCARD_COMMAND_RESPONSE_FILE_WRITE_RESULT:
             return private_data.file_write_result;
+
+        case SDCARD_COMMAND_RESPONSE_DISK_READ_READY:
+            return private_data.disk_read_ready;
+        case SDCARD_COMMAND_RESPONSE_DISK_READ_RESULT:
+            return private_data.disk_read_result;
+
+        case SDCARD_COMMAND_RESPONSE_DISK_WRITE_READY:
+            return private_data.disk_write_ready;
+        case SDCARD_COMMAND_RESPONSE_DISK_WRITE_RESULT:
+            return private_data.disk_write_result;
 
         case SDCARD_COMMAND_CLOSE_FILE:
             return sdcard_file_close();
@@ -1169,11 +1303,35 @@ uint8_t sdcard_handler_control_set(uint8_t cmd, uint8_t data)
             private_data.file_write_result = SDCARD_FILE_RESULT_IDLE;
             sdcard_queue_command(cmd, data);
             break;
+        case SDCARD_COMMAND_REQUEST_DISK_READ_SECTOR:
+            private_data.disk_sector_index = current_long_val;
+            private_data.disk_read_ready = 0;
+            private_data.disk_read_result = SDCARD_FILE_RESULT_IDLE;
+            sdcard_queue_command(cmd, data);
+            break;
+        case SDCARD_COMMAND_REQUEST_DISK_WRITE_SECTOR:
+            private_data.disk_sector_index = current_long_val;
+            private_data.disk_write_ready = 0;
+            private_data.disk_write_result = SDCARD_FILE_RESULT_IDLE;
+            sdcard_queue_command(cmd, data);
+            break;
         case SDCARD_COMMAND_GET_VOLUME_FREE:
             current_long_val = (uint32_t)((data == SDCARD_VOLUME_SPACE_DWORD_HIGH) ? (private_data.volume_free_bytes >> 32) : private_data.volume_free_bytes);
             break;
         case SDCARD_COMMAND_GET_VOLUME_TOTAL:
             current_long_val = (uint32_t)((data == SDCARD_VOLUME_SPACE_DWORD_HIGH) ? (private_data.volume_total_bytes >> 32) : private_data.volume_total_bytes);
+            break;
+        case SDCARD_COMMAND_GET_DISK_SECTOR_COUNT:
+            if (!sdcard_disk_refresh_sector_count())
+            {
+                current_long_val = 0;
+            }
+            else
+            {
+                current_long_val = (uint32_t)((data == SDCARD_DISK_SECTOR_DWORD_HIGH)
+                    ? (private_data.disk_num_sectors >> 32)
+                    : private_data.disk_num_sectors);
+            }
             break;
 	}
 	return 0;
@@ -1230,6 +1388,12 @@ void sdcard_handler_poll()
                     break;
                 case SDCARD_COMMAND_REQUEST_WRITE_FILE_CHUNK:
                     sdcard_file_write_chunk();
+                    break;
+                case SDCARD_COMMAND_REQUEST_DISK_READ_SECTOR:
+                    sdcard_disk_read_sector();
+                    break;
+                case SDCARD_COMMAND_REQUEST_DISK_WRITE_SECTOR:
+                    sdcard_disk_write_sector();
                     break;
                 default:
                     break;
