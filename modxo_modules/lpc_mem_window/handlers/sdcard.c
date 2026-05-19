@@ -88,7 +88,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define SDCARD_COMMAND_CLOSE_FILE 15
 
-#define SDCARD_COMMAND_FILE_READ_CHUNK 16 // set long value for chunk index, sets long to length read
+#define SDCARD_COMMAND_FILE_READ_CHUNK 16 // peek: current_long_val = chunk index; returns bytes read in long
 
 #define SDCARD_COMMAND_CWD_ROOT 17
 #define SDCARD_COMMAND_CWD_PARENT 18
@@ -114,12 +114,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SDCARD_COMMAND_RESPONSE_PATH_DELETE_RESULT 35
 
 #define SDCARD_COMMAND_REQUEST_CREATE_DIR_FROM_PATH 36
-#define SDCARD_COMMAND_REQUEST_CREATE_FILE_FROM_PATH 37
+#define SDCARD_COMMAND_REQUEST_CREATE_FILE_FROM_PATH 37 // empty file; size grows via write chunks
 #define SDCARD_COMMAND_RESPONSE_PATH_CREATE_READY 38
 #define SDCARD_COMMAND_RESPONSE_PATH_CREATE_RESULT 39
 
-#define SDCARD_COMMAND_SET_FILE_WRITE_CHUNK_SIZE 40
-#define SDCARD_COMMAND_REQUEST_WRITE_FILE_CHUNK 41 // set long value for chunk index before request
+#define SDCARD_COMMAND_SET_FILE_WRITE_CHUNK_SIZE 40 // current_long_val = byte count
+#define SDCARD_COMMAND_REQUEST_WRITE_FILE_CHUNK 41 // current_long_val = chunk index
 #define SDCARD_COMMAND_RESPONSE_FILE_WRITE_READY 42
 #define SDCARD_COMMAND_RESPONSE_FILE_WRITE_RESULT 43
 
@@ -210,7 +210,6 @@ typedef struct
 
     uint8_t path_create_ready;
     uint8_t path_create_result;
-    uint32_t path_create_file_size;
 
     uint8_t path_delete_ready;
     uint8_t path_delete_result;
@@ -602,30 +601,6 @@ void sdcard_delete_from_path()
     private_data.path_delete_ready = 1;
 }
 
-static FRESULT sdcard_set_open_file_size(uint32_t size)
-{
-    FRESULT fr;
-
-    if (size == 0)
-    {
-        return FR_OK;
-    }
-
-    fr = f_lseek(&private_data.open_file, (FSIZE_t)size);
-    if (fr != FR_OK)
-    {
-        return fr;
-    }
-
-    fr = f_lseek(&private_data.open_file, 0);
-    if (fr != FR_OK)
-    {
-        return fr;
-    }
-
-    return f_sync(&private_data.open_file);
-}
-
 void sdcard_create_file_from_path()
 {
     if (!sdcard_ensure_mounted())
@@ -638,24 +613,22 @@ void sdcard_create_file_from_path()
     f_close(&private_data.open_file);
     private_data.cached_chunk_index = 0xffffffff;
 
-    FRESULT fr = f_open(&private_data.open_file, private_data.path, FA_WRITE | FA_CREATE_ALWAYS);
+    FRESULT fr = f_open(&private_data.open_file, private_data.path, FA_READ | FA_WRITE | FA_CREATE_ALWAYS);
     if (fr != FR_OK)
     {
-        private_data.path_create_result = SDCARD_FILE_RESULT_ERROR;
-        private_data.path_create_ready = 1;
-        return;
-    }
-
-    fr = sdcard_set_open_file_size(private_data.path_create_file_size);
-    if (fr != FR_OK)
-    {
-        f_close(&private_data.open_file);
         private_data.path_create_result = SDCARD_FILE_RESULT_ERROR;
         private_data.path_create_ready = 1;
         return;
     }
 
     sdcard_file_info_stat(private_data.path);
+    if (private_data.file_info_result != SDCARD_FILE_RESULT_OK)
+    {
+        private_data.file_info_size = 0;
+        private_data.file_info_ready = 1;
+        private_data.file_info_result = SDCARD_FILE_RESULT_OK;
+    }
+
     private_data.path_create_result = SDCARD_FILE_RESULT_OK;
     private_data.path_create_ready = 1;
 }
@@ -778,21 +751,9 @@ void sdcard_file_write_chunk()
 
     uint32_t chunk_index = private_data.write_chunk_index;
     uint32_t length = private_data.write_chunk_size;
-
-    uint32_t file_size = private_data.file_info_size;
-    uint32_t max_chunk_index = (file_size + SDCARD_FILE_CHUNK_SIZE - 1u) / SDCARD_FILE_CHUNK_SIZE;
-    if (chunk_index >= max_chunk_index)
-    {
-        private_data.file_write_result = SDCARD_FILE_RESULT_ERROR;
-        private_data.file_write_ready = 1;
-        return;
-    }
-
     uint32_t file_offset = chunk_index * (uint32_t)SDCARD_FILE_CHUNK_SIZE;
-    uint32_t remaining = file_size - file_offset;
-    uint32_t max_length = (remaining > SDCARD_FILE_CHUNK_SIZE) ? SDCARD_FILE_CHUNK_SIZE : remaining;
 
-    if (length == 0 || length > max_length)
+    if (length == 0 || length > SDCARD_FILE_CHUNK_SIZE)
     {
         private_data.file_write_result = SDCARD_FILE_RESULT_ERROR;
         private_data.file_write_ready = 1;
@@ -825,6 +786,13 @@ void sdcard_file_write_chunk()
     }
 
     sdcard_invalidate_read_cache_for_range(file_offset, length);
+
+    uint32_t new_size = file_offset + length;
+    if (new_size > private_data.file_info_size)
+    {
+        private_data.file_info_size = new_size;
+    }
+
     private_data.file_write_result = SDCARD_FILE_RESULT_OK;
     private_data.file_write_ready = 1;
 }
@@ -1187,7 +1155,6 @@ uint8_t sdcard_handler_control_set(uint8_t cmd, uint8_t data)
             sdcard_queue_command(cmd, data);
             break;
         case SDCARD_COMMAND_REQUEST_CREATE_FILE_FROM_PATH:
-            private_data.path_create_file_size = current_long_val;
             private_data.file_info_ready = 0;
             private_data.path_create_ready = 0;
             private_data.path_create_result = SDCARD_FILE_RESULT_IDLE;
