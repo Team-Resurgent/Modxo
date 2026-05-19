@@ -236,6 +236,7 @@ typedef struct
 
     uint64_t disk_num_sectors;
     uint32_t disk_sector_index;
+    uint8_t disk_sector_buffer[SDCARD_DISK_SECTOR_SIZE];
     uint8_t disk_read_ready;
     uint8_t disk_read_result;
     uint8_t disk_write_ready;
@@ -385,14 +386,13 @@ void sdcard_disk_read_sector()
         return;
     }
 
-    if (disk_read(0, private_data.cached_chunk_buffer, (LBA_t)private_data.disk_sector_index, 1) != RES_OK)
+    if (disk_read(0, private_data.disk_sector_buffer, (LBA_t)private_data.disk_sector_index, 1) != RES_OK)
     {
         private_data.disk_read_result = SDCARD_FILE_RESULT_ERROR;
         private_data.disk_read_ready = 1;
         return;
     }
 
-    private_data.cached_chunk_index = 0xffffffff;
     private_data.disk_read_result = SDCARD_FILE_RESULT_OK;
     private_data.disk_read_ready = 1;
 }
@@ -415,7 +415,7 @@ void sdcard_disk_write_sector()
 
     disk_ioctl(0, CTRL_SYNC, NULL);
 
-    if (disk_write(0, private_data.cached_chunk_buffer, (LBA_t)private_data.disk_sector_index, 1) != RES_OK)
+    if (disk_write(0, private_data.disk_sector_buffer, (LBA_t)private_data.disk_sector_index, 1) != RES_OK)
     {
         private_data.disk_write_result = SDCARD_FILE_RESULT_ERROR;
         private_data.disk_write_ready = 1;
@@ -423,7 +423,6 @@ void sdcard_disk_write_sector()
     }
 
     disk_ioctl(0, CTRL_SYNC, NULL);
-    private_data.cached_chunk_index = 0xffffffff;
     private_data.disk_write_result = SDCARD_FILE_RESULT_OK;
     private_data.disk_write_ready = 1;
 }
@@ -1070,7 +1069,7 @@ bool sdcard_memread_handler(uint32_t addr, uint8_t *data, uint8_t window_id)
     {
         if (offset < SDCARD_DISK_SECTOR_SIZE)
         {
-            *data = private_data.cached_chunk_buffer[offset];
+            *data = private_data.disk_sector_buffer[offset];
             return true;
         }
     }
@@ -1129,7 +1128,7 @@ bool sdcard_memwrite_handler(uint32_t addr, uint8_t *data, uint8_t window_id)
     {
         if (offset < SDCARD_DISK_SECTOR_SIZE)
         {
-            private_data.cached_chunk_buffer[offset] = *data;
+            private_data.disk_sector_buffer[offset] = *data;
             return true;
         }
     }
