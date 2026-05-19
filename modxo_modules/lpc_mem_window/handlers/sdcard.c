@@ -949,8 +949,7 @@ void sdcard_volume_space()
 
 void sdcard_disk_refresh_sector_count()
 {
-    private_data.disk_refresh_sector_count_ready = 1;
-    private_data.disk_refresh_sector_count_result = SDCARD_FILE_RESULT_OK;
+    private_data.disk_num_sectors = 0;
 }
 
 void sdcard_create_dir_from_path()
