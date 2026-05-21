@@ -1172,6 +1172,11 @@ uint8_t sdcard_handler_control_peek(uint8_t cmd, uint8_t data)
         case SDCARD_COMMAND_RESPONSE_VOLUME_SPACE_RESULT:
             return private_data.volume_space_result;
 
+        case SDCARD_COMMAND_RESPONSE_PATH_DELETE_READY:
+            return private_data.path_delete_ready;
+        case SDCARD_COMMAND_RESPONSE_PATH_DELETE_RESULT:
+            return private_data.path_delete_result;
+
         case SDCARD_COMMAND_RESPONSE_PATH_CREATE_READY:
             return private_data.path_create_ready;
         case SDCARD_COMMAND_RESPONSE_PATH_CREATE_RESULT:
