@@ -947,6 +947,12 @@ void sdcard_volume_space()
     private_data.volume_space_result = SDCARD_FILE_RESULT_OK;
 }
 
+bool sdcard_disk_refresh_sector_count()
+{
+    private_data.disk_num_sectors = 0;
+    return true;
+}
+
 void sdcard_create_dir_from_path()
 {
     private_data.path_create_ready = 1;
@@ -1017,12 +1023,6 @@ bool sdcard_memread_handler(uint32_t addr, uint8_t *data, uint8_t window_id)
 
     if (private_data.payload_type == SDCARD_PAYLOAD_TYPE_FILE_SD_BIOS)
     {
-        if (private_data.open_file.obj.fs == NULL || private_data.file_info_size == 0)
-        {
-            *data = 0;
-            return true;
-        }
-
         uint32_t mirror = offset & (private_data.file_info_size - 1u);
         uint32_t chunk = mirror >> SDCARD_FILE_CHUNK_SIZE_SHIFT;
         if (private_data.cached_chunk_index != 0xffffffff && private_data.cached_chunk_index == chunk)
@@ -1052,43 +1052,31 @@ bool sdcard_memread_handler(uint32_t addr, uint8_t *data, uint8_t window_id)
 
     if (private_data.payload_type == SDCARD_PAYLOAD_TYPE_FILE_SD_CHUNK)
     {
-        /* Offset is byte index within the chunk loaded by FILE_READ_CHUNK (same as write staging). */
         uint32_t chunk_offset = offset & (SDCARD_FILE_CHUNK_SIZE - 1);
         if (private_data.cached_chunk_index == 0xffffffff)
         {
             *data = 0;
             return true;
         }
-        *data = chunk_offset < private_data.cached_chunk_length
-            ? private_data.cached_chunk_buffer[chunk_offset]
-            : 0;
+        *data = chunk_offset < private_data.cached_chunk_length ? private_data.cached_chunk_buffer[chunk_offset] : 0;
         return true;
     }
 
     if (private_data.payload_type == SDCARD_PAYLOAD_TYPE_DISK_SECTOR)
     {
-        if (offset < SDCARD_DISK_SECTOR_SIZE)
-        {
-            *data = private_data.disk_sector_buffer[offset];
-            return true;
-        }
+        *data =offset < SDCARD_DISK_SECTOR_SIZE ? private_data.disk_sector_buffer[offset] : 0;
+        return true;
     }
 
     if (private_data.payload_type == SDCARD_PAYLOAD_TYPE_CWD)
     {
-        if (offset < SDCARD_PATH_MAX)
-        {
-            *data = private_data.cwd[offset];
-            return true;
-        }
+        *data = offset < SDCARD_PATH_MAX ? private_data.cwd[offset] : 0;
+        return true;
     }
     else if (private_data.payload_type == SDCARD_PAYLOAD_TYPE_PATH)
     {
-        if (offset < SDCARD_PATH_MAX)
-        {
-            *data = private_data.path[offset];
-            return true;
-        }
+        *data = offset < SDCARD_PATH_MAX ? private_data.path[offset] : 0;
+        return true;
     }
 
     *data = 0;

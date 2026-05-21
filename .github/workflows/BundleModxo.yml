@@ -16,6 +16,7 @@ jobs:
           - official_pico
           - official_pico_clone
           - official_pico2
+          - r3mux
           - yd_rp2040
           - yd_rp2040_clone
           - rp2040_zero_tiny
@@ -34,6 +35,10 @@ jobs:
             pretty_name: Official Pico 2
             output_name: modxo_official_pico2
             pico_board: pico2
+          - pinout: r3mux
+            pretty_name: R3mux
+            output_name: modxo_r3mux
+            pico_board: pico
           - pinout: yd_rp2040
             pretty_name: YD-RP2040
             output_name: modxo_yd_rp2040
