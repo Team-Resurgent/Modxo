@@ -21,7 +21,6 @@ jobs:
           - yd_rp2040_clone
           - rp2040_zero_tiny
           - xiao_rp2040
-          - ultra
         include:
           - pinout: official_pico
             pretty_name: Official Pico
@@ -55,11 +54,6 @@ jobs:
             pretty_name: XIAO-RP2040
             output_name: modxo_xiao_rp2040
             pico_board: pico
-          - pinout: ultra
-            pretty_name: Ultra
-            output_name: modxo_ultra
-            pico_board: pico
-
 
     steps:
       - uses: actions/checkout@v4
