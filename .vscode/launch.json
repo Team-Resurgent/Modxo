@@ -96,18 +96,25 @@
             "cwd": "${workspaceFolder}"
         },
         {
+            "name": "Build (R3mux)",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "cmake -DMODXO_PINOUT=r3mux ./build; cmake --build ./build; pause; exit",
+            "cwd": "${workspaceFolder}",
+        },
+        {
+            "name": "Build (Weact-RP2350b)",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "cmake -DMODXO_PINOUT=weact_rp2350b ./build; cmake --build ./build; pause; exit",
+            "cwd": "${workspaceFolder}",
+        },
+        {
             "name": "Build (XIAO-RP2040)",
             "type": "node-terminal",
             "request": "launch",
             "command": "cmake -DMODXO_PINOUT=xiao_rp2040 ./build; cmake --build ./build; pause; exit",
             "cwd": "${workspaceFolder}"
-        },
-        {
-            "name": "Build (Ultra)",
-            "type": "node-terminal",
-            "request": "launch",
-            "command": "cmake -DMODXO_PINOUT=ultra ./build; cmake --build ./build; pause; exit",
-            "cwd": "${workspaceFolder}",
         },
     ]
 }

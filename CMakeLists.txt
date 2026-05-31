@@ -25,6 +25,8 @@ endif()
 # ====================================================================================
 set(PICO_BOARD pico2 CACHE STRING "Board type")
 
+set(PICO_SDK_PATH "${CMAKE_CURRENT_SOURCE_DIR}/external/pico-sdk")
+
 if(NOT DEFINED MODXO_PINOUT)
     if(PICO_BOARD EQUAL pico2)
         set(MODXO_PINOUT "official_pico2")
