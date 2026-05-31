@@ -12,10 +12,4 @@ RUN apk update && \
             g++-arm-none-eabi \
             ninja
 
-# Raspberry Pi Pico SDK
-ARG SDK_PATH=/root/.pico-sdk/sdk/1.5.1
-RUN git clone --depth 1 --branch 1.5.1 https://github.com/raspberrypi/pico-sdk $SDK_PATH && \
-    cd $SDK_PATH && \
-    git submodule update --init
-
-ENV PICO_SDK_PATH=$SDK_PATH
+ENV PICO_SDK_PATH=/home/dev/external/pico-sdk

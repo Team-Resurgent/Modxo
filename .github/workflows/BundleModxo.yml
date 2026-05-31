@@ -57,12 +57,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Install Dependencies
         run: sudo apt install cmake gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
-
-      - name: Get Pico SDK
-        run: git clone --branch 2.2.0 --recurse-submodules https://github.com/raspberrypi/pico-sdk.git
 
       - name: Create Build Folder
         run: |
@@ -74,7 +73,7 @@ jobs:
         id: cmake
         with:
           options: |
-            PICO_SDK_PATH=${{ github.workspace }}/pico-sdk
+            PICO_SDK_PATH=${{ github.workspace }}/external/pico-sdk
             MODXO_PINOUT=${{ matrix.pinout }}
             PICO_BOARD=${{ matrix.pico_board }}
 

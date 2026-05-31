@@ -135,6 +135,14 @@ However if you just want to install PrometheOS you can disregard the instruction
 
 ## Firmware Build Instructions
 
+Clone the repository with submodules:
+
+```bash
+git clone --recurse-submodules https://github.com/Team-Resurgent/Modxo.git
+# or, if already cloned:
+git submodule update --init --recursive
+```
+
 ### Visual Studio Code (Windows/Linux/Mac)
 
 1.- Download and Install [Visual Studio Code](https://code.visualstudio.com/download)
