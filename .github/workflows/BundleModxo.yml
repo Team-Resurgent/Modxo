@@ -39,6 +39,10 @@ jobs:
             pretty_name: R3mux
             output_name: modxo_r3mux
             pico_board: pico
+          - pinout: r3mux_clone
+            pretty_name: R3mux Clone
+            output_name: modxo_r3mux_clone
+            pico_board: pico
           - pinout: yd_rp2040
             pretty_name: YD-RP2040
             output_name: modxo_yd_rp2040
