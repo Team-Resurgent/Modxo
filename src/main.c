@@ -49,7 +49,7 @@ nvm_register_t* nvm_registers[] = {
     &ws2812_nvm,
 };
 
-uint8_t nvm_registers_count = sizeof(nvm_registers) / sizeof(nvm_registers[0]);
+uint8_t nvm_total_registers = sizeof(nvm_registers) / sizeof(nvm_register_t);
 
 
 bool reset_pin = false;

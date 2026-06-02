@@ -34,10 +34,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <modxo.h>
 #include <modxo/modxo_ports.h>
-#include "modxo/modxo_debug.h"
-#include "modxo/lpc_interface.h"
-#include "modxo/lpc_log.h"
+#include <modxo/modxo_debug.h>
+#include <modxo/lpc_interface.h>
+#include <modxo/lpc_log.h>
 #include <modxo/data_store.h>
+#include <modxo/config_nvm.h>
 #include "hardware/watchdog.h"
 #include "hardware/clocks.h"
 
@@ -69,6 +70,9 @@ static void modxo_ports_init(void)
 void modxo_poll_core1()
 {
     RUN_MODXO_HANDLERS(core1_poll);
+#ifdef POLL_CONFIG_IN_CORE1
+    config_poll();
+#endif
 }
 
 void modxo_poll_core0()
@@ -77,6 +81,9 @@ void modxo_poll_core0()
     lpc_interface_poll();
 #endif
     RUN_MODXO_HANDLERS(core0_poll);
+#ifndef POLL_CONFIG_IN_CORE1
+    config_poll();
+#endif
 }
 
 void modxo_lpc_reset_off()
@@ -118,6 +125,7 @@ void modxo_init(void)
 {
     RUN_MODXO_HANDLERS(init);
     modxo_ports_init();
+    config_retrieve_parameters();
 }
 
 void modxo_register_handler(MODXO_TASK* handler)

@@ -16,7 +16,7 @@ typedef struct
 }nvm_register_t;
 
 extern nvm_register_t* nvm_registers[];
-extern uint8_t nvm_registers_count;
+extern uint8_t nvm_total_registers;
 
 void config_save_parameters(void);
 void config_retrieve_parameters(void);
