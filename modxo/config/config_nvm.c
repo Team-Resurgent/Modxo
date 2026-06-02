@@ -161,7 +161,7 @@ static int look_next_empty_page(int page_no){
 }
 
 static int look_last_config(){
-    int page = -1;
+    int page;
     for(page = NVM_TOTAL_PAGES-1; page >= 0; page--){
         if(is_page_valid(page)){
             break;
@@ -187,7 +187,7 @@ static void prepare_nvm_page(NVM_PAGE* page)
     uint8_t *dst = page->data;
     memset(dst, 0xFF, sizeof(NVM_PAGE));
 
-    for(int i = 1; i < nvm_registers_count; i++){
+    for(int i = 1; i < nvm_total_registers; i++){
         memcpy(dst, nvm_registers[i]->data, nvm_registers[i]->size);
         dst += nvm_registers[i]->size;
     }
@@ -198,7 +198,7 @@ static void prepare_nvm_page(NVM_PAGE* page)
 
 static void load_nvm_defaults()
 {
-    for(int i = 1; i < nvm_registers_count; i++){
+    for(int i = 1; i < nvm_total_registers; i++){
         memcpy(nvm_registers[i]->data, nvm_registers[i]->default_value, nvm_registers[i]->size);
     }
 }
@@ -207,7 +207,7 @@ static void load_nvm_values(int page_no){
     NVM_PAGE* page = &nvm_pages[page_no];
     uint8_t *src = page->data;
     
-    for(int i = 1; i < nvm_registers_count; i++){
+    for(int i = 1; i < nvm_total_registers; i++){
         memcpy(nvm_registers[i]->data, src, nvm_registers[i]->size);
         src += nvm_registers[i]->size;
     }
