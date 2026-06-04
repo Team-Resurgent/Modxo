@@ -118,12 +118,12 @@ typedef enum {
 static NVM_CONFIG nvm_config;
 
 static const NVM_CONFIG default_nvm_parameters = {
-            .rgb_status_pf = RGB_STATUS_PIXEL_FORMAT,
-            .rgb_strip_pf[0]  = STRIP1_PIXEL_FORMAT,
-            .rgb_strip_pf[1]  = STRIP2_PIXEL_FORMAT,
-            .rgb_strip_pf[2]  = STRIP3_PIXEL_FORMAT,
-            .rgb_strip_pf[3]  = STRIP4_PIXEL_FORMAT,
-        };
+    .rgb_status_pf = RGB_STATUS_PIXEL_FORMAT,
+    .rgb_strip_pf[0]  = STRIP1_PIXEL_FORMAT,
+    .rgb_strip_pf[1]  = STRIP2_PIXEL_FORMAT,
+    .rgb_strip_pf[2]  = STRIP3_PIXEL_FORMAT,
+    .rgb_strip_pf[3]  = STRIP4_PIXEL_FORMAT,
+};
 
 uint8_t selected_strip;
 bool updating_strips;
@@ -527,40 +527,40 @@ void config_set_value(uint8_t value)
         {
             save = true;
             update_pixels = true;
+            nvm_config.rgb_status_pf = value;
         }
-        nvm_config.rgb_status_pf = value;
         break;
     case NVM_REGISTER_RGB_STRIP1_PF:
         if (nvm_config.rgb_strip_pf[0] != value)
         {
             save = true;
             update_pixels = true;
+            nvm_config.rgb_strip_pf[0] = value;
         }
-        nvm_config.rgb_strip_pf[0] = value;
         break;
     case NVM_REGISTER_RGB_STRIP2_PF:
         if (nvm_config.rgb_strip_pf[1] != value)
         {
             save = true;
             update_pixels = true;
+            nvm_config.rgb_strip_pf[1] = value;
         }
-        nvm_config.rgb_strip_pf[1] = value;
         break;
     case NVM_REGISTER_RGB_STRIP3_PF:
         if (nvm_config.rgb_strip_pf[2] != value)
         {
             save = true;
             update_pixels = true;
+            nvm_config.rgb_strip_pf[2] = value;
         }
-        nvm_config.rgb_strip_pf[2] = value;
         break;
     case NVM_REGISTER_RGB_STRIP4_PF:
         if (nvm_config.rgb_strip_pf[3] != value)
         {
             save = true;
             update_pixels = true;
+            nvm_config.rgb_strip_pf[3] = value;
         }
-        nvm_config.rgb_strip_pf[3] = value;
         break;
     default:
         break;
