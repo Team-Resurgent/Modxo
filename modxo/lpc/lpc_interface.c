@@ -340,6 +340,7 @@ bool lpc_interface_add_io_handler(uint16_t port_base, uint16_t mask, SUPERIO_POR
 
 void lpc_interface_poll()
 {
+#ifdef LPC_LOGGING
     log_entry entry;
     while (lpclog_dequeue(&entry))
     {
@@ -352,6 +353,7 @@ void lpc_interface_poll()
             printf("\nLPC_LOG: %s [0x%08X] data:[%02X]", LPC_OP_STRINGS[entry.cyc_type], entry.address, entry.data);
         }
     }
+#endif
 }
 
 MODXO_TASK lpc_interface_hdlr = {
