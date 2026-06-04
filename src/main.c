@@ -49,7 +49,7 @@ nvm_register_t* nvm_registers[] = {
     &ws2812_nvm,
 };
 
-uint8_t nvm_registers_count = sizeof(nvm_registers) / sizeof(nvm_registers[0]);
+uint8_t nvm_total_registers = sizeof(nvm_registers) / sizeof(nvm_registers[0]);
 
 
 bool reset_pin = false;
@@ -166,6 +166,7 @@ void register_handlers()
     modxo_register_handler(&data_store_handler);
     modxo_register_handler(&ws2812_hdlr);
     modxo_register_handler(&legacy_display_hdlr);
+    modxo_register_handler(&config_nvm_hdlr);
 }
 
 int main(void)

@@ -117,7 +117,7 @@ static bool is_page_empty(uint8_t page_no){
         flash_ptr++;
     }
 
-    return is_empty;    
+    return is_empty;
 }
 
 static bool is_sector_empty(uint8_t sectorno){
@@ -129,6 +129,7 @@ static bool is_sector_empty(uint8_t sectorno){
             is_empty = false;
             break;
         }
+        flash_ptr++;
     }
 
     return is_empty;
@@ -161,10 +162,14 @@ static int look_next_empty_page(int page_no){
 }
 
 static int look_last_config(){
-    int page = -1;
+    int page;
     for(page = NVM_TOTAL_PAGES-1; page >= 0; page--){
         if(is_page_valid(page)){
             break;
+        }
+        // no valid pages, default to -1
+        else if(page == 0) {
+            page = -1;
         }
     }
 
@@ -187,7 +192,7 @@ static void prepare_nvm_page(NVM_PAGE* page)
     uint8_t *dst = page->data;
     memset(dst, 0xFF, sizeof(NVM_PAGE));
 
-    for(int i = 1; i < nvm_registers_count; i++){
+    for(int i = 0; i < nvm_total_registers; i++){
         memcpy(dst, nvm_registers[i]->data, nvm_registers[i]->size);
         dst += nvm_registers[i]->size;
     }
@@ -198,7 +203,7 @@ static void prepare_nvm_page(NVM_PAGE* page)
 
 static void load_nvm_defaults()
 {
-    for(int i = 1; i < nvm_registers_count; i++){
+    for(int i = 0; i < nvm_total_registers; i++){
         memcpy(nvm_registers[i]->data, nvm_registers[i]->default_value, nvm_registers[i]->size);
     }
 }
@@ -207,7 +212,7 @@ static void load_nvm_values(int page_no){
     NVM_PAGE* page = &nvm_pages[page_no];
     uint8_t *src = page->data;
     
-    for(int i = 1; i < nvm_registers_count; i++){
+    for(int i = 0; i < nvm_total_registers; i++){
         memcpy(nvm_registers[i]->data, src, nvm_registers[i]->size);
         src += nvm_registers[i]->size;
     }
@@ -220,7 +225,7 @@ static void nvm_save_page(int page_no){
     if(page_no == -1){
         page_no = 0;
         
-        prepare_nvm_page(nvm_pages);
+        prepare_nvm_page(&page);
 
         ints = save_and_disable_interrupts();
         if(!is_sector_empty(0)){
@@ -234,12 +239,11 @@ static void nvm_save_page(int page_no){
         program_nvm_page(page_no,&page);
         restore_interrupts (ints);
     } else {
-        prepare_nvm_page(&nvm_pages[page_no]);
+        prepare_nvm_page(&page);
         ints = save_and_disable_interrupts();
         program_nvm_page(page_no, &page);
         restore_interrupts (ints);
     }
-
 }
 
 void config_save_parameters(){
@@ -265,11 +269,10 @@ void config_retrieve_parameters(){
     int page_no = look_last_config();
     if(page_no == -1)
     {
-        
         if(is_sector_empty(0)){
-           page_no = 0; 
+           page_no = 0;
         }
-        
+
         load_nvm_defaults();
         nvm_save_page(page_no);
     }
@@ -279,3 +282,15 @@ void config_retrieve_parameters(){
     }
 }
 
+void config_nvm_init() {
+    config_retrieve_parameters();
+}
+
+MODXO_TASK config_nvm_hdlr = {
+    .init = config_nvm_init,
+#ifdef POLL_CONFIG_IN_CORE1
+    .core1_poll = config_poll,
+#else
+    .core0_poll = config_poll,
+#endif
+};

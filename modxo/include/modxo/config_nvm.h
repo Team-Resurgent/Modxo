@@ -16,7 +16,9 @@ typedef struct
 }nvm_register_t;
 
 extern nvm_register_t* nvm_registers[];
-extern uint8_t nvm_registers_count;
+extern uint8_t nvm_total_registers;
+
+extern MODXO_TASK config_nvm_hdlr;
 
 void config_save_parameters(void);
 void config_retrieve_parameters(void);
@@ -29,6 +31,3 @@ NVM_REGISTER_SEL config_get_reg_sel(void);
 
 void config_set_value(uint8_t value);
 uint8_t config_get_value(void);
-
-
-void config_poll(void);
