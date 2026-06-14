@@ -6,8 +6,6 @@ target_include_directories(${LIB_NAME}  PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 target_include_directories(${LIB_NAME}  PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 target_link_libraries(${LIB_NAME}  PUBLIC modxo pico_rand no-OS-FatFS-SD-SDIO-SPI-RPi-Pico hardware_flash )
 
-add_compile_definitions(PICO_CLOCK_ADJUST_PERI_CLOCK_WITH_SYS_CLOCK=1)
-
 # Board file definitions for PSRAM
 if(DEFINED PSRAM_CS1 AND (PICO_PLATFORM MATCHES "rp2350*"))
     message(STATUS "RP2350 detected, enabling PSRAM support")
