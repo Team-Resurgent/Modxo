@@ -11,6 +11,7 @@ CMD/D0 and contiguous D1..D3/CLK derived in sd_sdio_ctor.
 
 #include "hw_config.h"
 #include "modxo_pinout.h"
+#include "modxo.h"
 
 #if SD_CARD_USE_SDIO
 
@@ -19,7 +20,7 @@ static sd_sdio_if_t sdio_if = {
     .D0_gpio = SD_CARD_SDIO_D0,
     .SDIO_PIO = SD_CARD_SDIO_PIO,
     .DMA_IRQ_num = SD_CARD_SDIO_DMA_IRQ,
-    .baud_rate = 266 * 1000 * 1000 / 12,
+    .baud_rate = SYS_FREQ_IN_KHZ * 1000 / 8,
 };
 
 static sd_card_t sd_card = {
@@ -34,7 +35,7 @@ static spi_t spi = {
     .sck_gpio = SD_CARD_SPI_CLK,
     .mosi_gpio = SD_CARD_SPI_MOSI,
     .miso_gpio = SD_CARD_SPI_MISO,
-    .baud_rate = 266 * 1000 * 1000 / 2,
+    .baud_rate = SYS_FREQ_IN_KHZ * 1000 / 8,
 };
 
 static sd_spi_if_t spi_if = {
