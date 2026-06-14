@@ -126,6 +126,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SDCARD_COMMAND_RESPONSE_FILE_WRITE_READY 42
 #define SDCARD_COMMAND_RESPONSE_FILE_WRITE_RESULT 43
 
+#define SDCARD_COMMAND_REQUEST_RENAME_FROM_PATH 44 // path = source, path_dst = destination
 #define SDCARD_COMMAND_GET_DISK_SECTOR_COUNT 45 // set: data 0/1 = low/high dword of sector count
 #define SDCARD_COMMAND_REQUEST_DISK_READ_SECTOR 46
 #define SDCARD_COMMAND_RESPONSE_DISK_READ_READY 47
@@ -135,6 +136,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SDCARD_COMMAND_RESPONSE_DISK_WRITE_RESULT 51
 
 #define SDCARD_COMMAND_SET_PAYLOAD_TYPE 52
+#define SDCARD_COMMAND_RESPONSE_PATH_RENAME_READY 53
+#define SDCARD_COMMAND_RESPONSE_PATH_RENAME_RESULT 54
 
 #define SDCARD_VOLUME_SPACE_DWORD_LOW 0
 #define SDCARD_VOLUME_SPACE_DWORD_HIGH 1
@@ -149,6 +152,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SDCARD_PAYLOAD_TYPE_CWD 4
 #define SDCARD_PAYLOAD_TYPE_PATH 5
 #define SDCARD_PAYLOAD_TYPE_DISK_SECTOR 6
+#define SDCARD_PAYLOAD_TYPE_PATH_DST 7
 
 #pragma pack(push, 1)
 typedef union
@@ -207,6 +211,7 @@ typedef struct
 
     char cwd[SDCARD_PATH_MAX];
     char path[SDCARD_PATH_MAX];
+    char path_dst[SDCARD_PATH_MAX];
 
     uint8_t file_info_index;
     uint8_t file_info_ready;
@@ -228,6 +233,9 @@ typedef struct
 
     uint8_t path_delete_ready;
     uint8_t path_delete_result;
+
+    uint8_t path_rename_ready;
+    uint8_t path_rename_result;
 
     uint32_t write_chunk_index;
     uint32_t write_chunk_size;
@@ -695,6 +703,23 @@ void sdcard_delete_from_path()
     private_data.path_delete_ready = 1;
 }
 
+void sdcard_rename_from_path()
+{
+    if (!sdcard_ensure_mounted())
+    {
+        private_data.path_rename_result = SDCARD_FILE_RESULT_ERROR;
+        private_data.path_rename_ready = 1;
+        return;
+    }
+
+    f_close(&private_data.open_file);
+    private_data.cached_chunk_index = 0xffffffff;
+
+    FRESULT fr = f_rename(private_data.path, private_data.path_dst);
+    private_data.path_rename_result = (fr == FR_OK) ? SDCARD_FILE_RESULT_OK : SDCARD_FILE_RESULT_ERROR;
+    private_data.path_rename_ready = 1;
+}
+
 void sdcard_create_file_from_path()
 {
     if (!sdcard_ensure_mounted())
@@ -961,8 +986,14 @@ void sdcard_create_dir_from_path()
 
 void sdcard_delete_from_path()
 {
-    private_data.path_create_ready = 1;
-    private_data.path_create_result = SDCARD_FILE_RESULT_OK;
+    private_data.path_delete_ready = 1;
+    private_data.path_delete_result = SDCARD_FILE_RESULT_OK;
+}
+
+void sdcard_rename_from_path()
+{
+    private_data.path_rename_ready = 1;
+    private_data.path_rename_result = SDCARD_FILE_RESULT_OK;
 }
 
 void sdcard_create_file_from_path()
@@ -1078,6 +1109,11 @@ bool sdcard_memread_handler(uint32_t addr, uint8_t *data, uint8_t window_id)
         *data = offset < SDCARD_PATH_MAX ? private_data.path[offset] : 0;
         return true;
     }
+    else if (private_data.payload_type == SDCARD_PAYLOAD_TYPE_PATH_DST)
+    {
+        *data = offset < SDCARD_PATH_MAX ? private_data.path_dst[offset] : 0;
+        return true;
+    }
 
     *data = 0;
 	return true;
@@ -1101,6 +1137,14 @@ bool sdcard_memwrite_handler(uint32_t addr, uint8_t *data, uint8_t window_id)
         if (offset < SDCARD_PATH_MAX)
         {
             private_data.path[offset] = *data;
+            return true;
+        }
+    }
+    else if (private_data.payload_type == SDCARD_PAYLOAD_TYPE_PATH_DST)
+    {
+        if (offset < SDCARD_PATH_MAX)
+        {
+            private_data.path_dst[offset] = *data;
             return true;
         }
     }
@@ -1169,6 +1213,11 @@ uint8_t sdcard_handler_control_peek(uint8_t cmd, uint8_t data)
             return private_data.path_create_ready;
         case SDCARD_COMMAND_RESPONSE_PATH_CREATE_RESULT:
             return private_data.path_create_result;
+
+        case SDCARD_COMMAND_RESPONSE_PATH_RENAME_READY:
+            return private_data.path_rename_ready;
+        case SDCARD_COMMAND_RESPONSE_PATH_RENAME_RESULT:
+            return private_data.path_rename_result;
 
         case SDCARD_COMMAND_RESPONSE_FILE_WRITE_READY:
             return private_data.file_write_ready;
@@ -1275,6 +1324,11 @@ uint8_t sdcard_handler_control_set(uint8_t cmd, uint8_t data)
             private_data.path_delete_result = SDCARD_FILE_RESULT_IDLE;
             sdcard_queue_command(cmd, data);
             break;
+        case SDCARD_COMMAND_REQUEST_RENAME_FROM_PATH:
+            private_data.path_rename_ready = 0;
+            private_data.path_rename_result = SDCARD_FILE_RESULT_IDLE;
+            sdcard_queue_command(cmd, data);
+            break;
         case SDCARD_COMMAND_REQUEST_CREATE_DIR_FROM_PATH:
             private_data.path_create_ready = 0;
             private_data.path_create_result = SDCARD_FILE_RESULT_IDLE;
@@ -1371,6 +1425,9 @@ void sdcard_handler_poll()
                     break;
                 case SDCARD_COMMAND_REQUEST_DELETE_FROM_PATH:
                     sdcard_delete_from_path();
+                    break;
+                case SDCARD_COMMAND_REQUEST_RENAME_FROM_PATH:
+                    sdcard_rename_from_path();
                     break;
                 case SDCARD_COMMAND_REQUEST_CREATE_DIR_FROM_PATH:
                     sdcard_create_dir_from_path();
