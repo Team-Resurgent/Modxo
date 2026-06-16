@@ -164,9 +164,9 @@ void register_handlers()
     modxo_register_handler(&LPC47M152_hdlr);
     modxo_register_handler(&uart_16550_hdlr);
     modxo_register_handler(&data_store_handler);
+    modxo_register_handler(&config_nvm_hdlr);
     modxo_register_handler(&ws2812_hdlr);
     modxo_register_handler(&legacy_display_hdlr);
-    modxo_register_handler(&config_nvm_hdlr);
 }
 
 int main(void)
