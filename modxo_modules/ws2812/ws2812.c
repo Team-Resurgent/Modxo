@@ -675,8 +675,19 @@ static void ws2812_poll()
 {
     if (updating_strips)
     {
+        NVM_CONFIG* defaults = (NVM_CONFIG*)ws2812_nvm.default_value;
+        PIXEL_FORMAT_TYPE status_format =  nvm_config.rgb_status_pf;
+        if (status_format == PIXEL_FORMAT_INVALID) {
+            nvm_config.rgb_status_pf = defaults->rgb_status_pf;
+        }
+
         for (uint display_strip = 0; display_strip < MAX_STRIPS; display_strip++)
         {
+            PIXEL_FORMAT_TYPE strip_format =  nvm_config.rgb_strip_pf[display_strip];
+            if (strip_format == PIXEL_FORMAT_INVALID) {
+                nvm_config.rgb_strip_pf[display_strip] = defaults->rgb_strip_pf[display_strip];
+            }
+
             while (is_strip_update_inprogress(display_strip))
             {
                 bool fifo_full = put_pixel(display_strip, get_next_pixel_value(display_strip));
