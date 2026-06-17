@@ -1,1 +1,0 @@
-target_sources(modxo PRIVATE data_store.c)

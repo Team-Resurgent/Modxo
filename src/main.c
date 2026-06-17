@@ -42,7 +42,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <LPC47M152.h>
 #include <uart_16550.h>
 #include <modxo/lpc_interface.h>
-#include <modxo/data_store.h>
 
 // Modxo nvm contents
 nvm_register_t* nvm_registers[] = {
@@ -163,7 +162,6 @@ void register_handlers()
     modxo_register_handler(&lpc_interface_hdlr);
     modxo_register_handler(&LPC47M152_hdlr);
     modxo_register_handler(&uart_16550_hdlr);
-    modxo_register_handler(&data_store_handler);
     modxo_register_handler(&config_nvm_hdlr);
     modxo_register_handler(&ws2812_hdlr);
     modxo_register_handler(&legacy_display_hdlr);
