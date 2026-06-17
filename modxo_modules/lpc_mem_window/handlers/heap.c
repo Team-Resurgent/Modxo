@@ -20,7 +20,8 @@ uint32_t heap_max_allowed_size = 256 * 1024;
 uint32_t heap_max_allowed_size = 0;
 #endif
 
-bool heap_memread_handler(uint32_t addr, uint8_t *data, uint8_t window_id) {
+
+__noinline bool heap_check_realloc(uint8_t window_id) {
 	uint32_t heap_offset = heap_window_offsets[window_id];
 	LPC_MEM_WINDOW *window = &lpc_mem_windows[window_id];
 
@@ -40,8 +41,16 @@ bool heap_memread_handler(uint32_t addr, uint8_t *data, uint8_t window_id) {
 		heap_window_sizes[window_id] = window->length;
 	}
 
-	uint32_t offset = heap_offset + (addr - window->base_addr);
+	return true;
+}
 
+bool heap_memread_handler(uint32_t addr, uint8_t *data, uint8_t window_id) {
+	uint32_t heap_offset = heap_window_offsets[window_id];
+	LPC_MEM_WINDOW *window = &lpc_mem_windows[window_id];
+
+	if(!heap_check_realloc(window_id)) return false;
+
+	uint32_t offset = heap_offset + (addr - window->base_addr);
 	*data = *(uint8_t*)offset;
 
 	return true;
@@ -51,24 +60,9 @@ bool heap_memwrite_handler(uint32_t addr, uint8_t *data, uint8_t window_id) {
 	uint32_t heap_offset = heap_window_offsets[window_id];
 	LPC_MEM_WINDOW *window = &lpc_mem_windows[window_id];
 
-	// New window size detected, free existing buffer
-	if(heap_offset && window->length != heap_window_sizes[window_id]) {
-		free((void *)heap_offset);
-
-		heap_window_offsets[window_id] = heap_window_sizes[window_id] = heap_offset = 0;
-	}
-
-	// Allocate the new buffer that matches the window size, if one doesn't exist yet
-	if(!heap_offset) {
-		// Bail if window is bigger than max allowed size
-		if(window->length > heap_max_allowed_size) return false;
-
-		heap_window_offsets[window_id] = heap_offset = (uint32_t)malloc(window->length);
-		heap_window_sizes[window_id] = window->length;
-	}
+	if(!heap_check_realloc(window_id)) return false;
 
 	uint32_t offset = heap_offset + (addr - window->base_addr);
-
 	(*(uint8_t*)offset) = *data;
 
 	return true;
