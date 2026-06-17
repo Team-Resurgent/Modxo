@@ -41,13 +41,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define NVM_FLASH_SECTORS 1
 #define NVM_FLASH_SECTOR_SIZE 4096
 
-
 #define NVM_PAGE_SIZE 256
 #define NVM_TOTAL_PAGES ( (NVM_FLASH_SECTORS*NVM_FLASH_SECTOR_SIZE) / NVM_PAGE_SIZE )
+#define NVM_RESERVE_SIZE 4
+
+#define NVM_PAGE_VERSION 1
 
 typedef struct
 {
-    uint8_t data[NVM_PAGE_SIZE - 2];
+    uint16_t version;
+    uint8_t data[NVM_PAGE_SIZE - NVM_RESERVE_SIZE];
     uint16_t crc;
 } NVM_PAGE;
 
@@ -192,11 +195,13 @@ static void prepare_nvm_page(NVM_PAGE* page)
     uint8_t *dst = page->data;
     memset(dst, 0xFF, sizeof(NVM_PAGE));
 
+    page->version = NVM_PAGE_VERSION;
+
     for(int i = 0; i < nvm_total_registers; i++){
         memcpy(dst, nvm_registers[i]->data, nvm_registers[i]->size);
         dst += nvm_registers[i]->size;
     }
-    
+
     uint16_t crc = calc_crc((uint8_t*)page,sizeof(NVM_PAGE)-2);
     page->crc = (crc<<8) | (crc>>8); //CRC must be stored as big endian
 }
