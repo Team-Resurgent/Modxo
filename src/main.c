@@ -77,7 +77,7 @@ void core0_main()
 }
 
 void core1_init() {
-    RUN_MODXO_HANDLERS(core1_init);
+    run_modxo_handlers(mxt_fn_core1_init);
 
     core1_main(); // Infinite loop
 }

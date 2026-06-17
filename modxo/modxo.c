@@ -47,6 +47,15 @@ uint8_t handler_count = 0;
 
 bool (*modxo_debug_sp_connected)(void);
 
+__noinline void run_modxo_handlers(MODXO_TASK_FUNC fn) {
+    for(int idx = 0; idx < handler_count; idx++) {
+        if(modxo_handlers[idx]) {
+            void(**funcs)(void) = (void*)modxo_handlers[idx];
+            if(funcs[fn]) funcs[fn]();
+        }
+    }
+}
+
 static void read_handler(uint16_t address, uint8_t *data)
 {
     switch (address)
@@ -68,22 +77,22 @@ static void modxo_ports_init(void)
 
 void modxo_poll_core1()
 {
-    RUN_MODXO_HANDLERS(core1_poll);
+    run_modxo_handlers(mxt_fn_core1_poll);
 }
 
 void modxo_poll_core0()
 {
-    RUN_MODXO_HANDLERS(core0_poll);
+    run_modxo_handlers(mxt_fn_core0_poll);
 }
 
 void modxo_lpc_reset_off()
 {
-    RUN_MODXO_HANDLERS(lpc_reset_off);
+    run_modxo_handlers(mxt_fn_lpc_reset_off);
 }
 
 void modxo_lpc_reset_on()
 {
-    RUN_MODXO_HANDLERS(lpc_reset_on);
+    run_modxo_handlers(mxt_fn_lpc_reset_on);
 }
 
 void software_reset()
@@ -97,7 +106,7 @@ void software_reset()
 
 void modxo_shutdown()
 {
-    RUN_MODXO_HANDLERS(shutdown);
+    run_modxo_handlers(mxt_fn_shutdown);
     // Modxo sleep
     set_sys_clock_khz(SYS_FREQ_DEFAULT, true);
 
@@ -108,12 +117,12 @@ void modxo_shutdown()
 
 void modxo_reset()
 {
-    RUN_MODXO_HANDLERS(powerup);//Modxo after LPC 3.3v goes high
+    run_modxo_handlers(mxt_fn_powerup);//Modxo after LPC 3.3v goes high
 }
 
 void modxo_init(void)
 {
-    RUN_MODXO_HANDLERS(init);
+    run_modxo_handlers(mxt_fn_init);
     modxo_ports_init();
 }
 

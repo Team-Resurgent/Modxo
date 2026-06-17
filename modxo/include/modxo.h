@@ -16,6 +16,18 @@ Copyright (c) 2024, Shalx <Alejandro L. Huitron shalxmva@gmail.com>
 	#define SYS_FREQ_IN_KHZ (266 * 1000)
 #endif
 
+// Order, numbering, count must match MODXO_TASK list
+typedef enum {
+	mxt_fn_init,
+	mxt_fn_powerup,
+	mxt_fn_core0_poll,
+	mxt_fn_core1_poll,
+	mxt_fn_lpc_reset_on,
+	mxt_fn_lpc_reset_off,
+	mxt_fn_shutdown,
+	mxt_fn_core1_init,
+} MODXO_TASK_FUNC;
+
 typedef struct {
 	void (*init)(void);
 	void (*powerup)(void);
@@ -25,17 +37,13 @@ typedef struct {
 	void (*lpc_reset_off)(void);
 	void (*shutdown)(void);
 	void (*core1_init)(void);
-}MODXO_TASK;
+} MODXO_TASK;
 
 
 extern MODXO_TASK* modxo_handlers[];
 extern uint8_t handler_count;
 
-#define RUN_MODXO_HANDLERS(func) \
-    {for(int _modxo_handler_idx = 0; _modxo_handler_idx < handler_count; _modxo_handler_idx++) \
-        if(modxo_handlers[_modxo_handler_idx] != NULL && modxo_handlers[_modxo_handler_idx]->func != NULL) \
-            modxo_handlers[_modxo_handler_idx]->func();}
-
+void run_modxo_handlers(MODXO_TASK_FUNC fn);
 
 extern bool (*modxo_debug_sp_connected)(void);
 void modxo_register_handler(MODXO_TASK* handler);
