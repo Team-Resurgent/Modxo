@@ -38,7 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string.h>
 
 #define NVM_FLASH_OFFSET 0x3E000
-#define NVM_FLASH_SECTORS 2
+#define NVM_FLASH_SECTORS 1
 #define NVM_FLASH_SECTOR_SIZE 4096
 
 
@@ -169,7 +169,7 @@ static int look_last_config(){
         }
         // no valid pages, default to -1
         else if(page == 0) {
-            page = -1;
+            return -1;
         }
     }
 
