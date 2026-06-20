@@ -29,7 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <modxo/modxo_queue.h>
 #include <modxo/modxo_ports.h>
 #include <modxo/lpc_interface.h>
-#include <lpc_mem_window.h>
+#include <lpc_mapper.h>
 
 #include <pico.h>
 #include <stdio.h>
@@ -167,10 +167,10 @@ void expansion_send_recieve_buffer()
     private_data.send_recieve_ready = 1;
 }
 
-bool expansion_memread_handler(uint32_t addr, uint8_t *data, uint8_t window_id) 
+bool expansion_memread_handler(uint32_t addr, uint8_t *data, uint8_t mapper_id) 
 {
-    uint32_t offset = (addr - lpc_mem_windows[window_id].base_addr);
-    offset = offset & (lpc_mem_windows[window_id].length - 1);
+    uint32_t offset = (addr - lpc_mappers[mapper_id].base_addr);
+    offset = offset & (lpc_mappers[mapper_id].length - 1);
 
     if (private_data.payload_type == EXPANSION_PAYLOAD_TYPE_INCOMING)
     {
@@ -193,10 +193,10 @@ bool expansion_memread_handler(uint32_t addr, uint8_t *data, uint8_t window_id)
 	return true;
 }
 
-bool expansion_memwrite_handler(uint32_t addr, uint8_t *data, uint8_t window_id) 
+bool expansion_memwrite_handler(uint32_t addr, uint8_t *data, uint8_t mapper_id) 
 {
-    uint32_t offset = (addr - lpc_mem_windows[window_id].base_addr);
-    offset = offset & (lpc_mem_windows[window_id].length - 1);
+    uint32_t offset = (addr - lpc_mappers[mapper_id].base_addr);
+    offset = offset & (lpc_mappers[mapper_id].length - 1);
 
     if (offset < EXPANSION_MAX_BUFFER_LEN)
     {

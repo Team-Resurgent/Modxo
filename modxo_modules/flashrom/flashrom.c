@@ -30,7 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "hardware/irq.h"
 #include "hardware/structs/bus_ctrl.h"
 #include <modxo/lpc_interface.h>
-#include <lpc_mem_window.h>
+#include <lpc_mapper.h>
 #include <modxo.h>
 
 #include <flashrom.h>
@@ -141,15 +141,14 @@ static void read_handler(uint16_t address, uint8_t *data)
 
 static void flashrom_memread_handler(uint32_t address, uint8_t *data)
 {
-    if(!lpc_mem_window_enabled || !lpc_mem_window_custom_read_handler(address, data)) {
-        register uint32_t mem_data;
+    if(!lpc_mapper_enabled || !lpc_mapper_custom_read_handler(address, data)) {
         *data = flash_rom_data[address & flash_rom_mask];
     }
 }
 
 static void flashrom_memwrite_handler(uint32_t address, uint8_t *data)
 {
-    if(!lpc_mem_window_enabled || !lpc_mem_window_custom_write_handler(address, data)) {
+    if(!lpc_mapper_enabled || !lpc_mapper_custom_write_handler(address, data)) {
         flash_write_buffer[address & (FLASH_WRITE_PAGE_SIZE - 1)] = *data;
     }
 }

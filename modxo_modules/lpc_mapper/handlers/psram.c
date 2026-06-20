@@ -10,7 +10,7 @@
 #include <stdio.h>
 
 #include <string.h>
-#include <lpc_mem_window.h>
+#include <lpc_mapper.h>
 
 #define ACCESS_REGION 0x10000000  //Cached
 #define PSRAM_OFFSET  0x01000000  //Window 2 at 16MB (CSn1)
@@ -45,7 +45,7 @@ static void psram_init(void);
 static uint8_t *psram_address = (uint8_t*)(ACCESS_REGION+PSRAM_OFFSET); // XIP2 base address for PSRAM
 static uint8_t psram_size = 0;  // Size in MiB (1, 2, 4, or 8 MiB)
 static uint8_t psram_id = 0xFF; //Unitialized ID
-static uint32_t psram_window_offsets[NUM_LPC_MEM_WINDOWS];
+static uint32_t psram_window_offsets[NUM_LPC_MAPPERS];
 static bool psram_inited = false;
 
 
@@ -154,20 +154,20 @@ static void psram_detect(void)
 }
 
 
-bool psram_memread_handler(uint32_t addr, uint8_t *data, uint8_t window_id) {
-	uint32_t psram_offset = psram_window_offsets[window_id];
-	uint32_t psram_length = lpc_mem_windows[window_id].length;
-    uint32_t offset = psram_offset + (addr - lpc_mem_windows[window_id].base_addr);
+bool psram_memread_handler(uint32_t addr, uint8_t *data, uint8_t mapper_id) {
+	uint32_t psram_offset = psram_window_offsets[mapper_id];
+	uint32_t psram_length = lpc_mappers[mapper_id].length;
+    uint32_t offset = psram_offset + (addr - lpc_mappers[mapper_id].base_addr);
 
 	*data = psram_address[offset];
 
 	return true;
 }
 
-bool psram_memwrite_handler(uint32_t addr, uint8_t *data, uint8_t window_id) {
-	uint32_t psram_offset = psram_window_offsets[window_id];
-	uint32_t psram_length = lpc_mem_windows[window_id].length;
-    uint32_t offset = psram_offset + (addr - lpc_mem_windows[window_id].base_addr);
+bool psram_memwrite_handler(uint32_t addr, uint8_t *data, uint8_t mapper_id) {
+	uint32_t psram_offset = psram_window_offsets[mapper_id];
+	uint32_t psram_length = lpc_mappers[mapper_id].length;
+    uint32_t offset = psram_offset + (addr - lpc_mappers[mapper_id].base_addr);
 
 	psram_address[offset] = *data;
 
@@ -178,7 +178,7 @@ uint8_t psram_handler_control_peek(uint8_t cmd, uint8_t data) {
     uint8_t return_value = 0;
 	switch(cmd) {
 	case PSRAM_CMD_WIN_OFFSET:
-		current_long_val = psram_window_offsets[current_window_id];
+		current_long_val = psram_window_offsets[current_mapper_id];
 		break;
     case PSRAM_CMD_GET_SIZE:
         return_value = psram_size;
@@ -197,7 +197,7 @@ uint8_t psram_handler_control_peek(uint8_t cmd, uint8_t data) {
 uint8_t psram_handler_control_set(uint8_t cmd, uint8_t data) {
 	switch(cmd) {
 	case PSRAM_CMD_WIN_OFFSET:
-		psram_window_offsets[current_window_id] = current_long_val;
+		psram_window_offsets[current_mapper_id] = current_long_val;
 		break;
     case PSRAM_CMD_INIT:
 	    psram_handler_init();

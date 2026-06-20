@@ -3,13 +3,13 @@
 
 #include <string.h>
 #include <malloc.h>
-#include <lpc_mem_window.h>
+#include <lpc_mapper.h>
 
 #define HEAP_CMD_READ_MAX_ALLOWED_SIZE 0
 
 // Store allocated heap addresses & sizes for each window
-uint32_t heap_window_offsets[NUM_LPC_MEM_WINDOWS];
-uint32_t heap_window_sizes[NUM_LPC_MEM_WINDOWS];
+uint32_t heap_window_offsets[NUM_LPC_MAPPERS];
+uint32_t heap_window_sizes[NUM_LPC_MAPPERS];
 
 // Set some sensible max allowed sizes for RP2040/RP2350's SRAM
 #if PICO_RP2040
@@ -21,48 +21,48 @@ uint32_t heap_max_allowed_size = 0;
 #endif
 
 
-__noinline bool heap_check_realloc(uint8_t window_id) {
-	uint32_t heap_offset = heap_window_offsets[window_id];
-	LPC_MEM_WINDOW *window = &lpc_mem_windows[window_id];
+__noinline bool heap_check_realloc(uint8_t mapper_id) {
+	uint32_t heap_offset = heap_window_offsets[mapper_id];
+	LPC_MAPPER *mapper = &lpc_mappers[mapper_id];
 
 	// New window size detected, free existing buffer
-	if(heap_offset && window->length != heap_window_sizes[window_id]) {
+	if(heap_offset && mapper->length != heap_window_sizes[mapper_id]) {
 		free((void *)heap_offset);
 
-		heap_window_offsets[window_id] = heap_window_sizes[window_id] = heap_offset = 0;
+		heap_window_offsets[mapper_id] = heap_window_sizes[mapper_id] = heap_offset = 0;
 	}
 
 	// Allocate the new buffer that matches the window size, if one doesn't exist yet
 	if(!heap_offset) {
 		// Bail if window is bigger than max allowed size
-		if(window->length > heap_max_allowed_size) return false;
+		if(mapper->length > heap_max_allowed_size) return false;
 
-		heap_window_offsets[window_id] = heap_offset = (uint32_t)malloc(window->length);
-		heap_window_sizes[window_id] = window->length;
+		heap_window_offsets[mapper_id] = heap_offset = (uint32_t)malloc(mapper->length);
+		heap_window_sizes[mapper_id] = mapper->length;
 	}
 
 	return true;
 }
 
-bool heap_memread_handler(uint32_t addr, uint8_t *data, uint8_t window_id) {
-	uint32_t heap_offset = heap_window_offsets[window_id];
-	LPC_MEM_WINDOW *window = &lpc_mem_windows[window_id];
+bool heap_memread_handler(uint32_t addr, uint8_t *data, uint8_t mapper_id) {
+	uint32_t heap_offset = heap_window_offsets[mapper_id];
+	LPC_MAPPER *mapper = &lpc_mappers[mapper_id];
 
-	if(!heap_check_realloc(window_id)) return false;
+	if(!heap_check_realloc(mapper_id)) return false;
 
-	uint32_t offset = heap_offset + (addr - window->base_addr);
+	uint32_t offset = heap_offset + (addr - mapper->base_addr);
 	*data = *(uint8_t*)offset;
 
 	return true;
 }
 
-bool heap_memwrite_handler(uint32_t addr, uint8_t *data, uint8_t window_id) {
-	uint32_t heap_offset = heap_window_offsets[window_id];
-	LPC_MEM_WINDOW *window = &lpc_mem_windows[window_id];
+bool heap_memwrite_handler(uint32_t addr, uint8_t *data, uint8_t mapper_id) {
+	uint32_t heap_offset = heap_window_offsets[mapper_id];
+	LPC_MAPPER *mapper = &lpc_mappers[mapper_id];
 
-	if(!heap_check_realloc(window_id)) return false;
+	if(!heap_check_realloc(mapper_id)) return false;
 
-	uint32_t offset = heap_offset + (addr - window->base_addr);
+	uint32_t offset = heap_offset + (addr - mapper->base_addr);
 	(*(uint8_t*)offset) = *data;
 
 	return true;

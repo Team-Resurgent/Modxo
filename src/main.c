@@ -34,7 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <hardware/gpio.h>
 
 #include <flashrom.h>
-#include <lpc_mem_window.h>
+#include <lpc_mapper.h>
 #include <modxo.h>
 #include <modxo_pinout.h>
 #include <ws2812.h>
@@ -158,7 +158,7 @@ void modxo_init_interrupts()
 void register_handlers()
 {
     modxo_register_handler(&flashrom_hdlr);
-    modxo_register_handler(&lpc_mem_window_hdlr);
+    modxo_register_handler(&lpc_mapper_hdlr);
     modxo_register_handler(&lpc_interface_hdlr);
     modxo_register_handler(&LPC47M152_hdlr);
     modxo_register_handler(&uart_16550_hdlr);

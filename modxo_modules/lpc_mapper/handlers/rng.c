@@ -7,13 +7,13 @@
 #include "pico/rand.h"
 
 #include <string.h>
-#include <lpc_mem_window.h>
+#include <lpc_mapper.h>
 
-#define RNG_CMD_WIN_RESET 0
+#define RNG_CMD_MAPPER_RESET 0
 
 uint64_t rand_val;
 
-bool rng_memread_handler(uint32_t addr, uint8_t *data, uint8_t window_id) {
+bool rng_memread_handler(uint32_t addr, uint8_t *data, uint8_t mapper_id) {
 	uint8_t mod = addr % sizeof(rand_val);
 	uint8_t shift = mod * 8;
 
@@ -23,7 +23,7 @@ bool rng_memread_handler(uint32_t addr, uint8_t *data, uint8_t window_id) {
 	return true;
 }
 
-bool rng_memwrite_handler(uint32_t addr, uint8_t *data, uint8_t window_id) {
+bool rng_memwrite_handler(uint32_t addr, uint8_t *data, uint8_t mapper_id) {
 	uint8_t mod = addr % sizeof(rand_val);
 	uint8_t shift = mod * 8;
 
@@ -43,7 +43,7 @@ uint8_t rng_handler_control_peek(uint8_t cmd, uint8_t data) {
 
 uint8_t rng_handler_control_set(uint8_t cmd, uint8_t data) {
 	switch(cmd) {
-	case RNG_CMD_WIN_RESET:
+	case RNG_CMD_MAPPER_RESET:
 		rand_val = get_rand_64();
 		break;
 	}

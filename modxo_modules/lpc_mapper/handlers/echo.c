@@ -1,16 +1,16 @@
 // Simple single byte echo handler, great for testing
 
 #include <string.h>
-#include <lpc_mem_window.h>
+#include <lpc_mapper.h>
 
 uint8_t echo_val;
 
-bool echo_memread_handler(uint32_t addr, uint8_t *data, uint8_t window_id) {
+bool echo_memread_handler(uint32_t addr, uint8_t *data, uint8_t mapper_id) {
 	*data = echo_val;
 	return true;
 }
 
-bool echo_memwrite_handler(uint32_t addr, uint8_t *data, uint8_t window_id) {
+bool echo_memwrite_handler(uint32_t addr, uint8_t *data, uint8_t mapper_id) {
 	echo_val = *data;
 	return true;
 }
