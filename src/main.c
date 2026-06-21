@@ -42,9 +42,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <LPC47M152.h>
 #include <uart_16550.h>
 #include <modxo/lpc_interface.h>
-
 #include <hardware/flash.h>
+
+#if !PICO_RP2040
+#include <hardware/structs/qmi.h>
+#else
 #include <hardware/structs/ssi.h>
+#endif
 
 // Modxo nvm contents
 nvm_register_t* nvm_registers[] = {
@@ -194,14 +198,20 @@ uint8_t get_flash_spi_clkdiv() {
 void detect_and_upgrade_flash_speed() {
     uint8_t clkdiv = get_flash_spi_clkdiv();
 
+#if !PICO_RP2040
+    qmi_hw->m[0].timing = (qmi_hw->m[0].timing & ~QMI_M0_TIMING_CLKDIV_BITS) | (clkdiv << QMI_M0_TIMING_CLKDIV_LSB);
+    xbox_active = *(uint8_t*)XIP_NOCACHE_NOALLOC_BASE; // Dummy read
+#else
     ssi_hw->ssienr = 0;
     ssi_hw->baudr = clkdiv; // This is PICO_FLASH_SPI_CLKDIV
     ssi_hw->ssienr = 1;
+#endif
 }
 
 int main(void)
 {
     detect_and_upgrade_flash_speed();
+    xbox_active = false;
 
     set_sys_clock_khz(SYS_FREQ_IN_KHZ, true);
     stdio_init_all();
