@@ -43,6 +43,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <uart_16550.h>
 #include <modxo/lpc_interface.h>
 
+#include <hardware/flash.h>
+#include <hardware/structs/ssi.h>
+
 // Modxo nvm contents
 nvm_register_t* nvm_registers[] = {
     &ws2812_nvm,
@@ -167,8 +170,39 @@ void register_handlers()
     modxo_register_handler(&legacy_display_hdlr);
 }
 
+#define RDID_BUF_SIZE 8
+uint8_t get_flash_spi_clkdiv() {
+    uint8_t txbuf[RDID_BUF_SIZE] = {0x9f}; // JEDEC ID command
+    uint8_t rxbuf[RDID_BUF_SIZE] = {0};
+
+    flash_do_cmd(txbuf, rxbuf, RDID_BUF_SIZE);
+
+    // rxbuf[0] has garbage in it
+    uint8_t manuf_id   = rxbuf[1];
+    uint8_t device_id1 = rxbuf[2];
+    uint8_t device_id2 = rxbuf[3];
+
+    switch(manuf_id) {
+    case 0x5E: // ZBit
+        if(device_id1 == 0x40 && device_id2 == 0x18) return 2; // ZB25VQ128D
+        break;
+    }
+
+    return 4;
+}
+
+void detect_and_upgrade_flash_speed() {
+    uint8_t clkdiv = get_flash_spi_clkdiv();
+
+    ssi_hw->ssienr = 0;
+    ssi_hw->baudr = clkdiv; // This is PICO_FLASH_SPI_CLKDIV
+    ssi_hw->ssienr = 1;
+}
+
 int main(void)
 {
+    detect_and_upgrade_flash_speed();
+
     set_sys_clock_khz(SYS_FREQ_IN_KHZ, true);
     stdio_init_all();
 

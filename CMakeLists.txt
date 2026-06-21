@@ -98,3 +98,4 @@ pico_enable_stdio_uart(${PROJECT_NAME} 0)
 pico_add_extra_outputs(${PROJECT_NAME})
 
 add_compile_definitions(PICO_CLOCK_ADJUST_PERI_CLOCK_WITH_SYS_CLOCK=1)
+add_compile_definitions(PICO_FLASH_SPI_CLKDIV=4)
