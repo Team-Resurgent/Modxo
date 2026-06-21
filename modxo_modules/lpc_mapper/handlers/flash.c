@@ -8,7 +8,7 @@
 
 #define FLASH_BUFFERS_SIZE 256
 
-#define FLASH_CMD_FIXED_BUFFER_SIZE 0
+#define FLASH_CMD_MAX_BUFFER_SIZE 0
 #define FLASH_CMD_SEND_TXBUF 1
 
 uint8_t flash_txbuf[NUM_LPC_MAPPERS][FLASH_BUFFERS_SIZE];
@@ -47,7 +47,7 @@ uint8_t flash_handler_control_set(uint8_t cmd, uint8_t data) {
 	LPC_MAPPER *mapper = &lpc_mappers[current_mapper_id];
 
 	switch(cmd) {
-	case FLASH_CMD_FIXED_BUFFER_SIZE:
+	case FLASH_CMD_MAX_BUFFER_SIZE:
 		current_long_val = FLASH_BUFFERS_SIZE;
 		break;
 
