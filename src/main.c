@@ -188,7 +188,12 @@ uint8_t get_flash_spi_clkdiv() {
 
     switch(manuf_id) {
     case 0x5E: // ZBit
-        if(device_id1 == 0x40 && device_id2 == 0x18) return 2; // ZB25VQ128D
+        if(device_id1 == 0x40 && device_id2 == 0x18) return 2; // ZB25VQ128D (16MB)
+        break;
+    case 0xEF: // Winbond
+        if(device_id1 == 0x40 && device_id2 == 0x15) return 2; // W25Q16JV (2MB)
+        if(device_id1 == 0x40 && device_id2 == 0x16) return 2; // W25Q32JV (4MB)
+        if(device_id1 == 0x40 && device_id2 == 0x18) return 2; // W25Q128JV (16MB)
         break;
     }
 
