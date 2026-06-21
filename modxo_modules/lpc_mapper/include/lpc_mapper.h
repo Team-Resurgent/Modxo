@@ -29,6 +29,7 @@
 #define LPC_MAPPER_TYPE_HEAP                         5
 #define LPC_MAPPER_TYPE_SDCARD                       6
 #define LPC_MAPPER_TYPE_EXPANSION                    7
+#define LPC_MAPPER_TYPE_FLASH                        8
 
 #define LPC_MAPPER_FLAG_WRITE_ENABLED                (1 << 0)
 #define LPC_MAPPER_FLAG_READ_ENABLED                 (1 << 1)
@@ -94,3 +95,8 @@ uint8_t expansion_handler_control(uint8_t cmd, uint8_t data, bool is_read);
 void expansion_handler_poll();
 void expansion_handler_powerup();
 void expansion_handler_init();
+
+bool flash_memread_handler(uint32_t addr, uint8_t *data, uint8_t mapper_id);
+bool flash_memwrite_handler(uint32_t addr, uint8_t *data, uint8_t mapper_id);
+uint8_t flash_handler_control(uint8_t cmd, uint8_t data, bool is_read);
+void flash_handler_powerup();

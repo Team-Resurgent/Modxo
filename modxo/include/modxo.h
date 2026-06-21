@@ -16,6 +16,19 @@ Copyright (c) 2024, Shalx <Alejandro L. Huitron shalxmva@gmail.com>
 	#define SYS_FREQ_IN_KHZ (266 * 1000)
 #endif
 
+
+#ifndef NOMINMAX
+
+#ifndef max
+#define max(a,b)            (((a) > (b)) ? (a) : (b))
+#endif
+
+#ifndef min
+#define min(a,b)            (((a) < (b)) ? (a) : (b))
+#endif
+
+#endif  /* NOMINMAX */
+
 // Order, numbering, count must match MODXO_TASK list
 typedef enum {
 	mxt_fn_init,

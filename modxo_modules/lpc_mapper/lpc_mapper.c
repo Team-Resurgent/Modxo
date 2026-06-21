@@ -101,6 +101,12 @@ void setup_handler(uint8_t type) {
 		mapper->control = expansion_handler_control;
 		break;
 
+	case LPC_MAPPER_TYPE_FLASH:
+		mapper->read = flash_memread_handler;
+		mapper->write = flash_memwrite_handler;
+		mapper->control = flash_handler_control;
+		break;
+
 	default:
 		mapper->read = NULL;
 		mapper->write = NULL;
@@ -275,6 +281,7 @@ void run_handler_powerups() {
 	heap_handler_powerup();
 	sdcard_handler_powerup();
 	expansion_handler_powerup();
+	flash_handler_powerup();
 }
 
 void powerup() {

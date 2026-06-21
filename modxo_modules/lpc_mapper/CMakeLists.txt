@@ -28,4 +28,5 @@ target_sources(${LIB_NAME} PRIVATE
     handlers/sdcard.c
     handlers/sdconfig.c
     handlers/expansion.c
+    handlers/flash.c
 )
