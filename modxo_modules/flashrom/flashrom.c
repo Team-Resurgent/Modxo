@@ -95,7 +95,7 @@ static void write_handler(uint16_t address, uint8_t *data)
         {
             _erase_sector_number = *data;
             password_index = 0;
-            __sev();
+            modxo_signal_core1_poll();
         }
         else if (password_sequence[password_index] == *data)
         {
@@ -111,7 +111,7 @@ static void write_handler(uint16_t address, uint8_t *data)
     // Sector Flush
     case MODXO_REGISTER_MEM_FLUSH:
         _program_sector_number = *data;
-        __sev();
+        modxo_signal_core1_poll();
         break;
 
     }

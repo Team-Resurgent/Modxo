@@ -702,7 +702,7 @@ static void ws2812_update_pixels(void)
         strips[i].next_led_to_display = 0;
     }
     updating_strips = true;
-    __sev();
+    modxo_signal_core1_poll();
 }
 
 static void ws2812_set_color(uint8_t color) {

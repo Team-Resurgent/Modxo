@@ -253,7 +253,7 @@ static void nvm_save_page(int page_no){
 
 void config_save_parameters(){
     save_config=true;
-    __sev();
+    modxo_signal_core1_poll();
 }
 
 void config_nvm_poll()

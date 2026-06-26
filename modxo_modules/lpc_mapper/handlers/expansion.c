@@ -113,7 +113,7 @@ void expansion_queue_command(uint8_t cmd, uint8_t data)
     _item.data.cmd = (uint8_t)cmd;
     _item.data.param1 = (uint8_t)data;
     modxo_queue_insert(&private_data.queue, &_item);
-    __sev();
+    modxo_signal_core1_poll();
 }
 
 void expansion_does_address_exist()

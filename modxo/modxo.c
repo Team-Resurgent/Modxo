@@ -29,6 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdio.h>
 #include <pico.h>
 #include <hardware/sync.h>
+#include <stdatomic.h>
 
 #include "pico/stdlib.h"
 
@@ -44,6 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 extern uint8_t current_led_color;
 MODXO_TASK* modxo_handlers[15] = {NULL};
 uint8_t handler_count = 0;
+uint32_t core1_poll_cntr = 0;
 
 bool (*modxo_debug_sp_connected)(void);
 
@@ -75,9 +77,17 @@ static void modxo_ports_init(void)
     lpc_interface_add_io_handler(MODXO_REGISTER_VARIANT_ID, 0xFFFF, read_handler, NULL);
 }
 
+void modxo_signal_core1_poll() {
+    atomic_fetch_add(&core1_poll_cntr, 1);
+    __sev();
+}
+
 void modxo_poll_core1()
 {
-    run_modxo_handlers(mxt_fn_core1_poll);
+    while(core1_poll_cntr) {
+        run_modxo_handlers(mxt_fn_core1_poll);
+        atomic_fetch_sub(&core1_poll_cntr, 1);
+    }
 }
 
 void modxo_lpc_reset_off()
