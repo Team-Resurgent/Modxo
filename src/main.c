@@ -61,6 +61,8 @@ uint8_t nvm_total_registers = sizeof(nvm_registers) / sizeof(nvm_registers[0]);
 bool reset_pin = false;
 bool xbox_active = false;
 
+void modxo_init_interrupts_core1();
+
 void core1_main()
 {
     while (true)
@@ -76,15 +78,13 @@ void core0_main()
 {
     while (true)
     {
-        if(xbox_active) {
-            modxo_poll_core0();
-        }
-        __wfe();
+        __wfi();
     }
 }
 
 void core1_init() {
     run_modxo_handlers(mxt_fn_core1_init);
+    modxo_init_interrupts_core1();
 
     core1_main(); // Infinite loop
 }
@@ -123,6 +123,20 @@ void pin_3_3v_high()
 
 void core0_irq_handler(uint gpio, uint32_t event)
 {
+    if (gpio == LPC_ON && (event & GPIO_IRQ_EDGE_FALL) != 0)
+    {
+        pin_3_3v_falling();
+    }
+
+    // Use LEVEL_HIGH because rising edge has already passed by the time we get here
+    if (gpio == LPC_ON && (event & GPIO_IRQ_LEVEL_HIGH) != 0)
+    {
+        pin_3_3v_high();
+    }
+}
+
+void core1_irq_handler(uint gpio, uint32_t event)
+{
     if (gpio == LPC_RESET && (event & GPIO_IRQ_EDGE_FALL) != 0)
     {
         reset_pin_falling();
@@ -131,17 +145,6 @@ void core0_irq_handler(uint gpio, uint32_t event)
     if (gpio == LPC_RESET && (event & GPIO_IRQ_EDGE_RISE) != 0)
     {
         reset_pin_rising();
-    }
-
-    if (gpio == LPC_ON && (event & GPIO_IRQ_EDGE_FALL) != 0)
-    {
-        pin_3_3v_falling();
-    }
-
-    // Use LEVEL_HIGH because rising edge triggers too early after power-up (~500us)
-    if (gpio == LPC_ON && (event & GPIO_IRQ_LEVEL_HIGH) != 0)
-    {
-        pin_3_3v_high();
     }
 }
 
@@ -156,9 +159,13 @@ void modxo_init_pin_irq(uint pin, uint32_t event)
 void modxo_init_interrupts()
 {
     gpio_set_irq_callback(core0_irq_handler);
-    modxo_init_pin_irq(LPC_RESET, GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE);
     modxo_init_pin_irq(LPC_ON, GPIO_IRQ_EDGE_FALL | GPIO_IRQ_LEVEL_HIGH);
+    irq_set_enabled(IO_IRQ_BANK0, true);
+}
 
+void modxo_init_interrupts_core1() {
+    gpio_set_irq_callback(core1_irq_handler);
+    modxo_init_pin_irq(LPC_RESET, GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE);
     irq_set_enabled(IO_IRQ_BANK0, true);
 }
 
@@ -197,7 +204,7 @@ uint8_t get_flash_spi_clkdiv() {
         break;
     }
 
-    return 4; // Default to CLKDIV=4, should be compatible with most flash chips
+    return 4; // Default to CLKDIV=4, should be compatible with most flash chips, should be 66MHz SPI CLK
 }
 
 void detect_and_upgrade_flash_speed() {

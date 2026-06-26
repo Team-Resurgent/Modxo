@@ -722,7 +722,7 @@ static void ws2812_set_color(uint8_t color) {
     select_command(CMD_UPDATE_STRIPS);
 }
 
-static void ws2812_init()
+static void ws2812_core1_init()
 {
     selected_strip = 0;
     updating_strips = false;
@@ -760,15 +760,18 @@ static void ws2812_init()
         }
     }
 
+    ws2812_update_pixels();
+}
+
+static void ws2812_init() {
     lpc_interface_add_io_handler(WS2812_PORT_BASE, WS2812_ADDRESS_MASK, lpc_port_read, lpc_port_write);
     lpc_interface_add_io_handler(MODXO_REGISTER_NVM_CONFIG_SEL, 0xFFFE, config_read_hdlr, config_write_hdlr);
-
-    ws2812_update_pixels();
 }
 
 
 MODXO_TASK ws2812_hdlr = {
     .init = ws2812_init,
+    .core1_init = ws2812_core1_init,
     .powerup = ws2812_update_pixels,
     .core1_poll = ws2812_poll,
     .lpc_reset_on = lpc_reset_on,

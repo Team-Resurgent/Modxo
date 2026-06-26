@@ -80,11 +80,6 @@ void modxo_poll_core1()
     run_modxo_handlers(mxt_fn_core1_poll);
 }
 
-void modxo_poll_core0()
-{
-    run_modxo_handlers(mxt_fn_core0_poll);
-}
-
 void modxo_lpc_reset_off()
 {
     run_modxo_handlers(mxt_fn_lpc_reset_off);
@@ -117,7 +112,7 @@ void modxo_shutdown()
 
 void modxo_reset()
 {
-    run_modxo_handlers(mxt_fn_powerup);//Modxo after LPC 3.3v goes high
+    run_modxo_handlers(mxt_fn_powerup); // Modxo after LPC 3.3v goes high
 }
 
 void modxo_init(void)

@@ -33,7 +33,6 @@ Copyright (c) 2024, Shalx <Alejandro L. Huitron shalxmva@gmail.com>
 typedef enum {
 	mxt_fn_init,
 	mxt_fn_powerup,
-	mxt_fn_core0_poll,
 	mxt_fn_core1_poll,
 	mxt_fn_lpc_reset_on,
 	mxt_fn_lpc_reset_off,
@@ -43,12 +42,11 @@ typedef enum {
 
 typedef struct {
 	void (*init)(void);
-	void (*powerup)(void);
-	void (*core0_poll)(void);
+	void (*powerup)(void); // Runs on core0, triggers off LPC_ON
 	void (*core1_poll)(void);
-	void (*lpc_reset_on)(void);
-	void (*lpc_reset_off)(void);
-	void (*shutdown)(void);
+	void (*lpc_reset_on)(void);  // Runs on core1, triggers off LPC_RESET
+	void (*lpc_reset_off)(void); // Runs on core1, triggers off LPC_RESET
+	void (*shutdown)(void); // Runs on core0, triggers off LPC_ON
 	void (*core1_init)(void);
 } MODXO_TASK;
 
@@ -63,7 +61,6 @@ void modxo_register_handler(MODXO_TASK* handler);
 void modxo_reset(void);
 void modxo_init(void);
 void modxo_poll_core1(void);
-void modxo_poll_core0(void);
 void modxo_lpc_reset_off(void);
 void modxo_lpc_reset_on(void);
 void modxo_shutdown(void);

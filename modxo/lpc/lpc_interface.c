@@ -277,7 +277,6 @@ void lpc_interface_set_callback(LPC_OP_TYPE op, lpc_handler_cback cback)
 
 void lpc_interface_start_sm()
 {
-
     pio_set_sm_mask_enabled(_pio, 15, false); // Disable All State Machines
     pio_custom_init(_pio, LPC_OP_MEM_READ, offset, _disable_internal_flash);
     pio_custom_init(_pio, LPC_OP_MEM_WRITE, offset, _disable_internal_flash);
@@ -300,7 +299,6 @@ void lpc_interface_reset(void)
 
 void lpc_interface_init(void)
 {
-
     _pio = pio0;
 
     pio_claim_sm_mask(_pio, 15);
