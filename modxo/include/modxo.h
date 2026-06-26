@@ -66,4 +66,4 @@ void modxo_lpc_reset_on(void);
 void modxo_shutdown(void);
 void modxo_enable_lpm(bool enable);
 void modxo_signal_core1_poll();
-
+void reset_flash_speed();

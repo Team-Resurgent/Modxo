@@ -225,6 +225,7 @@ static uint8_t get_flash_size(void)
         uint8_t txbuf[STORAGE_CMD_TOTAL_BYTES] = {0x9f};
         uint8_t rxbuf[STORAGE_CMD_TOTAL_BYTES] = {0};
         flash_do_cmd(txbuf, rxbuf, STORAGE_CMD_TOTAL_BYTES);
+        reset_flash_speed();
         flash_size = 1 << (rxbuf[3] - 20);
     }
     return flash_size;

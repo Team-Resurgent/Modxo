@@ -56,7 +56,7 @@ nvm_register_t* nvm_registers[] = {
 };
 
 uint8_t nvm_total_registers = sizeof(nvm_registers) / sizeof(nvm_registers[0]);
-
+uint8_t detected_clkdiv = 0;
 
 bool reset_pin = false;
 bool xbox_active = false;
@@ -207,17 +207,24 @@ uint8_t get_flash_spi_clkdiv() {
     return 4; // Default to CLKDIV=4, should be compatible with most flash chips, should be 66MHz SPI CLK
 }
 
-void detect_and_upgrade_flash_speed() {
-    uint8_t clkdiv = get_flash_spi_clkdiv();
+// Calling flash_do_cmd() (or anything that calls it internally, like flash_get_unique_id()) will
+// reset the CLKDIV value back to its compiled default (4 in this case)
+void reset_flash_speed() {
+    if(!detected_clkdiv) return;
 
 #if !PICO_RP2040
-    qmi_hw->m[0].timing = (qmi_hw->m[0].timing & ~QMI_M0_TIMING_CLKDIV_BITS) | (clkdiv << QMI_M0_TIMING_CLKDIV_LSB);
+    qmi_hw->m[0].timing = (qmi_hw->m[0].timing & ~QMI_M0_TIMING_CLKDIV_BITS) | (detected_clkdiv << QMI_M0_TIMING_CLKDIV_LSB);
     xbox_active = *(uint8_t*)XIP_NOCACHE_NOALLOC_BASE; // Dummy read
 #else
     ssi_hw->ssienr = 0;
-    ssi_hw->baudr = clkdiv; // This is PICO_FLASH_SPI_CLKDIV
+    ssi_hw->baudr = detected_clkdiv; // This is PICO_FLASH_SPI_CLKDIV
     ssi_hw->ssienr = 1;
 #endif
+}
+
+void detect_and_upgrade_flash_speed() {
+    detected_clkdiv = get_flash_spi_clkdiv();
+    reset_flash_speed();
 }
 
 int main(void)
