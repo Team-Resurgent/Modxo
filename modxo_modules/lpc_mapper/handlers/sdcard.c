@@ -326,6 +326,7 @@ void sdcard_flash_chunk()
     flash_range_erase(flash_offset, SDCARD_FILE_CHUNK_SIZE);
     flash_range_program(flash_offset, private_data.cached_chunk_buffer, SDCARD_FILE_CHUNK_SIZE);
     restore_interrupts(ints);
+    reset_flash_speed();
 
     private_data.flash_chunk_result = SDCARD_FILE_RESULT_OK;
     private_data.flash_chunk_ready = 1;

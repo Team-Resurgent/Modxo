@@ -183,6 +183,7 @@ static void program_sector(uint8_t sector_number)
     flash_offset = bank_size * bank_number + sector_number * FLASH_WRITE_PAGE_SIZE;
     flash_range_program(flash_offset, flash_write_buffer, FLASH_WRITE_PAGE_SIZE);
     restore_interrupts(ints); // Add this
+    reset_flash_speed();
 }
 
 static void erase_sector(uint8_t sector_number)
@@ -195,6 +196,7 @@ static void erase_sector(uint8_t sector_number)
     flash_offset = bank_size * bank_number + sector_number * FLASH_WRITE_PAGE_SIZE;
     flash_range_erase(flash_offset, FLASH_WRITE_PAGE_SIZE);
     restore_interrupts(ints); // Add this
+    reset_flash_speed();
 }
 
 static void set_mmc(uint8_t data)

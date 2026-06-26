@@ -183,11 +183,13 @@ static int look_last_config(){
 static void erase_nvm_sector(uint8_t sectorno){
     uint32_t flash_offset = NVM_FLASH_OFFSET + sectorno*NVM_FLASH_SECTOR_SIZE;
     flash_range_erase(flash_offset, NVM_FLASH_SECTOR_SIZE);
+    reset_flash_speed();
 }
 
 static void program_nvm_page(uint8_t number, NVM_PAGE* buffer){
     uint32_t flash_offset = NVM_FLASH_OFFSET + number * NVM_PAGE_SIZE;
     flash_range_program(flash_offset, (void*)buffer, NVM_PAGE_SIZE);
+    reset_flash_speed();
 }
 
 static void prepare_nvm_page(NVM_PAGE* page)
