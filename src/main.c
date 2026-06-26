@@ -197,7 +197,7 @@ uint8_t get_flash_spi_clkdiv() {
         break;
     }
 
-    return 4;
+    return 4; // Default to CLKDIV=4, should be compatible with most flash chips
 }
 
 void detect_and_upgrade_flash_speed() {

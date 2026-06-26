@@ -53,6 +53,7 @@ uint8_t flash_handler_control_set(uint8_t cmd, uint8_t data) {
 
 	case FLASH_CMD_SEND_TXBUF:
 		size_t sz = min(mapper->length, FLASH_BUFFERS_SIZE);
+		if(data) sz = min(data, sz);
 		flash_do_cmd(flash_txbuf[current_mapper_id], flash_rxbuf[current_mapper_id], sz);
 		break;
 	}
