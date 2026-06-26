@@ -300,7 +300,7 @@ void init() {
 	lpc_interface_add_io_handler(LPC_MAPPER_IO_BASE, 0xFFF8, lpc_mapper_read_handler, lpc_mapper_write_handler);
 }
 
-void core0_poll() {
+void lpc_mapper_poll() {
 	sdcard_handler_poll();
 	expansion_handler_poll();
 }
@@ -308,5 +308,5 @@ void core0_poll() {
 MODXO_TASK lpc_mapper_hdlr = {
 	.init = init,
 	.powerup = powerup,
-	.core0_poll = core0_poll
+	.core1_poll = lpc_mapper_poll,
 };

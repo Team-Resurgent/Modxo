@@ -230,7 +230,7 @@ static uint8_t get_flash_size(void)
     return flash_size;
 }
 
-static void core1_poll(void)
+static void flashrom_poll(void)
 {
     uint32_t val;
     if (_erase_sector_number >= 0)
@@ -250,5 +250,5 @@ static void core1_poll(void)
 MODXO_TASK flashrom_hdlr = {
     .init = init,
     .powerup = powerup,
-    .core1_poll = core1_poll
+    .core1_poll = flashrom_poll,
 };

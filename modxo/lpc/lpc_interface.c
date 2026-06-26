@@ -357,6 +357,6 @@ void lpc_interface_poll()
 }
 
 MODXO_TASK lpc_interface_hdlr = {
-    .core1_init = lpc_interface_init,
-    .core1_poll = lpc_interface_poll
+    .init = lpc_interface_init,
+    .core1_poll = lpc_interface_poll,
 };

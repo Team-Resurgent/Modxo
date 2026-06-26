@@ -770,9 +770,9 @@ static void ws2812_init()
 MODXO_TASK ws2812_hdlr = {
     .init = ws2812_init,
     .powerup = ws2812_update_pixels,
-    .core0_poll = ws2812_poll,
+    .core1_poll = ws2812_poll,
     .lpc_reset_on = lpc_reset_on,
-    .lpc_reset_off = lpc_reset_off
+    .lpc_reset_off = lpc_reset_off,
 };
 
 nvm_register_t ws2812_nvm={

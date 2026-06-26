@@ -286,5 +286,5 @@ static void init()
 MODXO_TASK legacy_display_hdlr = {
     .init = init,
     .powerup = powerup,
-    .core0_poll = legacy_display_poll
+    .core1_poll = legacy_display_poll,
 };

@@ -256,7 +256,7 @@ void config_save_parameters(){
     __sev();
 }
 
-void config_poll()
+void config_nvm_poll()
 {
     if(save_config)
     {
@@ -293,9 +293,5 @@ void config_nvm_init() {
 
 MODXO_TASK config_nvm_hdlr = {
     .init = config_nvm_init,
-#ifdef POLL_CONFIG_IN_CORE1
-    .core1_poll = config_poll,
-#else
-    .core0_poll = config_poll,
-#endif
+    .core1_poll = config_nvm_poll,
 };
