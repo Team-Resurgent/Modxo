@@ -214,7 +214,9 @@ void reset_flash_speed() {
 
 #if !PICO_RP2040
     qmi_hw->m[0].timing = (qmi_hw->m[0].timing & ~QMI_M0_TIMING_CLKDIV_BITS) | (detected_clkdiv << QMI_M0_TIMING_CLKDIV_LSB);
-    xbox_active = *(uint8_t*)XIP_NOCACHE_NOALLOC_BASE; // Dummy read
+
+    volatile uint8_t *dummy_addr = (uint8_t*)XIP_NOCACHE_NOALLOC_BASE;
+    uint8_t dummy_val = dummy_addr[0];
 #else
     ssi_hw->ssienr = 0;
     ssi_hw->baudr = detected_clkdiv; // This is PICO_FLASH_SPI_CLKDIV
@@ -230,7 +232,6 @@ void detect_and_upgrade_flash_speed() {
 int main(void)
 {
     detect_and_upgrade_flash_speed();
-    xbox_active = false;
 
     set_sys_clock_khz(SYS_FREQ_IN_KHZ, true);
     stdio_init_all();
