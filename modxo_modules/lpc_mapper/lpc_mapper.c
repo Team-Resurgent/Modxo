@@ -16,6 +16,7 @@ uint8_t current_mapper_hdlr_cmd;
 uint8_t current_mapper_hdlr_data;
 
 bool shortcut_enabled = false;
+uint8_t shortcut_mapper_id = 0;
 uint32_t shortcut_base_addr = 0;
 uint32_t shortcut_buffer_size = 0;
 uint8_t *shortcut_buffer = NULL;
@@ -30,7 +31,13 @@ bool lpc_mapper_custom_rw_handler(uint32_t addr, uint8_t *data, bool is_read) {
 	// Handlers can setup an arbitrary read buffer that bypasses the main loop.
 	// If none of the conditions are meet or the incoming addr is out-of-bounds,
 	// then fall-thru to main loop
-	if(shortcut_enabled && is_read && shortcut_buffer_size && shortcut_buffer) {
+	if(1
+		&& shortcut_enabled // Having this first minimizes opcode count if not enabled
+		&& shortcut_mapper_id == current_mapper_id // Only one mapper can own the shortcut
+		&& is_read
+		&& shortcut_buffer_size
+		&& shortcut_buffer
+	) {
 		uint32_t offset = addr - shortcut_base_addr;
 
 		if(offset < shortcut_buffer_size) {
@@ -316,6 +323,12 @@ void powerup() {
 	current_mapper_hdlr_cmd = 0;
 	current_mapper_hdlr_data = 0;
 	lpc_mapper_enabled = false;
+
+	shortcut_enabled = false;
+	shortcut_mapper_id = 0;
+	shortcut_base_addr = 0;
+	shortcut_buffer_size = 0;
+	shortcut_buffer = NULL;
 
 	run_handler_powerups();
 }

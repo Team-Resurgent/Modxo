@@ -55,6 +55,7 @@ extern uint8_t current_mapper_hdlr_data;
 extern bool lpc_mapper_enabled;
 
 extern bool shortcut_enabled;
+extern uint8_t shortcut_mapper_id;
 extern uint32_t shortcut_base_addr;
 extern uint32_t shortcut_buffer_size;
 extern uint8_t *shortcut_buffer;

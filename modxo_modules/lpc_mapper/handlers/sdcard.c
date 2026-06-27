@@ -1078,6 +1078,7 @@ bool sdcard_memread_handler(uint32_t addr, uint8_t *data, uint8_t mapper_id)
         *data = chunk_offset < chunk_length ? private_data.cached_chunk_buffer[chunk_offset] : 0;
 
         if(shortcut_enabled) {
+            shortcut_mapper_id = mapper_id;
             shortcut_buffer_size = SDCARD_FILE_CHUNK_SIZE;
             shortcut_base_addr = base_addr + (offset & ~(SDCARD_FILE_CHUNK_SIZE - 1));
             shortcut_buffer = private_data.cached_chunk_buffer;
