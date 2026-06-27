@@ -8,13 +8,17 @@
 
 LPC_MAPPER lpc_mappers[NUM_LPC_MAPPERS];
 
-uint8_t lpc_mapper_enabled = false;
+bool lpc_mapper_enabled = false;
 uint8_t current_lpc_mapper_cmd;
 uint32_t current_long_val;
 uint8_t current_mapper_id;
 uint8_t current_mapper_hdlr_cmd;
 uint8_t current_mapper_hdlr_data;
 
+bool shortcut_enabled = false;
+uint32_t shortcut_base_addr = 0;
+uint32_t shortcut_buffer_size = 0;
+uint8_t *shortcut_buffer = NULL;
 
 
 // Returns true if there is a custom enabled handler for the given address
@@ -22,6 +26,18 @@ uint8_t current_mapper_hdlr_data;
 //    fallback to default flashrom handler
 bool lpc_mapper_custom_rw_handler(uint32_t addr, uint8_t *data, bool is_read) {
 	LPC_MAPPER *mapper;
+
+	// Handlers can setup an arbitrary read buffer that bypasses the main loop.
+	// If none of the conditions are meet or the incoming addr is out-of-bounds,
+	// then fall-thru to main loop
+	if(shortcut_enabled && is_read && shortcut_buffer_size && shortcut_buffer) {
+		uint32_t offset = addr - shortcut_base_addr;
+
+		if(offset < shortcut_buffer_size) {
+			*data = *(uint8_t*)(shortcut_buffer + offset);
+			return true;
+		}
+	}
 
 	for(size_t i = 0; i < NUM_LPC_MAPPERS; i++) {
 		uint32_t start;
@@ -187,6 +203,10 @@ void send_command(uint8_t data) {
 	case LPC_MAPPER_CMD_MAPPER_CTRL_DATA:
 		current_mapper_hdlr_data = data;
 		break;
+
+	case LPC_MAPPER_SHORTCUT_ENABLE:
+		shortcut_enabled = data;
+		break;
 	}
 }
 
@@ -228,6 +248,10 @@ uint8_t peek_command() {
 
 	case LPC_MAPPER_CMD_MAPPER_CTRL_DATA:
 		return current_mapper_hdlr_data;
+		break;
+
+	case LPC_MAPPER_SHORTCUT_ENABLE:
+		return shortcut_enabled;
 		break;
 	}
 

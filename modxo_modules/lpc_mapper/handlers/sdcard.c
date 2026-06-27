@@ -1050,8 +1050,10 @@ void sdcard_queue_command(uint8_t cmd, uint8_t data)
 
 bool sdcard_memread_handler(uint32_t addr, uint8_t *data, uint8_t mapper_id) 
 {
-    uint32_t offset = (addr - lpc_mappers[mapper_id].base_addr);
-    offset = offset & (lpc_mappers[mapper_id].length - 1);
+    LPC_MAPPER *mapper = &lpc_mappers[mapper_id];
+    uint32_t base_addr = mapper->base_addr;
+    uint32_t offset = (addr - base_addr);
+    offset = offset & (mapper->length - 1);
 
     if (private_data.payload_type == SDCARD_PAYLOAD_TYPE_FILE_SD_BIOS)
     {
@@ -1071,8 +1073,16 @@ bool sdcard_memread_handler(uint32_t addr, uint8_t *data, uint8_t mapper_id)
             *data = 0;
             return true;
         }
+
         uint32_t chunk_offset = mirror & (SDCARD_FILE_CHUNK_SIZE - 1);
         *data = chunk_offset < chunk_length ? private_data.cached_chunk_buffer[chunk_offset] : 0;
+
+        if(shortcut_enabled) {
+            shortcut_buffer_size = SDCARD_FILE_CHUNK_SIZE;
+            shortcut_base_addr = base_addr + (offset & ~(SDCARD_FILE_CHUNK_SIZE - 1));
+            shortcut_buffer = private_data.cached_chunk_buffer;
+        }
+
         return true;
     }
 

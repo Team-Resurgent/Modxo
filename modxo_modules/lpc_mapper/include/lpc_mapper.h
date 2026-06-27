@@ -20,6 +20,7 @@
 #define LPC_MAPPER_CMD_MAPPER_CTRL                   6
 #define LPC_MAPPER_CMD_MAPPER_CTRL_CMD               7
 #define LPC_MAPPER_CMD_MAPPER_CTRL_DATA              8
+#define LPC_MAPPER_SHORTCUT_ENABLE                   9
 
 #define LPC_MAPPER_TYPE_NONE                         0
 #define LPC_MAPPER_TYPE_PSRAM                        1
@@ -51,7 +52,12 @@ extern uint32_t current_long_val;
 extern uint8_t current_mapper_id;
 extern uint8_t current_mapper_hdlr_cmd;
 extern uint8_t current_mapper_hdlr_data;
-extern uint8_t lpc_mapper_enabled;
+extern bool lpc_mapper_enabled;
+
+extern bool shortcut_enabled;
+extern uint32_t shortcut_base_addr;
+extern uint32_t shortcut_buffer_size;
+extern uint8_t *shortcut_buffer;
 
 
 bool lpc_mapper_custom_read_handler(uint32_t addr, uint8_t *data);
