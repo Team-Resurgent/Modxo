@@ -211,7 +211,7 @@ void send_command(uint8_t data) {
 		current_mapper_hdlr_data = data;
 		break;
 
-	case LPC_MAPPER_SHORTCUT_ENABLE:
+	case LPC_MAPPER_CMD_SHORTCUT_ENABLE:
 		shortcut_enabled = data;
 		break;
 	}
@@ -257,7 +257,7 @@ uint8_t peek_command() {
 		return current_mapper_hdlr_data;
 		break;
 
-	case LPC_MAPPER_SHORTCUT_ENABLE:
+	case LPC_MAPPER_CMD_SHORTCUT_ENABLE:
 		return shortcut_enabled;
 		break;
 	}

@@ -20,7 +20,7 @@
 #define LPC_MAPPER_CMD_MAPPER_CTRL                   6
 #define LPC_MAPPER_CMD_MAPPER_CTRL_CMD               7
 #define LPC_MAPPER_CMD_MAPPER_CTRL_DATA              8
-#define LPC_MAPPER_SHORTCUT_ENABLE                   9
+#define LPC_MAPPER_CMD_SHORTCUT_ENABLE               9
 
 #define LPC_MAPPER_TYPE_NONE                         0
 #define LPC_MAPPER_TYPE_PSRAM                        1
