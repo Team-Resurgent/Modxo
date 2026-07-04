@@ -32,6 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <modxo/lpc_interface.h>
 #include <lpc_mapper.h>
 
+#include <pico/mutex.h>
 #include <pico.h>
 #include <stdio.h>
 #include <string.h>
@@ -56,6 +57,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define SDCARD_FILE_CHUNK_SIZE_SHIFT 12
 #define SDCARD_FILE_CHUNK_SIZE (1 << SDCARD_FILE_CHUNK_SIZE_SHIFT)
+
+#define SDCARD_FILE_RCACHE_SIZE_SHIFT 11
+#define SDCARD_FILE_RCACHE_SIZE (1 << SDCARD_FILE_RCACHE_SIZE_SHIFT)
+#define SDCARD_FILE_RCACHE_CHUNKS 2
 
 #define SDCARD_CWD_RESULT_OK 0
 #define SDCARD_CWD_RESULT_BAD_INDEX 1
@@ -139,6 +144,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SDCARD_COMMAND_RESPONSE_PATH_RENAME_READY 53
 #define SDCARD_COMMAND_RESPONSE_PATH_RENAME_RESULT 54
 
+#define SDCARD_COMMAND_CHUNK_READAHEAD 55
+
 #define SDCARD_VOLUME_SPACE_DWORD_LOW 0
 #define SDCARD_VOLUME_SPACE_DWORD_HIGH 1
 
@@ -182,6 +189,13 @@ typedef struct
 
 typedef struct
 {
+    uint32_t index;
+    uint32_t length;
+    uint8_t buffer[SDCARD_FILE_RCACHE_SIZE];
+} sdcard_rcached_chunk_t;
+
+typedef struct
+{
     MODXO_QUEUE_ITEM_T buffer[SDCARD_QUEUE_BUFFER_LEN];
     MODXO_QUEUE_T queue;
 
@@ -208,6 +222,15 @@ typedef struct
     uint32_t cached_chunk_index;
     uint32_t cached_chunk_length;
     uint8_t cached_chunk_buffer[SDCARD_FILE_CHUNK_SIZE];
+
+    uint8_t rcache_chunk_idx;
+    sdcard_rcached_chunk_t rcache_chunks[SDCARD_FILE_RCACHE_CHUNKS];
+
+    mutex_t readahead_mutex;
+    uint8_t readahead_is_loading;
+    uint32_t readahead_chunk_index;
+    uint32_t readahead_chunk_length;
+    uint8_t readahead_chunk_buffer[SDCARD_FILE_RCACHE_SIZE];
 
     char cwd[SDCARD_PATH_MAX];
     char path[SDCARD_PATH_MAX];
@@ -303,7 +326,7 @@ uint8_t sdcard_cwd(uint8_t index)
     const char *nm = private_data.file_entries[index].name;
     size_t clen = strlen(private_data.cwd);
     size_t nlen = strlen(nm);
-    if (clen + 1u + nlen >= sizeof(private_data.cwd))
+    if (clen + 1 + nlen >= sizeof(private_data.cwd))
     {
         return SDCARD_CWD_RESULT_PATH_TOO_LONG;
     }
@@ -497,8 +520,8 @@ void sdcard_dir_list()
             file_entry->id = current_offset;
             file_entry->flags = file_info.fattrib;
             file_entry->file_size = (file_info.fattrib & AM_DIR) ? 0 : (uint32_t)file_info.fsize;
-            strncpy(file_entry->name, file_info.fname, SDCARD_PATH_MAX - 1u);
-            file_entry->name[SDCARD_PATH_MAX - 1u] = '\0';
+            strncpy(file_entry->name, file_info.fname, SDCARD_PATH_MAX - 1);
+            file_entry->name[SDCARD_PATH_MAX - 1] = '\0';
             file_entry->file_name_length = (uint16_t)strlen(file_entry->name);
 
             file_count++;
@@ -535,8 +558,8 @@ static void sdcard_file_info_apply(const FILINFO *file_info, uint32_t created_pa
 {
     private_data.file_info_flags = file_info->fattrib;
     private_data.file_info_size = (file_info->fattrib & AM_DIR) ? 0 : (uint32_t)file_info->fsize;
-    strncpy(private_data.file_info_name, file_info->fname, SDCARD_PATH_MAX - 1u);
-    private_data.file_info_name[SDCARD_PATH_MAX - 1u] = '\0';
+    strncpy(private_data.file_info_name, file_info->fname, SDCARD_PATH_MAX - 1);
+    private_data.file_info_name[SDCARD_PATH_MAX - 1] = '\0';
     private_data.file_info_name_length = (uint16_t)strlen(private_data.file_info_name);
     private_data.file_info_modified = sdcard_pack_fatfs_datetime(file_info->fdate, file_info->ftime);
     private_data.file_info_created = created_packed;
@@ -779,8 +802,14 @@ uint8_t sdcard_file_close()
     return fr == FR_OK ? SDCARD_FILE_RESULT_OK : SDCARD_FILE_RESULT_ERROR;
 }
 
-uint8_t sdcard_file_read_chunk(uint32_t chunk_index, uint32_t* chunk_length)
-{
+uint8_t sdcard_file_read_chunk(
+    uint32_t chunk_index,
+    uint32_t* chunk_length,
+    uint8_t* buffer,
+    uint32_t* in_chunk_idx,
+    uint32_t* in_chunk_len,
+    uint32_t read_size
+) {
     FRESULT file_result;
 
     if (!private_data.sd_fat_mounted)
@@ -800,16 +829,16 @@ uint8_t sdcard_file_read_chunk(uint32_t chunk_index, uint32_t* chunk_length)
         return SDCARD_FILE_RESULT_ERROR;
     }
 
-    uint32_t max_chunk_index = (private_data.file_info_size + SDCARD_FILE_CHUNK_SIZE - 1u) / SDCARD_FILE_CHUNK_SIZE;
+    uint32_t max_chunk_index = (private_data.file_info_size + read_size - 1) / read_size;
     if (chunk_index >= max_chunk_index)
     {
         *chunk_length = 0;
         return SDCARD_FILE_RESULT_ERROR;
     }
 
-    if (private_data.cached_chunk_index == 0xffffffff || private_data.cached_chunk_index != chunk_index)
+    if (*in_chunk_idx == 0xffffffff || *in_chunk_idx != chunk_index)
     {
-        uint32_t offset = chunk_index * (uint32_t)SDCARD_FILE_CHUNK_SIZE;
+        uint32_t offset = chunk_index * (uint32_t)read_size;
         uint32_t remaining = private_data.file_info_size - offset;
 
         file_result = f_lseek(&private_data.open_file, (FSIZE_t)offset);
@@ -820,19 +849,19 @@ uint8_t sdcard_file_read_chunk(uint32_t chunk_index, uint32_t* chunk_length)
         }
 
         UINT bytes_read = 0;
-        UINT bytes_to_read = (UINT)((remaining > SDCARD_FILE_CHUNK_SIZE) ? SDCARD_FILE_CHUNK_SIZE : remaining);
-        file_result = f_read(&private_data.open_file, private_data.cached_chunk_buffer, bytes_to_read, &bytes_read);
+        UINT bytes_to_read = (UINT)((remaining > read_size) ? read_size : remaining);
+        file_result = f_read(&private_data.open_file, buffer, bytes_to_read, &bytes_read);
         if (file_result != FR_OK)
         {
             *chunk_length = 0;
             return SDCARD_FILE_RESULT_ERROR;
         }
 
-        private_data.cached_chunk_index = chunk_index;
-        private_data.cached_chunk_length = (uint16_t)bytes_read;
+        *in_chunk_idx = chunk_index;
+        *in_chunk_len = bytes_read;
     }
 
-    *chunk_length = private_data.cached_chunk_length;
+    *chunk_length = *in_chunk_len;
     return SDCARD_FILE_RESULT_OK;
 }
 
@@ -1026,8 +1055,14 @@ uint8_t sdcard_file_close()
     return SDCARD_FILE_RESULT_OK;
 }
 
-uint8_t sdcard_file_read_chunk(uint32_t chunk_index, uint32_t* chunk_length)
-{
+uint8_t sdcard_file_read_chunk(
+    uint32_t chunk_index,
+    uint32_t* chunk_length,
+    uint8_t* buffer,
+    uint32_t* in_chunk_idx,
+    uint32_t* in_chunk_len,
+    uint32_t read_size
+) {
     (void)chunk_index;
     *chunk_length = 0;
     return SDCARD_FILE_RESULT_OK;
@@ -1040,57 +1075,132 @@ void sdcard_queue_command(uint8_t cmd, uint8_t data)
     if (cmd == SDCARD_COMMAND_NONE) {
         return;
     }
+
     MODXO_QUEUE_ITEM_T _item;
     _item.iscmd = true;
-    _item.data.cmd = (uint8_t)cmd;
-    _item.data.param1 = (uint8_t)data;
+    _item.data.cmd = cmd;
+    _item.data.param1 = data;
     modxo_queue_insert(&private_data.queue, &_item);
     modxo_signal_core1_poll();
 }
 
-bool sdcard_memread_handler(uint32_t addr, uint8_t *data, uint8_t mapper_id) 
-{
+void sdcard_chunk_readahead(uint32_t chunk) {
+    uint32_t chunk_length = 0;
+    if (sdcard_file_read_chunk(
+        chunk,
+        &chunk_length,
+        private_data.readahead_chunk_buffer,
+        &private_data.readahead_chunk_index,
+        &private_data.readahead_chunk_length,
+        SDCARD_FILE_RCACHE_SIZE
+    ) != SDCARD_FILE_RESULT_OK)
+    {
+        private_data.readahead_chunk_index = 0xffffffff;
+        private_data.readahead_chunk_length = 0;
+    }
+
+    mutex_exit(&private_data.readahead_mutex);
+    private_data.readahead_is_loading = false;
+}
+
+void sdcard_queue_chunk_readahead(uint32_t chunk) {
+    // Only one readahead can be queued at a time
+    if(private_data.readahead_is_loading || private_data.readahead_chunk_index == chunk) return;
+
+    private_data.readahead_is_loading = true;
+    mutex_enter_blocking(&private_data.readahead_mutex);
+    sdcard_queue_command(SDCARD_COMMAND_CHUNK_READAHEAD, chunk);
+}
+
+bool sdcard_bios_read_handler(uint32_t addr, uint8_t *data, uint8_t mapper_id) {
+    uint32_t chunk_length = 0;
     LPC_MAPPER *mapper = &lpc_mappers[mapper_id];
     uint32_t base_addr = mapper->base_addr;
     uint32_t offset = (addr - base_addr);
     offset = offset & (mapper->length - 1);
 
-    if (private_data.payload_type == SDCARD_PAYLOAD_TYPE_FILE_SD_BIOS)
-    {
-        uint32_t mirror = offset & (private_data.file_info_size - 1u);
-        uint32_t chunk = mirror >> SDCARD_FILE_CHUNK_SIZE_SHIFT;
-        if (private_data.cached_chunk_index != 0xffffffff && private_data.cached_chunk_index == chunk)
-        {
-            uint32_t chunk_offset = mirror & (SDCARD_FILE_CHUNK_SIZE - 1);
-            *data = chunk_offset < private_data.cached_chunk_length
-                ? private_data.cached_chunk_buffer[chunk_offset]
-                : 0;
-            return true;
+    uint32_t mirror = offset & (private_data.file_info_size - 1);
+    uint32_t chunk = mirror >> SDCARD_FILE_RCACHE_SIZE_SHIFT;
+
+    // Check previous cached chunks
+    for(uint8_t i = 0; i < SDCARD_FILE_RCACHE_CHUNKS; i++) {
+        if (private_data.rcache_chunks[i].index == chunk) {
+            private_data.rcache_chunk_idx = i;
+            chunk_length = private_data.rcache_chunks[i].length;
+            goto kickoff_and_exit;
         }
-        uint32_t chunk_length = 0;
-        if (sdcard_file_read_chunk(chunk, &chunk_length) != SDCARD_FILE_RESULT_OK)
-        {
+    }
+
+    // Advance to next cache buffer
+    private_data.rcache_chunk_idx++;
+    if(private_data.rcache_chunk_idx >= SDCARD_FILE_RCACHE_CHUNKS)
+        private_data.rcache_chunk_idx = 0;
+
+    if(private_data.readahead_chunk_index == chunk) {
+        // We have a readahead copy of the chunk, let's use it!
+        memcpy(
+            private_data.rcache_chunks[private_data.rcache_chunk_idx].buffer,
+            private_data.readahead_chunk_buffer,
+            private_data.readahead_chunk_length
+        );
+        private_data.rcache_chunks[private_data.rcache_chunk_idx].index = private_data.readahead_chunk_index;
+        chunk_length = private_data.rcache_chunks[private_data.rcache_chunk_idx].length = private_data.readahead_chunk_length;
+
+        private_data.readahead_chunk_index = 0xffffffff;
+        private_data.readahead_chunk_length = 0;
+    } else {
+        // Serialize access to the SD card, blocks until readahead is done
+        mutex_enter_blocking(&private_data.readahead_mutex);
+        if (sdcard_file_read_chunk(
+            chunk,
+            &chunk_length,
+            private_data.rcache_chunks[private_data.rcache_chunk_idx].buffer,
+            &private_data.rcache_chunks[private_data.rcache_chunk_idx].index,
+            &private_data.rcache_chunks[private_data.rcache_chunk_idx].length,
+            SDCARD_FILE_RCACHE_SIZE
+        ) != SDCARD_FILE_RESULT_OK) {
+            mutex_exit(&private_data.readahead_mutex);
             *data = 0;
             return true;
         }
-
-        uint32_t chunk_offset = mirror & (SDCARD_FILE_CHUNK_SIZE - 1);
-        *data = chunk_offset < chunk_length ? private_data.cached_chunk_buffer[chunk_offset] : 0;
-
-        if(shortcut_enabled) {
-            shortcut_mapper_id = mapper_id;
-            shortcut_buffer_size = SDCARD_FILE_CHUNK_SIZE;
-            shortcut_base_addr = base_addr + (offset & ~(SDCARD_FILE_CHUNK_SIZE - 1));
-            shortcut_buffer = private_data.cached_chunk_buffer;
-        }
-
-        return true;
+        mutex_exit(&private_data.readahead_mutex);
     }
+
+kickoff_and_exit:
+    // Dispatch reading next chunk in the background (should run on core1)
+    sdcard_queue_chunk_readahead(chunk + 1);
+
+    uint32_t chunk_offset = mirror & (SDCARD_FILE_RCACHE_SIZE - 1);
+    *data = chunk_offset < chunk_length
+        ? private_data.rcache_chunks[private_data.rcache_chunk_idx].buffer[chunk_offset]
+        : 0;
+
+    // Setup the shortcut buffer
+    if(shortcut_enabled) {
+        shortcut_mapper_id = mapper_id;
+        shortcut_buffer_size = SDCARD_FILE_RCACHE_SIZE;
+        shortcut_base_addr = base_addr + (offset & ~(SDCARD_FILE_RCACHE_SIZE - 1));
+        shortcut_buffer = private_data.rcache_chunks[private_data.rcache_chunk_idx].buffer;
+    }
+
+    return true;
+}
+
+bool sdcard_memread_handler(uint32_t addr, uint8_t *data, uint8_t mapper_id)
+{
+    if (private_data.payload_type == SDCARD_PAYLOAD_TYPE_FILE_SD_BIOS) {
+        return sdcard_bios_read_handler(addr, data, mapper_id);
+    }
+
+    LPC_MAPPER *mapper = &lpc_mappers[mapper_id];
+    uint32_t base_addr = mapper->base_addr;
+    uint32_t offset = (addr - base_addr);
+    offset = offset & (mapper->length - 1);
 
     if (private_data.payload_type == SDCARD_PAYLOAD_TYPE_FILE_NAME)
     {
         *data = offset < private_data.file_info_name_length ? private_data.file_info_name[offset] : 0;
-		return true;
+        return true;
     }
 
     if (private_data.payload_type == SDCARD_PAYLOAD_TYPE_FILE_SD_CHUNK)
@@ -1128,7 +1238,7 @@ bool sdcard_memread_handler(uint32_t addr, uint8_t *data, uint8_t mapper_id)
     }
 
     *data = 0;
-	return true;
+    return true;
 }
 
 bool sdcard_memwrite_handler(uint32_t addr, uint8_t *data, uint8_t mapper_id) 
@@ -1250,7 +1360,14 @@ uint8_t sdcard_handler_control_peek(uint8_t cmd, uint8_t data)
             return sdcard_file_close();
 
         case SDCARD_COMMAND_FILE_READ_CHUNK:
-            return sdcard_file_read_chunk(current_long_val, &current_long_val);
+            return sdcard_file_read_chunk(
+                current_long_val,
+                &current_long_val,
+                private_data.cached_chunk_buffer,
+                &private_data.cached_chunk_index,
+                &private_data.cached_chunk_length,
+                SDCARD_FILE_CHUNK_SIZE
+            );
 
         case SDCARD_COMMAND_CWD_ROOT:
             return sdcard_cwd_root();
@@ -1456,6 +1573,9 @@ void sdcard_handler_poll()
                 case SDCARD_COMMAND_REQUEST_DISK_WRITE_SECTOR:
                     sdcard_disk_write_sector();
                     break;
+                case SDCARD_COMMAND_CHUNK_READAHEAD:
+                    sdcard_chunk_readahead(_item.data.param1);
+                    break;
                 default:
                     break;
             }
@@ -1466,7 +1586,13 @@ void sdcard_handler_poll()
 void sdcard_handler_powerup() 
 {
     memset(&private_data, 0, sizeof(private_data));
-	sdcard_cwd_root();
+    sdcard_cwd_root();
     private_data.cached_chunk_index = 0xffffffff;
+    private_data.readahead_chunk_index = 0xffffffff;
+
+    for(uint8_t i = 0; i < SDCARD_FILE_RCACHE_CHUNKS; i++)
+        private_data.rcache_chunks[i].index = 0xffffffff;
+
+    mutex_init(&private_data.readahead_mutex);
     modxo_queue_init(&private_data.queue, (void *)private_data.buffer, sizeof(private_data.buffer[0]), SDCARD_QUEUE_BUFFER_LEN);
 }
