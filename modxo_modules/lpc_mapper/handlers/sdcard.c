@@ -1070,7 +1070,7 @@ uint8_t sdcard_file_read_chunk(
 
 #endif
 
-void sdcard_queue_command(uint8_t cmd, uint8_t data)
+void sdcard_queue_command(uint8_t cmd, uint32_t data)
 {
     if (cmd == SDCARD_COMMAND_NONE) {
         return;
@@ -1079,7 +1079,7 @@ void sdcard_queue_command(uint8_t cmd, uint8_t data)
     MODXO_QUEUE_ITEM_T _item;
     _item.iscmd = true;
     _item.data.cmd = cmd;
-    _item.data.param1 = data;
+    _item.data2 = data;
     modxo_queue_insert(&private_data.queue, &_item);
     modxo_signal_core1_poll();
 }
@@ -1574,7 +1574,7 @@ void sdcard_handler_poll()
                     sdcard_disk_write_sector();
                     break;
                 case SDCARD_COMMAND_CHUNK_READAHEAD:
-                    sdcard_chunk_readahead(_item.data.param1);
+                    sdcard_chunk_readahead(_item.data2);
                     break;
                 default:
                     break;

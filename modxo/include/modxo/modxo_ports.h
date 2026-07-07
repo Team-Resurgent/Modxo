@@ -47,6 +47,7 @@ typedef struct
         uint8_t bytes[4];
         uint32_t raw;
     } data;
+    uint32_t data2;
 } MODXO_QUEUE_ITEM_T;
 #pragma pack(pop)
 
