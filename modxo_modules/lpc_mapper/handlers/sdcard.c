@@ -1136,6 +1136,9 @@ bool sdcard_bios_read_handler(uint32_t addr, uint8_t *data, uint8_t mapper_id) {
     if(private_data.rcache_chunk_idx >= SDCARD_FILE_RCACHE_CHUNKS)
         private_data.rcache_chunk_idx = 0;
 
+    // Serialize access to the SD card, blocks until readahead is done
+    mutex_enter_blocking(&private_data.readahead_mutex);
+
     if(private_data.readahead_chunk_index == chunk) {
         // We have a readahead copy of the chunk, let's use it!
         memcpy(
@@ -1143,14 +1146,13 @@ bool sdcard_bios_read_handler(uint32_t addr, uint8_t *data, uint8_t mapper_id) {
             private_data.readahead_chunk_buffer,
             private_data.readahead_chunk_length
         );
+
         private_data.rcache_chunks[private_data.rcache_chunk_idx].index = private_data.readahead_chunk_index;
         chunk_length = private_data.rcache_chunks[private_data.rcache_chunk_idx].length = private_data.readahead_chunk_length;
 
         private_data.readahead_chunk_index = 0xffffffff;
         private_data.readahead_chunk_length = 0;
     } else {
-        // Serialize access to the SD card, blocks until readahead is done
-        mutex_enter_blocking(&private_data.readahead_mutex);
         if (sdcard_file_read_chunk(
             chunk,
             &chunk_length,
@@ -1163,8 +1165,9 @@ bool sdcard_bios_read_handler(uint32_t addr, uint8_t *data, uint8_t mapper_id) {
             *data = 0;
             return true;
         }
-        mutex_exit(&private_data.readahead_mutex);
     }
+
+    mutex_exit(&private_data.readahead_mutex);
 
 kickoff_and_exit:
     // Dispatch reading next chunk in the background (should run on core1)
