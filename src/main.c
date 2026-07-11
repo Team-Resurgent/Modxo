@@ -194,21 +194,31 @@ uint8_t get_flash_spi_clkdiv() {
     uint8_t device_id2 = rxbuf[3];
 
     switch(manuf_id) {
+    case 0x68: // BoHong/BYTe (Found on some cheap clone boards, missing SFDP table)
+        if(device_id1 == 0x40 && device_id2 == 0x15) return 4; // BH25D16A/BY25D16AS (2MB, 108MHz)
+        break;
     case 0x5E: // ZBit
-        if(device_id1 == 0x40 && device_id2 == 0x18) return 2; // ZB25VQ128D (16MB)
+        if(device_id1 == 0x40 && device_id2 == 0x18) return 2; // ZB25VQ128D (16MB, 133MHz)
         break;
     case 0xEF: // Winbond
-        if(device_id1 == 0x40 && device_id2 == 0x15) return 2; // W25Q16JV (2MB)
-        if(device_id1 == 0x40 && device_id2 == 0x16) return 2; // W25Q32JV (4MB)
-        if(device_id1 == 0x40 && device_id2 == 0x18) return 2; // W25Q128JV (16MB)
+        if(device_id1 == 0x40 && device_id2 == 0x15) return 2; // W25Q16JV (2MB, 133MHz)
+        if(device_id1 == 0x40 && device_id2 == 0x16) return 2; // W25Q32JV (4MB, 133MHz)
+        if(device_id1 == 0x40 && device_id2 == 0x18) return 2; // W25Q128JV (16MB, 133MHz)
         break;
     }
 
     return 4; // Default to CLKDIV=4, should be compatible with most flash chips, should be 66MHz SPI CLK
 }
 
-// Calling flash_do_cmd() (or anything that calls it internally, like flash_get_unique_id()) will
-// reset the CLKDIV value back to its compiled default (4 in this case)
+// Calling flash_do_cmd(), or anything that indirectly calls bootrom function flash_exit_xip(),
+// will reset CLKDIV to 6, then restore to 4 by calling boot2 code (via flash_enable_xip_via_boot2())
+// Currently, that's:
+//  - flash_start_xip()
+//  - flash_range_erase()
+//  - flash_range_program()
+//  - flash_do_cmd()
+//  - flash_get_unique_id() - (indirectly calls flash_do_cmd())
+// https://github.com/raspberrypi/pico-bootrom-rp2040/blob/ef22cd8ede5bc007f81d7f2416b48db90f313434/bootrom/program_flash_generic.c#L72
 void reset_flash_speed() {
     if(!detected_clkdiv) return;
 
@@ -216,7 +226,7 @@ void reset_flash_speed() {
     qmi_hw->m[0].timing = (qmi_hw->m[0].timing & ~QMI_M0_TIMING_CLKDIV_BITS) | (detected_clkdiv << QMI_M0_TIMING_CLKDIV_LSB);
 
     volatile uint8_t *dummy_addr = (uint8_t*)XIP_NOCACHE_NOALLOC_BASE;
-    uint8_t dummy_val = dummy_addr[0];
+    uint8_t dummy_val = dummy_addr[0]; // Dummy read required when changing QMI timing
 #else
     ssi_hw->ssienr = 0;
     ssi_hw->baudr = detected_clkdiv; // This is PICO_FLASH_SPI_CLKDIV
