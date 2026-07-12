@@ -38,6 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <modxo.h>
 #include <modxo_pinout.h>
 #include <ws2812.h>
+#include <serirq.h>
 #include <legacy_display.h>
 #include <LPC47M152.h>
 #include <uart_16550.h>
@@ -178,6 +179,7 @@ void register_handlers()
     modxo_register_handler(&uart_16550_hdlr);
     modxo_register_handler(&config_nvm_hdlr);
     modxo_register_handler(&ws2812_hdlr);
+    modxo_register_handler(&serirq_hdlr);
     modxo_register_handler(&legacy_display_hdlr);
 }
 
