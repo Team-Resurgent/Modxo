@@ -6,7 +6,7 @@ set(LPC_LFRAME    6)
 set(GPIO_D0       7)
 set(LPC_RESET     8)
 set(LPC_ON        9)
-set(SERIRQ        10)
+set(LPC_SERIRQ    10)
 
 #PSRAM
 set(PSRAM_CS1 0)

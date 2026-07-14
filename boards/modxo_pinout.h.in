@@ -18,6 +18,7 @@ Copyright (c) 2024, Shalx <Alejandro L. Huitron shalxmva@gmail.com>
 #define GPIO_D0       @GPIO_D0@
 #define LPC_RESET     @LPC_RESET@
 #define LPC_ON        @LPC_ON@
+#define LPC_SERIRQ    @LPC_SERIRQ@
 
 //LCD_PORT GPIOs
 #define LCD_PORT_I2C_ENABLE @LCD_PORT_I2C_ENABLE@
