@@ -16,10 +16,9 @@ wait_start:                     ; waiting for a start frame
     jmp pin wait_start          ; if SERIRQ is high by this point, this is not a start frame, go back and wait for next start frame
 
 wait_irq:                       ; waiting for requested IRQ frame to come up
-    wait 0 gpio LCLK_PIN        ; wait for LCLK to go low
-    jmp Y-- wait_irq            ; once Y reaches 0 (before decrement), we should be at the requested IRQ frame
+    jmp Y-- wait_irq       [1]  ; once Y reaches 0 (before decrement), we should be at the requested IRQ frame
 
 pulse_irq:                      ; this will pulse SERIRQ for one LCLK
-    set pins, 0            [2]  ; set SERIRQ low - the delay here decides how long the pulse lasts, in PIO cycles
+    set pins, 0            [1]  ; set SERIRQ low - the delay here decides how long the pulse lasts, in PIO cycles
     set pins, 1                 ; set SERIRQ high
 .wrap

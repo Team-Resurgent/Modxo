@@ -53,7 +53,7 @@ static void serirq_core1_init() {
     serirq_pio_init();
 }
 
-static void serirq_trigger_irq(uint32_t irq) {
+void serirq_trigger_irq(uint32_t irq) {
     // Xbox only supports 21 IRQs thru SERIRQ line
     if(irq > 20) {
         return;
