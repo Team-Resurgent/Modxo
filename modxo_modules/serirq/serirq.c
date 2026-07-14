@@ -26,7 +26,7 @@ static void serirq_pio_init() {
     serirq_offset = pio_add_program(serirq_pio, &serirq_program);
 
     pio_gpio_init(serirq_pio, serirq_pin);
-    pio_gpio_init(serirq_pio, LPC_CLK);
+    //pio_gpio_init(serirq_pio, LPC_CLK);
     gpio_disable_pulls(serirq_pin);
 
     pio_sm_set_consecutive_pindirs(serirq_pio, serirq_sm, serirq_pin, 1, true);
