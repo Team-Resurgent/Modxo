@@ -13,6 +13,8 @@
 #include <modxo_pinout.h>
 
 #define NUM_LCLKS_PER_IRQ_FRAME 3
+#define NUM_PIOS_PER_LCLKS 8
+#define IRQ_FRAME_PIO_OFFSET 14
 
 PIO serirq_pio = pio1;
 uint8_t serirq_pin = LPC_SERIRQ;
@@ -34,7 +36,7 @@ static void serirq_pio_init() {
     pio_sm_config c = serirq_program_get_default_config(serirq_offset);
     sm_config_set_jmp_pin (&c, serirq_pin);
     sm_config_set_set_pins(&c, serirq_pin, 1);
-    sm_config_set_clkdiv(&c, 4); // 266mhz sysclk / 4 = 66.5mhz (LCLK freq * 2)
+    sm_config_set_clkdiv(&c, 1); // 266mhz sysclk / 1 = 266mhz (LPC/PCI clock frequency * 8)
 
     pio_sm_init(serirq_pio, serirq_sm, serirq_offset, &c);
     pio_sm_set_enabled(serirq_pio, serirq_sm, true);
@@ -49,7 +51,7 @@ void serirq_trigger_irq(uint32_t irq) {
     // Xbox only supports 21 IRQs by default thru SERIRQ line
     if(irq > 20) return;
 
-    serirq_pio->txf[serirq_sm] = irq * NUM_LCLKS_PER_IRQ_FRAME; // Number of LCLKs to wait
+    serirq_pio->txf[serirq_sm] = irq * NUM_LCLKS_PER_IRQ_FRAME * NUM_PIOS_PER_LCLKS + IRQ_FRAME_PIO_OFFSET; // Number of LCLKs to wait
 }
 
 static void serirq_lpc_reset() {
