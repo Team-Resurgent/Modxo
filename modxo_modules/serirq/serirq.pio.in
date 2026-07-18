@@ -10,7 +10,7 @@
     mov Y, OSR                  ; copy to Y scratch register, this is a counter used for the wait_irq loop below to wait for the requested IRQ frame
 
 wait_start:                     ; waiting for a start frame
-    wait 0 gpio SERIRQ_PIN [23]  ; wait for SERIRQ to go low, it should remain low for 4 consecutive LCLKs if this is a start frame
+    wait 0 gpio SERIRQ_PIN [23] ; wait for SERIRQ to go low, it should remain low for 4 consecutive LCLKs if this is a start frame
     jmp pin wait_start          ; if SERIRQ is high by this point, this is not a start frame, go back and wait for next start frame
 
 wait_irq:                       ; waiting for requested IRQ frame to come up
