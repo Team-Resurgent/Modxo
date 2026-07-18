@@ -1,5 +1,5 @@
 ; Interface with OG Xbox LPC SERIRQ line
-; This program is expected to run at, or close to (+/- 100KHz), 66.66MHz (LPC/PCI clock frequency * 2)
+; This program is expected to run at, or close to (+/- 200KHz), 66.66MHz (LPC/PCI clock frequency * 2)
 
 .program serirq
 
@@ -17,6 +17,6 @@ wait_irq:                       ; waiting for requested IRQ frame to come up
     jmp Y-- wait_irq       [1]  ; once Y reaches 0 (before decrement), we should be at the requested IRQ frame
 
 pulse_irq:                      ; this will pulse SERIRQ for one LCLK
-    set pins, 0            [1]  ; set SERIRQ low - the delay here decides how long the pulse lasts, in PIO cycles
+    set pins, 0            [2]  ; set SERIRQ low - the delay here decides how long the pulse lasts, in PIO cycles
     set pins, 1                 ; set SERIRQ high
 .wrap
