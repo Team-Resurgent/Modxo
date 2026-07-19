@@ -1588,9 +1588,11 @@ void sdcard_handler_poll()
 }
 
 void sdcard_handler_shutdown() {
+#if SD_CARD_SPI_ENABLE
     f_close(&private_data.open_file);
     if(private_data.sd_fat_mounted) f_unmount("0:");
     sd_deinit_driver();
+#endif
 }
 
 void sdcard_handler_init() {
