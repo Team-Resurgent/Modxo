@@ -14,7 +14,7 @@
 
 #define NUM_LCLKS_PER_IRQ_FRAME 3
 #define NUM_PIOS_PER_LCLKS 8
-#define IRQ_FRAME_PIO_OFFSET 10
+#define IRQ_FRAME_PIO_OFFSET 14
 
 PIO serirq_pio = pio1;
 uint8_t serirq_pin = LPC_SERIRQ;
