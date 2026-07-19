@@ -147,6 +147,7 @@ void sd_unlock(sd_card_t *sd_card_p);
 bool sd_is_locked(sd_card_t *sd_card_p);
 
 bool sd_init_driver();
+void sd_deinit_driver();
 bool sd_card_detect(sd_card_t *sd_card_p);
 void cidDmp(sd_card_t *sd_card_p, printer_t printer);
 void csdDmp(sd_card_t *sd_card_p, printer_t printer);

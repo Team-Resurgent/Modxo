@@ -94,6 +94,7 @@ bool sdcard_memwrite_handler(uint32_t addr, uint8_t *data, uint8_t mapper_id);
 uint8_t sdcard_handler_control(uint8_t cmd, uint8_t data, bool is_read);
 void sdcard_handler_poll();
 void sdcard_handler_powerup();
+void sdcard_handler_shutdown();
 void sdcard_handler_init();
 
 bool expansion_memread_handler(uint32_t addr, uint8_t *data, uint8_t mapper_id);

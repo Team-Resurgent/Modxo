@@ -80,6 +80,9 @@ target_sources(${PROJECT_NAME} PRIVATE
     src/main.c
 )
 
+# SDCard debug
+#add_compile_definitions(USE_PRINTF USE_DBG_PRINTF)
+
 # Link to pico_stdlib (gpio, time, etc. functions)
 target_link_libraries(${PROJECT_NAME} PRIVATE
     pico_stdlib

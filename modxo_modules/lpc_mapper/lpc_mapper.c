@@ -315,6 +315,14 @@ void run_handler_powerups() {
 	flash_handler_powerup();
 }
 
+void run_handler_shutdowns() {
+	sdcard_handler_shutdown();
+}
+
+void run_handler_inits() {
+	sdcard_handler_init();
+}
+
 void powerup() {
 	memset(lpc_mappers, 0, sizeof(lpc_mappers));
 	current_mapper_id = 0;
@@ -333,7 +341,12 @@ void powerup() {
 	run_handler_powerups();
 }
 
+void shutdown() {
+	run_handler_shutdowns();
+}
+
 void init() {
+	run_handler_inits();
 	lpc_interface_add_io_handler(LPC_MAPPER_IO_BASE, 0xFFF8, lpc_mapper_read_handler, lpc_mapper_write_handler);
 }
 
@@ -345,5 +358,6 @@ void lpc_mapper_poll() {
 MODXO_TASK lpc_mapper_hdlr = {
 	.init = init,
 	.powerup = powerup,
+	.shutdown = shutdown,
 	.core1_poll = lpc_mapper_poll,
 };

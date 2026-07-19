@@ -122,6 +122,10 @@ char const *sd_get_drive_prefix(sd_card_t *sd_card_p) {
     return sd_card_p->state.drive_prefix;
 }
 
+void sd_deinit_driver() {
+    driver_initialized = false;
+}
+
 bool sd_init_driver() {
     auto_init_mutex(initialized_mutex);
     mutex_enter_blocking(&initialized_mutex);

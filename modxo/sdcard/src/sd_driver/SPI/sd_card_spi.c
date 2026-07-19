@@ -1693,6 +1693,8 @@ static void sd_deinit(sd_card_t *sd_card_p) {
         gpio_deinit(sd_card_p->spi_if_p->ss_gpio);
         gpio_set_dir(sd_card_p->spi_if_p->ss_gpio, GPIO_IN);
     }
+
+    sd_deinit_driver();
 }
 
 /**
