@@ -51,7 +51,8 @@ void serirq_trigger_irq(uint32_t irq) {
     // Xbox only supports 21 IRQs by default thru SERIRQ line
     if(irq > 20) return;
 
-    serirq_pio->txf[serirq_sm] = irq * NUM_LCLKS_PER_IRQ_FRAME * NUM_PIOS_PER_LCLKS + IRQ_FRAME_PIO_OFFSET; // Number of PIOs to wait
+    // Number of PIOs to wait
+    serirq_pio->txf[serirq_sm] = irq * NUM_LCLKS_PER_IRQ_FRAME * NUM_PIOS_PER_LCLKS + IRQ_FRAME_PIO_OFFSET;
 }
 
 static void serirq_lpc_reset() {

@@ -1,12 +1,12 @@
 ; Interface with OG Xbox LPC SERIRQ line
-; This program is expected to run at, or close to (+/- 200KHz), 266.66MHz (LPC/PCI clock frequency * 8)
+; This program is expected to run at, or close to (+/- 800KHz), 266.66MHz (LPC/PCI clock frequency * 8)
 
 .program serirq
 
 .define public SERIRQ_PIN @LPC_SERIRQ@
 
 .wrap_target
-    pull                        ; shift a 32-bit word from TX FIFO to OSR (blocking), this will be the number of LCLKs to wait to reach the requested IRQ frame
+    pull                        ; shift a 32-bit word from TX FIFO to OSR (blocking), this will be the number of PIO cycles to wait to reach the requested IRQ frame
     mov Y, OSR                  ; copy to Y scratch register, this is a counter used for the wait_irq loop below to wait for the requested IRQ frame
 
 wait_start:                     ; waiting for a start frame
