@@ -14,7 +14,7 @@
 
 #define NUM_LCLKS_PER_IRQ_FRAME 3
 #define NUM_PIOS_PER_LCLKS 8
-#define IRQ_FRAME_PIO_OFFSET 14
+#define IRQ_FRAME_PIO_OFFSET 10
 
 PIO serirq_pio = pio1;
 uint8_t serirq_pin = LPC_SERIRQ;
@@ -61,6 +61,7 @@ static void serirq_lpc_reset() {
     // serirq_trigger_irq(1);
     // serirq_trigger_irq(2);
     // serirq_trigger_irq(20);
+    //for(uint8_t i = 0; i < 21; i++) serirq_trigger_irq(i);
 }
 
 static void serirq_init() {
