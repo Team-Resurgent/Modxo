@@ -44,7 +44,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <modxo_pinout.h>
 #include "sd_card.h"
-#include "hw_config.h"
 
 #if SD_CARD_SPI_ENABLE
 #include "ff.h"
@@ -1591,9 +1590,7 @@ void sdcard_handler_poll()
 void sdcard_handler_shutdown() {
     f_close(&private_data.open_file);
     if(private_data.sd_fat_mounted) f_unmount("0:");
-
-    sd_card_t *sd_card_p = sd_get_by_num(0);
-    sd_card_p->deinit(sd_card_p);
+    sd_deinit_driver();
 }
 
 void sdcard_handler_init() {
