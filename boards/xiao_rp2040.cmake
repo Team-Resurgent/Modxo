@@ -6,6 +6,7 @@ set(LPC_LFRAME    1)
 set(GPIO_D0       2)
 set(LPC_RESET     3)
 set(LPC_ON        4)
+set(LPC_SERIRQ    5)
 
 #LCD_PORT GPIOs
 set(LCD_PORT_I2C_ENABLE false)
