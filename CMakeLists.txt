@@ -90,6 +90,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     modxo
     no-OS-FatFS-SD-SDIO-SPI-RPi-Pico
     ws2812
+    serirq
     legacy_display
     superio
     flashrom

@@ -52,7 +52,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define LED_PIO pio1
 #define IS_RGBW false // 24 bit color value
 
-#define MAX_STRIPS 4
+#define MAX_STRIPS 2
 #define DISABLED_STRIP_VALUE 31
 
 #define CMD_SET_LED_COUNT_STRIP 0x00
@@ -103,7 +103,7 @@ typedef struct
 
 typedef struct{
     PIXEL_FORMAT_TYPE rgb_status_pf;
-    PIXEL_FORMAT_TYPE rgb_strip_pf[4];
+    PIXEL_FORMAT_TYPE rgb_strip_pf[MAX_STRIPS];
 }NVM_CONFIG;
 
 typedef enum {
@@ -111,8 +111,6 @@ typedef enum {
     NVM_REGISTER_RGB_STATUS_PF      =  1,
     NVM_REGISTER_RGB_STRIP1_PF      =  2,
     NVM_REGISTER_RGB_STRIP2_PF      =  3,
-    NVM_REGISTER_RGB_STRIP3_PF      =  4,
-    NVM_REGISTER_RGB_STRIP4_PF      =  5,
 } NVM_REGISTER_SEL;
 
 static NVM_CONFIG nvm_config;
@@ -121,14 +119,12 @@ static const NVM_CONFIG default_nvm_parameters = {
     .rgb_status_pf = RGB_STATUS_PIXEL_FORMAT,
     .rgb_strip_pf[0]  = STRIP1_PIXEL_FORMAT,
     .rgb_strip_pf[1]  = STRIP2_PIXEL_FORMAT,
-    .rgb_strip_pf[2]  = STRIP3_PIXEL_FORMAT,
-    .rgb_strip_pf[3]  = STRIP4_PIXEL_FORMAT,
 };
 
 uint8_t selected_strip;
 bool updating_strips;
 
-uint8_t ws2812_reg_buffer[4]; // Just in case a 32bit value register is added
+uint8_t ws2812_reg_buffer[MAX_STRIPS]; // Just in case a 32bit value register is added
 
 uint32_t pixel_color_value;
 REG24bit_t pixel_color_reg;
@@ -145,13 +141,8 @@ LED_STRIP strips[MAX_STRIPS] = {
     },
     {
         .gpio_pin = LED_STRIP2,
-    },
-    {
-        .gpio_pin = LED_STRIP3,
-    },
-    {
-        .gpio_pin = LED_STRIP4,
-    }};
+    }
+};
 
 static void ws2812_update_pixels(void);
 static void ws2812_set_color(uint8_t color);
@@ -330,7 +321,7 @@ static bool inline is_strip_update_inprogress(uint8_t strip)
 
 static bool inline are_all_strips_updated()
 {
-    for (uint i = 0; i < 4; i++)
+    for (uint i = 0; i < MAX_STRIPS; i++)
     {
         if (is_strip_update_inprogress(i) == true)
         {
@@ -360,7 +351,7 @@ static void fill_strip(uint32_t rgb24_color)
 
 static void select_strip(uint8_t strip_no)
 {
-    if (strip_no < 4)
+    if (strip_no < MAX_STRIPS)
     {
         selected_strip = strip_no;
     }
@@ -546,22 +537,6 @@ void config_set_value(uint8_t value)
             nvm_config.rgb_strip_pf[1] = value;
         }
         break;
-    case NVM_REGISTER_RGB_STRIP3_PF:
-        if (nvm_config.rgb_strip_pf[2] != value)
-        {
-            save = true;
-            update_pixels = true;
-            nvm_config.rgb_strip_pf[2] = value;
-        }
-        break;
-    case NVM_REGISTER_RGB_STRIP4_PF:
-        if (nvm_config.rgb_strip_pf[3] != value)
-        {
-            save = true;
-            update_pixels = true;
-            nvm_config.rgb_strip_pf[3] = value;
-        }
-        break;
     default:
         break;
     }
@@ -590,12 +565,6 @@ uint8_t config_get_value(void)
         break;
     case NVM_REGISTER_RGB_STRIP2_PF:
         value = nvm_config.rgb_strip_pf[1];
-        break;
-    case NVM_REGISTER_RGB_STRIP3_PF:
-        value = nvm_config.rgb_strip_pf[2];
-        break;
-    case NVM_REGISTER_RGB_STRIP4_PF:
-        value = nvm_config.rgb_strip_pf[3];
         break;
     default:
         break;
@@ -697,7 +666,7 @@ static void ws2812_poll()
 
 static void ws2812_update_pixels(void)
 {
-    for (uint i = 0; i < 4; i++)
+    for (uint i = 0; i < MAX_STRIPS; i++)
     {
         strips[i].next_led_to_display = 0;
     }
@@ -742,7 +711,7 @@ static void ws2812_core1_init()
 
     uint offset = pio_add_program(LED_PIO, &ws2812_program);
 
-    for (uint i = 0; i < 4; i++)
+    for (uint i = 0; i < MAX_STRIPS; i++)
     {
         for (uint j = 0; j < 256; j++)
         {
