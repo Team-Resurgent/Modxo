@@ -28,23 +28,19 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdio.h>
 #include "pico/stdlib.h"
-#include "hardware/sio.h"
 #include "hardware/irq.h"
 #include "hardware/structs/padsbank0.h"
 #include "hardware/structs/bus_ctrl.h"
+#include "hardware/gpio.h"
 #include <modxo/lpc_interface.h>
 #include <modxo_pinout.h>
 
 #include <lpc_comm.pio.h>
 #include <modxo/lpc_log.h>
 
-typedef struct
-{
-    uint32_t nibbles_read;
-    lpc_handler_cback handler;
-    uint8_t cyctype_dir;
-    uint8_t address_len;
-} LPC_SM_HANDLER;
+extern void lpc_sio_sm_init(void)
+extern void lpc_sio_sm_main_loop(void);
+
 
 typedef struct
 {
@@ -54,30 +50,14 @@ typedef struct
     SUPERIO_PORT_CALLBACK_T write_cback;
 } SUPERIO_PORT_HANDLER_T;
 
-static void io_write_hdlr(uint32_t address, uint8_t *data);
-static void io_read_hdlr(uint32_t address, uint8_t *data);
 static void gpio_set_max_drivestrength(io_rw_32 gpio, uint32_t strength);
-
-LPC_SM_HANDLER lpc_handlers[LPC_OP_TOTAL] = {
-    [LPC_OP_IO_READ] = {.nibbles_read = 4, .cyctype_dir = 0, .handler = io_read_hdlr, .address_len = 16},
-    [LPC_OP_IO_WRITE] = {.nibbles_read = 6, .cyctype_dir = 2, .handler = io_write_hdlr, .address_len = 16},
-    [LPC_OP_MEM_READ] = {.nibbles_read = 8, .cyctype_dir = 4, .handler = NULL, .address_len = 32},
-    [LPC_OP_MEM_WRITE] = {.nibbles_read = 10, .cyctype_dir = 6, .handler = NULL, .address_len = 32},
-}; // 4 SM per PIO
-
-static const char *LPC_OP_STRINGS[LPC_OP_TOTAL] = {
-    [LPC_OP_IO_READ] = "IO_READ  ",
-    [LPC_OP_IO_WRITE] = "IO_WRITE ",
-    [LPC_OP_MEM_WRITE] = "MEM_WRITE",
-    [LPC_OP_MEM_READ] = "MEM_READ ",
-};
 
 
 #define SUPERIO_HANDLER_MAX_ENTRIES 32
 static SUPERIO_PORT_HANDLER_T hdlr_table[SUPERIO_HANDLER_MAX_ENTRIES];
 static uint8_t total_entries = 0;
 
-static void io_write_hdlr(uint32_t address, uint8_t *data)
+void io_write_hdlr(uint32_t address, uint8_t *data)
 {
     for (uint8_t tidx = 0; tidx < total_entries; tidx++)
     {
@@ -88,7 +68,7 @@ static void io_write_hdlr(uint32_t address, uint8_t *data)
     }
 }
 
-static void io_read_hdlr(uint32_t address, uint8_t *data)
+void io_read_hdlr(uint32_t address, uint8_t *data)
 {
     for (uint8_t tidx = 0; tidx < total_entries; tidx++)
     {
@@ -107,67 +87,6 @@ static void gpio_set_max_drivestrength(io_rw_32 gpio, uint32_t strength)
         &padsbank0_hw->io[gpio],
         strength << PADS_BANK0_GPIO0_DRIVE_LSB,
         PADS_BANK0_GPIO0_DRIVE_BITS);
-}
-
-static void lpc_read_handler(uint8_t sm)
-{
-    register uint32_t address, shifted, pushed;
-    uint8_t result_data;
-    address = _pio->rxf[sm];
-    pushed = _pio->rxf[sm];
-
-    if (lpc_handlers[sm].handler)
-        lpc_handlers[sm].handler(address, &result_data);
-
-    shifted = 0xF000;
-    shifted |= (result_data << 4);
-    _pio->txf[sm] = shifted;
-    _pio->txf[sm] = lpc_handlers[sm].nibbles_read - 1;
-
-#ifdef LPC_LOGGING
-    {
-        log_entry item;
-        item.address = address;
-        item.cyc_type = sm;
-        item.data = result_data;
-        lpclog_enqueue(item);
-    }
-#endif
-
-    pio_interrupt_clear(_pio, sm);
-}
-
-
-
-static void lpc_write_handler(uint8_t sm)
-{
-    register uint32_t address, shifted, swaped_value;
-
-    uint8_t result_data;
-    address = _pio->rxf[sm];
-    result_data = (uint8_t)_pio->rxf[sm];
-    swaped_value = (result_data & 0xF) << 4;
-    swaped_value |= result_data >> 4;
-    result_data = (uint8_t)swaped_value;
-
-    if (lpc_handlers[sm].handler)
-        lpc_handlers[sm].handler(address, &result_data);
-
-    shifted = 0xFFF0;
-    _pio->txf[sm] = shifted;
-    _pio->txf[sm] = lpc_handlers[sm].nibbles_read - 1;
-
-#ifdef LPC_LOGGING
-    {
-        log_entry item;
-        item.address = address;
-        item.cyc_type = sm;
-        item.data = result_data;
-        lpclog_enqueue(item);
-    }
-#endif
-
-    pio_interrupt_clear(_pio, sm);
 }
 
 void init(void)
@@ -204,9 +123,11 @@ void init(void)
     gpio_set_max_drivestrength(LPC_LFRAME, PADS_BANK0_GPIO0_DRIVE_VALUE_12MA);
     gpio_set_max_drivestrength(GPIO_D0, PADS_BANK0_GPIO0_DRIVE_VALUE_12MA);
 
+    lpc_interface_set_callback(LPC_OP_IO_READ, io_read_hdlr);
+    lpc_interface_set_callback(LPC_OP_IO_WRITE, io_write_hdlr);
 }
 
-void core0_poll()
+void core1_poll()
 {
     log_entry entry;
     while (lpclog_dequeue(&entry))
@@ -224,9 +145,7 @@ void core0_poll()
 
 MODXO_TASK lpc_interface_hdlr = {
     .init = init,
-#ifdef LPC_LOGGING
-    .core0_poll = core0_poll,
-#endif
+    .core1_poll = core1_poll,
 };
 
 
@@ -251,12 +170,6 @@ void lpc_interface_disable_onboard_flash(bool disable)
     _disable_internal_flash = disable;
     setup_onboard_flash();
 }
-
-void lpc_interface_set_callback(LPC_OP_TYPE op, lpc_handler_cback cback)
-{
-    lpc_handlers[op].handler = cback;
-}
-
 
 bool lpc_interface_add_io_handler(uint16_t port_base, uint16_t mask, SUPERIO_PORT_CALLBACK_T read_cback, SUPERIO_PORT_CALLBACK_T write_cback)
 {
