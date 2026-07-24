@@ -31,15 +31,22 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "hardware/irq.h"
 #include "hardware/structs/padsbank0.h"
 #include "hardware/structs/bus_ctrl.h"
-#include "hardware/gpio.h"
+#include <hardware/gpio.h>
 #include <modxo/lpc_interface.h>
 #include <modxo_pinout.h>
 
 #include <lpc_comm.pio.h>
 #include <modxo/lpc_log.h>
 
-extern void lpc_sio_sm_init(void)
+extern void lpc_sio_sm_init(void);
 extern void lpc_sio_sm_main_loop(void);
+
+static const char *LPC_OP_STRINGS[LPC_OP_TOTAL] = {
+    [LPC_OP_IO_READ] = "IO_READ  ",
+    [LPC_OP_IO_WRITE] = "IO_WRITE ",
+    [LPC_OP_MEM_WRITE] = "MEM_WRITE",
+    [LPC_OP_MEM_READ] = "MEM_READ ",
+};
 
 
 typedef struct
@@ -56,6 +63,7 @@ static void gpio_set_max_drivestrength(io_rw_32 gpio, uint32_t strength);
 #define SUPERIO_HANDLER_MAX_ENTRIES 32
 static SUPERIO_PORT_HANDLER_T hdlr_table[SUPERIO_HANDLER_MAX_ENTRIES];
 static uint8_t total_entries = 0;
+void setup_onboard_flash();
 
 void io_write_hdlr(uint32_t address, uint8_t *data)
 {
@@ -97,6 +105,8 @@ void init(void)
         gpio_init(i);
         gpio_set_dir(i, GPIO_IN);
         gpio_put(i, 0);
+        gpio_set_oeover(LPC_LFRAME, 1);
+        gpio_set_outover(LPC_LFRAME, 2);
     }
 
     gpio_init(LPC_CLK);
@@ -120,8 +130,9 @@ void init(void)
     // lpc_disable_tsop(disable_internal_flash);
 
     gpio_set_drive_strength(LPC_LFRAME, GPIO_DRIVE_STRENGTH_12MA);
-    gpio_set_max_drivestrength(LPC_LFRAME, PADS_BANK0_GPIO0_DRIVE_VALUE_12MA);
-    gpio_set_max_drivestrength(GPIO_D0, PADS_BANK0_GPIO0_DRIVE_VALUE_12MA);
+    gpio_set_drive_strength(GPIO_D0, GPIO_DRIVE_STRENGTH_12MA);
+    //gpio_set_max_drivestrength(LPC_LFRAME, PADS_BANK0_GPIO0_DRIVE_VALUE_12MA);
+    //gpio_set_max_drivestrength(GPIO_D0, PADS_BANK0_GPIO0_DRIVE_VALUE_12MA);
 
     lpc_interface_set_callback(LPC_OP_IO_READ, io_read_hdlr);
     lpc_interface_set_callback(LPC_OP_IO_WRITE, io_write_hdlr);

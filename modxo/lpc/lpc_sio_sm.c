@@ -29,11 +29,11 @@ static inline void set_lad_as_inputs()
 inline static void wait_rising_edge()
 {   
     do
-    {
         read_bus();
-    }while(inputs&0x10 != 0);
+    while(inputs&0x10 != 0);
 
-    while(inputs&0x10 == 0) read_bus();
+    while(inputs&0x10 == 0)
+        read_bus();
 }
 
 inline static void wait_falling_edge()
@@ -45,6 +45,7 @@ inline static void wait_falling_edge()
 
     while(inputs&0x10 != 0) read_bus();
 }
+
 
 typedef enum
 {
@@ -116,7 +117,9 @@ inline static void wait_start(void)
 {
     wait_falling_edge();
 
-    if((inputs&0xF) == 0)
+    uint8_t lad = inputs&0xF;
+
+    if( lad == 0)
         lpc_state = CYC_DIR;
 }
 
@@ -131,7 +134,7 @@ inline static void get_cyctype_dir(void)
     }
     else
     {
-        req.cyc = (cyctype_t)((inputs&0xF)>>1);
+        req.cyc = (cyctype_t)(lad>>1);
         req.address = 0;
         req.cycle_repeat = is_mem_op() ? 8:4; //Memory operation addresses are 32bit (8 nibbles)
         lpc_state = ADDRESS;

@@ -286,7 +286,7 @@ void lpc_mapper_read_handler(uint16_t addr, uint8_t *data) {
 	}
 }
 
-void lpc_mapper_write_handler(uint16_t addr, uint8_t *data) {
+static void lpc_mapper_write_handler(uint16_t addr, uint8_t *data) {
 	switch (addr) {
 	case LPC_MAPPER_CMD_PORT:
 		current_lpc_mapper_cmd = *data;
@@ -305,7 +305,7 @@ void lpc_mapper_write_handler(uint16_t addr, uint8_t *data) {
 	}
 }
 
-void run_handler_powerups() {
+static void run_handler_powerups() {
 	rng_handler_powerup();
 	int_ram_handler_powerup();
 	echo_handler_powerup();
@@ -315,7 +315,7 @@ void run_handler_powerups() {
 	flash_handler_powerup();
 }
 
-void powerup() {
+static void powerup() {
 	memset(lpc_mappers, 0, sizeof(lpc_mappers));
 	current_mapper_id = 0;
 	current_long_val = 0;
@@ -333,11 +333,11 @@ void powerup() {
 	run_handler_powerups();
 }
 
-void init() {
+static void init() {
 	lpc_interface_add_io_handler(LPC_MAPPER_IO_BASE, 0xFFF8, lpc_mapper_read_handler, lpc_mapper_write_handler);
 }
 
-void lpc_mapper_poll() {
+static void lpc_mapper_poll() {
 	sdcard_handler_poll();
 	expansion_handler_poll();
 }
