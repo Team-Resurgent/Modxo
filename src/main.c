@@ -196,8 +196,9 @@ uint8_t get_flash_spi_clkdiv() {
     uint8_t device_id2 = rxbuf[3];
 
     switch(manuf_id) {
-    case 0x68: // BoHong/BYTe (Found on some cheap clone boards, missing SFDP table)
+    case 0x68: // BoHong/BYTe/Boya (Found on some cheap clone boards, missing SFDP table)
         if(device_id1 == 0x40 && device_id2 == 0x15) return 4; // BH25D16A/BY25D16AS (2MB, 108MHz)
+        if(device_id1 == 0x40 && device_id2 == 0x18) return 4; // BY25Q128AS (16MB, 108MHz)
         break;
     case 0x5E: // ZBit
         if(device_id1 == 0x40 && device_id2 == 0x18) return 2; // ZB25VQ128D (16MB, 133MHz)
@@ -209,11 +210,12 @@ uint8_t get_flash_spi_clkdiv() {
         break;
     }
 
-    return 4; // Default to CLKDIV=4, should be compatible with most flash chips, should be 66MHz SPI CLK
+    // Set to compiled default, should be compatible with most flash chips, lowest common denominator (check root CMakeLists.txt)
+    return PICO_FLASH_SPI_CLKDIV;
 }
 
 // Calling flash_do_cmd(), or anything that indirectly calls bootrom function flash_exit_xip(),
-// will reset CLKDIV to 6, then restore to 4 by calling boot2 code (via flash_enable_xip_via_boot2())
+// will reset CLKDIV to 6, then restore to compiled default by calling boot2 code (via flash_enable_xip_via_boot2())
 // Currently, that's:
 //  - flash_start_xip()
 //  - flash_range_erase()
