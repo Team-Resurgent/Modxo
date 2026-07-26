@@ -184,6 +184,9 @@ void register_handlers()
 }
 
 #define RDID_BUF_SIZE 8
+// The number returned by this function is the clock divider for the QSPI bus, which is
+// based on the system clock (check SYS_FREQ_IN_KHZ), currently set to 266MHz.
+// Changing the system clock may also requires adjusting the QSPI divider.
 uint8_t get_flash_spi_clkdiv() {
     uint8_t txbuf[RDID_BUF_SIZE] = {0x9f}; // JEDEC ID command
     uint8_t rxbuf[RDID_BUF_SIZE] = {0};
@@ -198,6 +201,7 @@ uint8_t get_flash_spi_clkdiv() {
     switch(manuf_id) {
     case 0x68: // BoHong/BYTe/Boya (Found on some cheap clone boards, missing SFDP table)
         if(device_id1 == 0x40 && device_id2 == 0x15) return 4; // BH25D16A/BY25D16AS (2MB, 108MHz)
+        if(device_id1 == 0x40 && device_id2 == 0x16) return 4; // BY25Q32CS/BY25Q32BS (4MB, 108MHz)
         if(device_id1 == 0x40 && device_id2 == 0x18) return 4; // BY25Q128AS (16MB, 108MHz)
         break;
     case 0x5E: // ZBit
