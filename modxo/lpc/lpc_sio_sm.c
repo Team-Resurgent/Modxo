@@ -12,6 +12,12 @@ static inline void cancel_lframe(void)
     sio_hw->gpio_oe_set = 0x20; //Sets lframe as output (output is tied to 0)
 }
 
+static inline void restore_lframe(void)
+{
+    sio_hw->gpio_oe_clr = 0x20; //Sets lframe as output (output is tied to 0)
+}
+
+
 static inline bool get_clk(void)
 {
     return (inputs&0x10);
@@ -133,6 +139,8 @@ static inline bool is_write_dir()
 {
     return (req.cyc & 0b1) == 0b1;
 }
+
+
 
 //State machine handlers
 inline static void wait_start(void)
@@ -282,6 +290,7 @@ static void tar_output_end(void)
 
 static void tar_input_start(void)
 {
+    restore_lframe();
     wait_falling_edge();
     lpc_state = START;
 }
@@ -300,6 +309,9 @@ static LPC_State_Handler lpc_handlers[TOTAL_STATES]=
     [TAR_INPUT_START] = tar_input_start,    //TAR2
 };
 
+
+
+// Interface, init, loop and register callbacks
 void lpc_sio_sm_init(void)
 {
     
