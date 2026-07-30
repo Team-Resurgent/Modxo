@@ -1,32 +1,54 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "hardware/regs/sio.h"
-#include "modxo/lpc_interface.h"
+#include "modxo/lpc_interface.h" 
 
-static uint16_t inputs;
+static uint32_t inputs;
 
 // Lowlevel SIO Access
+
+static inline void cancel_lframe(void)
+{
+    sio_hw->gpio_oe_set = 0x20; //Sets lframe as output (output is tied to 0)
+}
+
+static inline bool get_clk(void)
+{
+    return (inputs&0x10);
+}
+
+static inline uint8_t get_lad(void)
+{
+    return inputs&0xF;
+}
+
+//Read Lad and clock bits (Requires official pinout for now GPIO0-5)
 static inline void read_bus(void)
 {
     inputs = sio_hw->gpio_in & 0x1F;
 }
 
-static inline void write_bus(uint16_t v)
+//Writes only LAD pins
+static inline void write_bus(uint32_t v)
 {
-    sio_hw->gpio_out = v;
+    uint32_t clear_bits = (~v)&0xF;
+    sio_hw->gpio_set = v;
+    sio_hw->gpio_clr = clear_bits;
 }
 
-static inline void set_lad_as_outputs()
-{
-    sio_hw->gpio_oe_clr = 0xF;
-}
-
-static inline void set_lad_as_inputs()
+//Set output enable HIGH? for output
+static inline void set_lad_as_outputs(void)
 {
     sio_hw->gpio_oe_set = 0xF;
 }
 
-inline static void wait_rising_edge()
+//Set output enable LOW? for input
+static inline void set_lad_as_inputs(void)
+{
+    sio_hw->gpio_oe_clr = 0xF;
+}
+
+inline static void wait_rising_edge(void)
 {   
     do
         read_bus();
@@ -36,7 +58,7 @@ inline static void wait_rising_edge()
         read_bus();
 }
 
-inline static void wait_falling_edge()
+inline static void wait_falling_edge(void)
 {
     do
     {
@@ -136,7 +158,16 @@ inline static void get_cyctype_dir(void)
     {
         req.cyc = (cyctype_t)(lad>>1);
         req.address = 0;
-        req.cycle_repeat = is_mem_op() ? 8:4; //Memory operation addresses are 32bit (8 nibbles)
+        if(is_mem_op())
+        {
+            req.cycle_repeat = 8;
+            cancel_lframe();
+        }
+        else
+        {
+            req.cycle_repeat = 4;
+        }
+
         lpc_state = ADDRESS;
     }
 }
@@ -271,11 +302,13 @@ static LPC_State_Handler lpc_handlers[TOTAL_STATES]=
 
 void lpc_sio_sm_init(void)
 {
-    lpc_state = START;
+    
 }
 
 void lpc_sio_sm_main_loop(void)
 {
+    lpc_state = START;
+
     while(true)
         lpc_handlers[lpc_state]();
 }

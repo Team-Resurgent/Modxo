@@ -5,7 +5,5 @@ target_sources(modxo PRIVATE ${CMAKE_CURRENT_LIST_DIR}/lpc_sio_sm.c )
 target_sources(modxo PRIVATE ${CMAKE_CURRENT_LIST_DIR}/lpc_sio.c )
 target_sources(modxo PRIVATE ${CMAKE_CURRENT_LIST_DIR}/lpc_sio_sm.c )
 
-
 #configure_file(${CMAKE_CURRENT_LIST_DIR}/lpc_comm.in temp/lpc_comm.pio @ONLY)
-
-pico_generate_pio_header(modxo temp/lpc_comm.pio)
+#pico_generate_pio_header(modxo temp/lpc_comm.pio)

@@ -35,7 +35,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <modxo/lpc_interface.h>
 #include <modxo_pinout.h>
 
-#include <lpc_comm.pio.h>
 #include <modxo/lpc_log.h>
 
 extern void lpc_sio_sm_init(void);
@@ -100,13 +99,11 @@ static void gpio_set_max_drivestrength(io_rw_32 gpio, uint32_t strength)
 void init(void)
 {
         // Connect the GPIOs to selected PIO block
-    for (uint i = LPC_LAD_START; i < LPC_LAD_START + LAD_PIN_COUNT; i++)
+    for (uint i = 0; i < 0 + 4; i++)
     {
         gpio_init(i);
         gpio_set_dir(i, GPIO_IN);
         gpio_put(i, 0);
-        gpio_set_oeover(LPC_LFRAME, 1);
-        gpio_set_outover(LPC_LFRAME, 2);
     }
 
     gpio_init(LPC_CLK);
@@ -116,12 +113,10 @@ void init(void)
 
 
     gpio_init(LPC_LFRAME);
-    gpio_set_dir(LPC_CLK, GPIO_IN);
     gpio_disable_pulls(LPC_LFRAME);
-    //gpio_set_oeover(LPC_LFRAME, 1);
-    //gpio_set_outover(LPC_LFRAME, 2);
-
-
+    gpio_set_dir(LPC_LFRAME, GPIO_IN); // Set it as Input (disables the OE bit, value is inverted at this point)
+    gpio_set_outover(LPC_LFRAME, GPIO_OVERRIDE_LOW);   // output is always 0 (GND)
+    
     gpio_init(GPIO_D0);
     gpio_disable_pulls(GPIO_D0);
 
@@ -129,13 +124,16 @@ void init(void)
 
     // lpc_disable_tsop(disable_internal_flash);
 
-    gpio_set_drive_strength(LPC_LFRAME, GPIO_DRIVE_STRENGTH_12MA);
-    gpio_set_drive_strength(GPIO_D0, GPIO_DRIVE_STRENGTH_12MA);
-    //gpio_set_max_drivestrength(LPC_LFRAME, PADS_BANK0_GPIO0_DRIVE_VALUE_12MA);
-    //gpio_set_max_drivestrength(GPIO_D0, PADS_BANK0_GPIO0_DRIVE_VALUE_12MA);
+    gpio_set_max_drivestrength(LPC_LFRAME, PADS_BANK0_GPIO0_DRIVE_VALUE_12MA);
+    gpio_set_max_drivestrength(GPIO_D0, PADS_BANK0_GPIO0_DRIVE_VALUE_12MA);
 
     lpc_interface_set_callback(LPC_OP_IO_READ, io_read_hdlr);
     lpc_interface_set_callback(LPC_OP_IO_WRITE, io_write_hdlr);
+
+    //LPC State Machine
+    lpc_sio_sm_init();
+    
+    lpc_sio_sm_main_loop(); //Never gets back
 }
 
 void core1_poll()
