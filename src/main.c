@@ -212,6 +212,9 @@ uint8_t get_flash_spi_clkdiv() {
         if(device_id1 == 0x40 && device_id2 == 0x16) return 2; // W25Q32JV (4MB, 133MHz)
         if(device_id1 == 0x40 && device_id2 == 0x18) return 2; // W25Q128JV (16MB, 133MHz)
         break;
+    case 0x85: // Puya
+        if(device_id1 == 0x60 && device_id2 == 0x15) return 4; // P25Q16H (2MB, 104MHz), P25Q16SH = 133MHz
+        break;
     }
 
     // Set to compiled default, should be compatible with most flash chips, lowest common denominator (check root CMakeLists.txt)
