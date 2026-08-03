@@ -53,6 +53,7 @@ dkms.conf
 
 # Build folder
 build
+build-pico2
 .vscode
 build_docker
 out
