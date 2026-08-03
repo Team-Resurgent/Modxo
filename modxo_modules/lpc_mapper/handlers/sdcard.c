@@ -952,55 +952,55 @@ void sdcard_file_write_chunk()
 uint8_t sdcard_cwd(uint8_t index)
 {
     (void)index;
-    return SDCARD_CWD_RESULT_OK;
+    return SDCARD_CWD_RESULT_BAD_INDEX;
 }
 
 void sdcard_flash_chunk(void)
 {
     private_data.flash_chunk_ready = 1;
-    private_data.flash_chunk_result = SDCARD_FILE_RESULT_OK;
+    private_data.flash_chunk_result = SDCARD_FILE_RESULT_ERROR;
 }
 
 void sdcard_remount()
 {
     private_data.remount_ready = 1;
-    private_data.remount_result = SDCARD_FILE_RESULT_OK;
+    private_data.remount_result = SDCARD_FILE_RESULT_ERROR;
 }
 
 void sdcard_dir_list()
 {
     private_data.file_list_ready = 1;
-    private_data.file_list_result = SDCARD_FILE_RESULT_OK;
+    private_data.file_list_result = SDCARD_FILE_RESULT_ERROR;
 }
 
 void sdcard_file_open_from_index()
 {
     private_data.open_file_ready = 1;
-    private_data.open_file_result = SDCARD_FILE_RESULT_OK;
+    private_data.open_file_result = SDCARD_FILE_RESULT_ERROR;
 }
 
 void sdcard_file_open_from_path()
 {
     private_data.open_file_ready = 1;
-    private_data.open_file_result = SDCARD_FILE_RESULT_OK;
+    private_data.open_file_result = SDCARD_FILE_RESULT_ERROR;
 }
 
 void sdcard_file_info_from_path()
 {
     private_data.file_info_ready = 1;
-    private_data.file_info_result = SDCARD_FILE_RESULT_OK;
+    private_data.file_info_result = SDCARD_FILE_RESULT_ERROR;
 }
 
 void sdcard_file_info_from_index()
 {
     private_data.file_info_ready = 1;
-    private_data.file_info_result = SDCARD_FILE_RESULT_OK;
+    private_data.file_info_result = SDCARD_FILE_RESULT_ERROR;
 }
 
 void sdcard_volume_space()
 {
     private_data.volume_space_ready = 1;
-    private_data.volume_space_result = SDCARD_FILE_RESULT_OK;
+    private_data.volume_space_result = SDCARD_FILE_RESULT_ERROR;
 }
 
 bool sdcard_disk_refresh_sector_count()
@@ -1012,48 +1012,48 @@ bool sdcard_disk_refresh_sector_count()
 void sdcard_create_dir_from_path()
 {
     private_data.path_create_ready = 1;
-    private_data.path_create_result = SDCARD_FILE_RESULT_OK;
+    private_data.path_create_result = SDCARD_FILE_RESULT_ERROR;
 }
 
 void sdcard_delete_from_path()
 {
     private_data.path_delete_ready = 1;
-    private_data.path_delete_result = SDCARD_FILE_RESULT_OK;
+    private_data.path_delete_result = SDCARD_FILE_RESULT_ERROR;
 }
 
 void sdcard_rename_from_path()
 {
     private_data.path_rename_ready = 1;
-    private_data.path_rename_result = SDCARD_FILE_RESULT_OK;
+    private_data.path_rename_result = SDCARD_FILE_RESULT_ERROR;
 }
 
 void sdcard_create_file_from_path()
 {
     private_data.path_create_ready = 1;
-    private_data.path_create_result = SDCARD_FILE_RESULT_OK;
+    private_data.path_create_result = SDCARD_FILE_RESULT_ERROR;
 }
 
 void sdcard_file_write_chunk()
 {
     private_data.file_write_ready = 1;
-    private_data.file_write_result = SDCARD_FILE_RESULT_OK;
+    private_data.file_write_result = SDCARD_FILE_RESULT_ERROR;
 }
 
 void sdcard_disk_write_sector()
 {
     private_data.disk_write_ready = 1;
-    private_data.disk_write_result = SDCARD_FILE_RESULT_OK;
+    private_data.disk_write_result = SDCARD_FILE_RESULT_ERROR;
 }
 
 void sdcard_disk_read_sector()
 {
     private_data.disk_read_ready = 1;
-    private_data.disk_read_result = SDCARD_FILE_RESULT_OK;
+    private_data.disk_read_result = SDCARD_FILE_RESULT_ERROR;
 }
 
 uint8_t sdcard_file_close()
 {
-    return SDCARD_FILE_RESULT_OK;
+    return SDCARD_FILE_RESULT_ERROR;
 }
 
 uint8_t sdcard_file_read_chunk(
@@ -1066,7 +1066,7 @@ uint8_t sdcard_file_read_chunk(
 ) {
     (void)chunk_index;
     *chunk_length = 0;
-    return SDCARD_FILE_RESULT_OK;
+    return SDCARD_FILE_RESULT_ERROR;
 }
 
 #endif
