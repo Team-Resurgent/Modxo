@@ -4,54 +4,59 @@
 #include "modxo/lpc_interface.h" 
 
 static uint32_t inputs;
-
+register io_wo_32 gpio_oe_set asm("r4");
+register io_wo_32 gpio_oe_clr asm("r5");
+register io_wo_32 gpio_set asm("r6");
+register io_wo_32 gpio_clr asm("r7");
+register io_wo_32 gpio_in asm("r8");
+register io_wo_32 gpio_out asm("r9");
 // Lowlevel SIO Access
 
-static inline void cancel_lframe(void)
+inline static void cancel_lframe(void)
 {
-    sio_hw->gpio_oe_set = 0x20; //Sets lframe as output (output is tied to 0)
+    gpio_oe_set = 0x20; //Sets lframe as output (output is tied to 0)
 }
 
-static inline void restore_lframe(void)
+inline static void restore_lframe(void)
 {
-    sio_hw->gpio_oe_clr = 0x20; //Sets lframe as output (output is tied to 0)
+    gpio_oe_clr = 0x20; //Sets lframe as output (output is tied to 0)
 }
 
 
-static inline bool get_clk(void)
+inline static bool get_clk(void)
 {
     return (inputs&0x10);
 }
 
-static inline uint8_t get_lad(void)
+inline static uint8_t get_lad(void)
 {
     return inputs&0xF;
 }
 
 //Read Lad and clock bits (Requires official pinout for now GPIO0-5)
-static inline void read_bus(void)
+inline static void read_bus(void)
 {
-    inputs = sio_hw->gpio_in & 0x1F;
+    inputs = gpio_in & 0x1F;
 }
 
 //Writes only LAD pins
-static inline void write_bus(uint32_t v)
+inline static void write_bus(uint32_t v)
 {
     uint32_t clear_bits = (~v)&0xF;
-    sio_hw->gpio_set = v;
-    sio_hw->gpio_clr = clear_bits;
+    gpio_set = v;
+    gpio_clr = clear_bits;
 }
 
 //Set output enable HIGH? for output
-static inline void set_lad_as_outputs(void)
+inline static void set_lad_as_outputs(void)
 {
-    sio_hw->gpio_oe_set = 0xF;
+    gpio_oe_set = 0xF;
 }
 
 //Set output enable LOW? for input
-static inline void set_lad_as_inputs(void)
+inline static void set_lad_as_inputs(void)
 {
-    sio_hw->gpio_oe_clr = 0xF;
+    gpio_oe_clr = 0xF;
 }
 
 inline static void wait_rising_edge(void)
@@ -314,7 +319,10 @@ static LPC_State_Handler lpc_handlers[TOTAL_STATES]=
 // Interface, init, loop and register callbacks
 void lpc_sio_sm_init(void)
 {
-    
+    gpio_oe_set = sio_hw->gpio_oe_set;
+    gpio_oe_clr = sio_hw->gpio_oe_clr;
+    gpio_in = sio_hw->gpio_in;
+    gpio_out = sio_hw->gpio_out;
 }
 
 void lpc_sio_sm_main_loop(void)
