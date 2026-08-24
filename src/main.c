@@ -214,6 +214,7 @@ uint8_t get_flash_spi_clkdiv() {
         break;
     case 0x85: // Puya
         if(device_id1 == 0x60 && device_id2 == 0x15) return 4; // P25Q16H (2MB, 104MHz), P25Q16SH = 133MHz
+        if(device_id1 == 0x20 && device_id2 == 0x18) return 2; // PY25Q128HA (16MB, 133MHz)
         break;
     }
 
