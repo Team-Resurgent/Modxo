@@ -13,7 +13,7 @@
 #include <modxo_pinout.h>
 
 #define NUM_LCLKS_PER_IRQ_FRAME 3
-#define NUM_PIOS_PER_LCLKS 8
+#define NUM_PIOS_PER_LCLK 8
 #define IRQ_FRAME_PIO_OFFSET 14
 
 PIO serirq_pio = pio1;
@@ -33,7 +33,7 @@ static void serirq_pio_init() {
     pio_sm_config c = serirq_program_get_default_config(serirq_offset);
     sm_config_set_jmp_pin (&c, serirq_pin);
     sm_config_set_set_pins(&c, serirq_pin, 1);
-    sm_config_set_clkdiv(&c, 1); // 266mhz sysclk / 1 = 266mhz (LPC/PCI clock frequency * 8)
+    sm_config_set_clkdiv(&c, 1); // 266mhz: sysclk / 1 = 266mhz (LPC/PCI clock frequency * 8)
 
     pio_sm_init(serirq_pio, serirq_sm, serirq_offset, &c);
     pio_sm_set_enabled(serirq_pio, serirq_sm, true);
@@ -52,26 +52,9 @@ void serirq_trigger_irq(uint32_t irq) {
     if(irq > 20) return;
 
     // Number of PIOs to wait
-    serirq_pio->txf[serirq_sm] = irq * NUM_LCLKS_PER_IRQ_FRAME * NUM_PIOS_PER_LCLKS + IRQ_FRAME_PIO_OFFSET;
+    serirq_pio->txf[serirq_sm] = irq * NUM_LCLKS_PER_IRQ_FRAME * NUM_PIOS_PER_LCLK + IRQ_FRAME_PIO_OFFSET;
 }
-
-static void serirq_lpc_reset() {
-    // Remove these vvvv after testing
-    // serirq_trigger_irq(0);
-    // serirq_trigger_irq(1);
-    // serirq_trigger_irq(2);
-    // serirq_trigger_irq(20);
-    //for(uint8_t i = 0; i < 21; i++) serirq_trigger_irq(i);
-}
-
-static void serirq_init() {
-    // lpc_interface_add_io_handler(WS2812_PORT_BASE, WS2812_ADDRESS_MASK, lpc_port_read, lpc_port_write);
-    // lpc_interface_add_io_handler(MODXO_REGISTER_NVM_CONFIG_SEL, 0xFFFE, config_read_hdlr, config_write_hdlr);
-}
-
 
 MODXO_TASK serirq_hdlr = {
-    .init = serirq_init,
     .core1_init = serirq_core1_init,
-    .lpc_reset_on = serirq_lpc_reset
 };
