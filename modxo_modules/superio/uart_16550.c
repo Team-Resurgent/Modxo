@@ -35,7 +35,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <modxo/lpc_interface.h>
 #include "tusb.h"
 
-uint8_t scratch = 0;
+uint8_t ien = 0;     // 0x3F9 - Interrupt Enable register
+uint8_t iir = 0;     // 0x3FA - Interrupt Ident register
+uint8_t lcr = 0;     // 0x3FB - Line Control register
+uint8_t mcr = 0;     // 0x3FC - Modem Control register
+uint8_t msr = 0;     // 0x3FE - Moden Status register
+uint8_t scratch = 0; // 0x3FF - arbitrary scratch register
 
 static void uart_16550_port_write(uint16_t address, uint8_t *data)
 {
@@ -47,8 +52,12 @@ static void uart_16550_port_write(uint16_t address, uint8_t *data)
             tud_cdc_write_flush();
         }
 
-        if(address == 0x3FF) {
-            scratch = *data;
+        switch(address) {
+            case 0x3F9: ien = *data; break;
+            case 0x3FA: iir = *data; break;
+            case 0x3FB: lcr = *data; break;
+            case 0x3FC: mcr = *data; break;
+            case 0x3FF: scratch = *data; break;
         }
     }
 }
@@ -73,8 +82,13 @@ static void uart_16550_port_read(uint16_t address, uint8_t *data)
             tud_cdc_read(data, 1);
         }
 
-        if(address == 0x3FF) {
-            *data = scratch;
+        switch(address) {
+            case 0x3F9: *data = ien; break;
+            case 0x3FA: *data = iir; break;
+            case 0x3FB: *data = lcr; break;
+            case 0x3FC: *data = mcr; break;
+            case 0x3FE: *data = msr; break;
+            case 0x3FF: *data = scratch; break;
         }
     }
     else
