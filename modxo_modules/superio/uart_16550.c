@@ -35,6 +35,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <modxo/lpc_interface.h>
 #include "tusb.h"
 
+uint8_t scratch = 0;
+
 static void uart_16550_port_write(uint16_t address, uint8_t *data)
 {
     if(tud_cdc_connected()) {
@@ -43,6 +45,10 @@ static void uart_16550_port_write(uint16_t address, uint8_t *data)
         {
             tud_cdc_write(data, 1);
             tud_cdc_write_flush();
+        }
+
+        if(address == 0x3FF) {
+            scratch = *data;
         }
     }
 }
@@ -54,12 +60,21 @@ static void uart_16550_port_read(uint16_t address, uint8_t *data)
     { // If usb serial port is open
         if (address == 0x3FD)
         {
-            *data = (tud_cdc_write_available() ? 0x20 : 0x00) | (tud_cdc_available() ? 0x01 : 0x00);
+            uint32_t avail = tud_cdc_write_available();
+            *data = (0
+                | (avail == CFG_TUD_CDC_TX_BUFSIZE ? 0x40 : 0x00)
+                | (avail ? 0x20 : 0x00)
+                | (tud_cdc_available() ? 0x01 : 0x00)
+            );
         }
 
         if (address == 0x3F8)
         {
             tud_cdc_read(data, 1);
+        }
+
+        if(address == 0x3FF) {
+            *data = scratch;
         }
     }
     else
