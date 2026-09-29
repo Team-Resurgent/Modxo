@@ -104,13 +104,15 @@ typedef struct
 typedef struct{
     PIXEL_FORMAT_TYPE rgb_status_pf;
     PIXEL_FORMAT_TYPE rgb_strip_pf[MAX_STRIPS];
+    uint8_t rgb_status_brightness;
 }NVM_CONFIG;
 
 typedef enum {
-    NVM_REGISTER_NONE               =  0,
-    NVM_REGISTER_RGB_STATUS_PF      =  1,
-    NVM_REGISTER_RGB_STRIP1_PF      =  2,
-    NVM_REGISTER_RGB_STRIP2_PF      =  3,
+    NVM_REGISTER_NONE                   =  0,
+    NVM_REGISTER_RGB_STATUS_PF          =  1,
+    NVM_REGISTER_RGB_STRIP1_PF          =  2,
+    NVM_REGISTER_RGB_STRIP2_PF          =  3,
+    NVM_REGISTER_RGB_STATUS_BRIGHTNESS  =  4,
 } NVM_REGISTER_SEL;
 
 static NVM_CONFIG nvm_config;
@@ -119,6 +121,7 @@ static const NVM_CONFIG default_nvm_parameters = {
     .rgb_status_pf = RGB_STATUS_PIXEL_FORMAT,
     .rgb_strip_pf[0]  = STRIP1_PIXEL_FORMAT,
     .rgb_strip_pf[1]  = STRIP2_PIXEL_FORMAT,
+    .rgb_status_brightness = 100,
 };
 
 uint8_t selected_strip;
@@ -310,6 +313,12 @@ static uint32_t inline get_next_pixel_value(uint8_t strip)
     uint8_t display_led_no = strips[strip].next_led_to_display;
     PIXEL_FORMAT_TYPE pixel_format = (display_led_no == 0 && strip == 0) ? nvm_config.rgb_status_pf: nvm_config.rgb_strip_pf[strip];
     uint32_t display_color_value = traslate_pixel(strips[strip].pixels[display_led_no], pixel_format);
+    if (display_led_no == 0) {
+        float fadeFactor = nvm_config.rgb_status_brightness / 100.0f;
+        HSV_COLOR hsv = rgb2hsv(display_color_value);
+        hsv.v *= fadeFactor;
+        display_color_value = hsv2rgb(hsv);
+    }
     return display_color_value;
 }
 
@@ -537,6 +546,14 @@ void config_set_value(uint8_t value)
             nvm_config.rgb_strip_pf[1] = value;
         }
         break;
+    case NVM_REGISTER_RGB_STATUS_BRIGHTNESS:
+        if (nvm_config.rgb_status_brightness != value)
+        {
+            save = true;
+            update_pixels = true;
+            nvm_config.rgb_status_brightness = value;
+        }
+        break;
     default:
         break;
     }
@@ -565,6 +582,9 @@ uint8_t config_get_value(void)
         break;
     case NVM_REGISTER_RGB_STRIP2_PF:
         value = nvm_config.rgb_strip_pf[1];
+        break;
+    case NVM_REGISTER_RGB_STATUS_BRIGHTNESS:
+        value = nvm_config.rgb_status_brightness;
         break;
     default:
         break;
