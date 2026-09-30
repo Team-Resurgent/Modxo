@@ -308,6 +308,14 @@ static RGB_COLOR traslate_rgb2color(uint32_t rgb_value)
     return color;
 }
 
+
+static uint32_t traslate_color2rgb(RGB_COLOR rgb_color)
+{
+    return (((uint8_t)rgb_color.red) << 24) |
+            (((uint8_t)rgb_color.green) << 16) | 
+            (((uint8_t)rgb_color.blue) << 8); 
+}
+
 static uint32_t inline get_next_pixel_value(uint8_t strip)
 {
     uint8_t display_led_no = strips[strip].next_led_to_display;
@@ -315,9 +323,9 @@ static uint32_t inline get_next_pixel_value(uint8_t strip)
     uint32_t display_color_value = traslate_pixel(strips[strip].pixels[display_led_no], pixel_format);
     if (display_led_no == 0) {
         float fadeFactor = nvm_config.rgb_status_brightness / 100.0f;
-        HSV_COLOR hsv = rgb2hsv(display_color_value);
+        HSV_COLOR hsv = rgb2hsv(traslate_color2rgb(display_color_value));
         hsv.v *= fadeFactor;
-        display_color_value = hsv2rgb(hsv);
+        display_color_value = traslate_rgb2color(hsv2rgb(hsv));
     }
     return display_color_value;
 }
