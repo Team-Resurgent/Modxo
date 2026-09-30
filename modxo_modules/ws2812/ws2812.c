@@ -121,7 +121,7 @@ static const NVM_CONFIG default_nvm_parameters = {
     .rgb_status_pf = RGB_STATUS_PIXEL_FORMAT,
     .rgb_strip_pf[0]  = STRIP1_PIXEL_FORMAT,
     .rgb_strip_pf[1]  = STRIP2_PIXEL_FORMAT,
-    .rgb_status_brightness = 100,
+    .rgb_status_brightness = 255,
 };
 
 uint8_t selected_strip;
@@ -314,7 +314,7 @@ static uint32_t inline get_next_pixel_value(uint8_t strip)
     PIXEL_FORMAT_TYPE pixel_format = (display_led_no == 0 && strip == 0) ? nvm_config.rgb_status_pf: nvm_config.rgb_strip_pf[strip];
     PIXEL_STATE pixel_state = strips[strip].pixels[display_led_no];
     if (display_led_no == 0) {
-        float fadeFactor = nvm_config.rgb_status_brightness / 100.0f;
+        float fadeFactor = nvm_config.rgb_status_brightness / 255.0f;
         pixel_state.brightness *= fadeFactor;
     }
     return traslate_pixel(pixel_state, pixel_format);
