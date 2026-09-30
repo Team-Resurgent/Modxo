@@ -315,7 +315,7 @@ static uint32_t inline get_next_pixel_value(uint8_t strip)
     PIXEL_STATE pixel_state = strips[strip].pixels[display_led_no];
     if (display_led_no == 0) {
         float fadeFactor = nvm_config.rgb_status_brightness / 100.0f;
-        pixel_state.brightness *= fadeFactor
+        pixel_state.brightness *= fadeFactor;
     }
     return traslate_pixel(pixel_state, pixel_format);
 }
