@@ -323,9 +323,9 @@ static uint32_t inline get_next_pixel_value(uint8_t strip)
     uint32_t display_color_value = traslate_pixel(strips[strip].pixels[display_led_no], pixel_format);
     if (display_led_no == 0) {
         float fadeFactor = nvm_config.rgb_status_brightness / 100.0f;
-        HSV_COLOR hsv = rgb2hsv(traslate_color2rgb(display_color_value));
+        HSV_COLOR hsv = rgb2hsv(traslate_rgb2color(display_color_value));
         hsv.v *= fadeFactor;
-        display_color_value = traslate_rgb2color(hsv2rgb(hsv));
+        display_color_value = traslate_color2rgb(hsv2rgb(hsv));
     }
     return display_color_value;
 }
