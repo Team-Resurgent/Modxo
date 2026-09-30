@@ -262,7 +262,7 @@ static inline bool put_pixel(uint8_t strip, uint32_t pixel_color)
 static uint32_t traslate_pixel(PIXEL_STATE pixel, PIXEL_FORMAT_TYPE pixel_format)
 {
     HSV_COLOR hsv = rgb2hsv(pixel.rgb);
-    hsv.v *= (pixel.brightness / (255.0f * BOARD_LED_BRIGHTNESS_ADJUST));
+    hsv.v *= (pixel.brightness / 255.0f);
     RGB_COLOR rgb = hsv2rgb(hsv);
     if (pixel_format == PIXEL_FORMAT_RGB)
     {
@@ -308,26 +308,16 @@ static RGB_COLOR traslate_rgb2color(uint32_t rgb_value)
     return color;
 }
 
-
-static uint32_t traslate_color2rgb(RGB_COLOR rgb_color)
-{
-    return (((uint8_t)rgb_color.red) << 24) |
-            (((uint8_t)rgb_color.green) << 16) | 
-            (((uint8_t)rgb_color.blue) << 8); 
-}
-
 static uint32_t inline get_next_pixel_value(uint8_t strip)
 {
     uint8_t display_led_no = strips[strip].next_led_to_display;
     PIXEL_FORMAT_TYPE pixel_format = (display_led_no == 0 && strip == 0) ? nvm_config.rgb_status_pf: nvm_config.rgb_strip_pf[strip];
-    uint32_t display_color_value = traslate_pixel(strips[strip].pixels[display_led_no], pixel_format);
+    PIXEL_STATE pixel_state = strips[strip].pixels[display_led_no];
     if (display_led_no == 0) {
         float fadeFactor = nvm_config.rgb_status_brightness / 100.0f;
-        HSV_COLOR hsv = rgb2hsv(traslate_rgb2color(display_color_value));
-        hsv.v *= fadeFactor;
-        display_color_value = traslate_color2rgb(hsv2rgb(hsv));
+        pixel_state.brightness *= fadeFactor
     }
-    return display_color_value;
+    return traslate_pixel(pixel_state, pixel_format);
 }
 
 static bool inline is_strip_update_inprogress(uint8_t strip)
