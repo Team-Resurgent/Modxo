@@ -24,7 +24,7 @@ set(LCD_PORT_SPI_CSN2  26)
 #SD_CARD GPIOs
 set(SD_CARD_SPI_ENABLE true)
 set(SD_CARD_SPI_INST spi0) # Discarded pin
-set(SD_CARD_SPI_MISO 32)   # Discarded pin
+set(SD_CARD_SPI_MISO 20)   # Discarded pin
 set(SD_CARD_SPI_CSN  17)   # Discarded pin
 set(SD_CARD_SPI_CLK  18)   # Discarded pin
 set(SD_CARD_SPI_MOSI 19)   # Discarded pin
