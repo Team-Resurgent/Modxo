@@ -58,7 +58,6 @@ typedef struct
 
 static void io_write_hdlr(uint32_t address, uint8_t *data);
 static void io_read_hdlr(uint32_t address, uint8_t *data);
-static void gpio_set_max_drivestrength(io_rw_32 gpio, uint32_t strength);
 
 LPC_SM_HANDLER lpc_handlers[LPC_OP_TOTAL] = {
     [LPC_OP_IO_READ] = {.nibbles_read = 4, .cyctype_dir = 0, .handler = io_read_hdlr, .address_len = 16},
@@ -121,14 +120,6 @@ static void lpc_gpio_init(PIO pio)
     gpio_set_oeover(LPC_LFRAME, 1);
     gpio_set_outover(LPC_LFRAME, 2);
     pio_gpio_init(pio, LPC_LFRAME);
-}
-
-static void gpio_set_max_drivestrength(io_rw_32 gpio, uint32_t strength)
-{
-    hw_write_masked(
-        &padsbank0_hw->io[gpio],
-        strength << PADS_BANK0_GPIO0_DRIVE_LSB,
-        PADS_BANK0_GPIO0_DRIVE_BITS);
 }
 
 static void pio_custom_init(PIO pio, uint sm, uint offset, bool lframe_cancel)
@@ -316,9 +307,8 @@ void lpc_interface_init(void)
     setup_onboard_flash();
 
     // lpc_disable_tsop(disable_internal_flash);
-
-    gpio_set_max_drivestrength(LPC_LFRAME, PADS_BANK0_GPIO0_DRIVE_VALUE_12MA);
-    gpio_set_max_drivestrength(GPIO_D0, PADS_BANK0_GPIO0_DRIVE_VALUE_12MA);
+    gpio_set_drive_strength(LPC_LFRAME, PADS_BANK0_GPIO0_DRIVE_VALUE_12MA);
+    gpio_set_drive_strength(GPIO_D0, PADS_BANK0_GPIO0_DRIVE_VALUE_12MA);
 
     lpc_interface_start_sm();
 }

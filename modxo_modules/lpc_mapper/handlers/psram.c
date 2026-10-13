@@ -99,7 +99,7 @@ static void psram_get_info(void)
 }
 
 static void psram_configure()
-{    
+{
      qmi_hw->m[1].timing = QMI_M1_TIMING_PAGEBREAK_VALUE_1024 << QMI_M1_TIMING_PAGEBREAK_LSB | // Break between pages.
 		                   3 << QMI_M1_TIMING_SELECT_HOLD_LSB | // Delay releasing CS for 3 extra system cycles.
 		                   1 << QMI_M1_TIMING_COOLDOWN_LSB | 
@@ -132,12 +132,14 @@ static void psram_configure()
     qmi_hw->m[1].wcmd = PSRAM_CMD_QUAD_WRITE;
 
     xip_ctrl_hw->ctrl |= XIP_CTRL_WRITABLE_M1_BITS;
-    xip_ctrl_hw->ctrl &= ~(XIP_CTRL_NO_UNTRANSLATED_NONSEC_BITS | XIP_CTRL_EN_NONSECURE_BITS | XIP_CTRL_EN_SECURE_BITS);
+    //xip_ctrl_hw->ctrl &= ~(XIP_CTRL_NO_UNTRANSLATED_NONSEC_BITS | XIP_CTRL_EN_NONSECURE_BITS | XIP_CTRL_EN_SECURE_BITS);
 }
 
 static void psram_detect(void)
 {
     uint32_t intr_stash = save_and_disable_interrupts();
+    uint32_t old_csr = qmi_hw->direct_csr;
+
     qmi_hw->direct_csr = QMI_DIRECT_CSR_EN_BITS;
     while ((qmi_hw->direct_csr & QMI_DIRECT_CSR_BUSY_BITS) != 0);
 
@@ -147,9 +149,10 @@ static void psram_detect(void)
     send_direct_cmd(PSRAM_CMD_RST, false);
     send_direct_cmd(PSRAM_CMD_QUAD_ENABLE, false);
 
-    qmi_hw->direct_csr &= ~(QMI_DIRECT_CSR_EN_BITS);
+    //qmi_hw->direct_csr &= ~(QMI_DIRECT_CSR_EN_BITS);
+    qmi_hw->direct_csr = old_csr;
     psram_configure();
-    
+
     restore_interrupts(intr_stash);
 }
 
