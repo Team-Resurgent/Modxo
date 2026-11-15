@@ -123,10 +123,14 @@ jobs:
         with:
           tag_name: latest
           draft: true
-          files: ${{ github.workspace }}/modxo-bundle.zip
+          files: |
+            ${{ github.workspace }}/modxo-bundle.zip
+            ${{ steps.artifacts.outputs.download-path }}/*
 
       - name: Publish tag release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v3
         with:
-          files: ${{ github.workspace }}/modxo-bundle.zip
+          files: |
+            ${{ github.workspace }}/modxo-bundle.zip
+            ${{ steps.artifacts.outputs.download-path }}/*
