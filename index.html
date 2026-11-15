@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html translate="no">
+
+<head>
+    <title>ModXo BIOS UF2 BIOS Builder</title>
+    <script type="text/javascript" src="./js/modxo_bios_packer.js"></script>
+    <script type="text/javascript" src="./js/uf2.js"></script>
+    <link rel="stylesheet" type="text/css" href="./style/style.css">
+</head>
+
+<body>
+    <div id="column">
+        <!-- HEADER -->
+        <header>
+            <img src="./img/logo.png" />
+            <h1>Modxo BIOS Packer</h1>
+        </header>
+        <div>
+            <label for="FamilyID">Board Type: </label>
+            <select id="FamilyID" name="FamilyID">
+                <option value="0">Pico</option>
+                <option value="1">Pico2</option>
+            </select>
+        </div>
+        <div 
+            id="drop_zone" 
+            ondrop="dropHandler(event);"
+            ondragover="dragOverHandler(event);">
+            <p>Drag the bios file to this drop zone</p>
+        </div>
+
+        <footer>
+		<a href="https://github.com/Team-Resurgent/modxo/">Modxo Repo</a>
+		<br />
+		<img src="./img/Shalx-TR.png" />
+        </footer>
+    </div>
+</body>
+
+</html>
