@@ -15,12 +15,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: recursive
           fetch-depth: 1
 
       - name: Fetch custom branch (if present)
-        continue-on-error: true
-        run: git fetch --no-tags origin custom:refs/remotes/origin/custom
+        run: |
+          if git ls-remote --exit-code --heads origin custom >/dev/null 2>&1; then
+            git fetch --no-tags origin custom:refs/remotes/origin/custom
+          else
+            echo "origin/custom not found; using base matrix only"
+          fi
 
       - name: Merge matrix includes from custom branch
         id: merge
@@ -38,8 +41,12 @@ jobs:
           submodules: recursive
 
       - name: Fetch custom branch (if present)
-        continue-on-error: true
-        run: git fetch --no-tags origin custom:refs/remotes/origin/custom
+        run: |
+          if git ls-remote --exit-code --heads origin custom >/dev/null 2>&1; then
+            git fetch --no-tags origin custom:refs/remotes/origin/custom
+          else
+            echo "origin/custom not found; using pinouts from this ref only"
+          fi
 
       - name: Ensure board pinout file exists
         run: |
