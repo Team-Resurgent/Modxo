@@ -179,7 +179,9 @@ void register_handlers()
     modxo_register_handler(&uart_16550_hdlr);
     modxo_register_handler(&config_nvm_hdlr);
     modxo_register_handler(&ws2812_hdlr);
+#if MODXO_VARIANT != MODXO_VARIANT_R3MUX
     modxo_register_handler(&serirq_hdlr);
+#endif
     modxo_register_handler(&legacy_display_hdlr);
 }
 

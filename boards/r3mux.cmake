@@ -6,7 +6,7 @@ set(LPC_LFRAME    5)
 set(GPIO_D0       6)
 set(LPC_RESET     7)
 set(LPC_ON        8)
-set(LPC_SERIRQ    28)
+set(LPC_SERIRQ    31)
 
 set(LCD_PORT_I2C_ENABLE false)
 set(LCD_PORT_SPI_ENABLE false)
@@ -14,10 +14,11 @@ set(LCD_PORT_SPI_ENABLE false)
 #SPI/ALT SD_CARD GPIOs
 set(SD_CARD_SPI_ENABLE true)
 set(SD_CARD_SPI_INST spi1)
-set(SD_CARD_SPI_CSN 13)
+set(SD_CARD_SPI_CSN 9)
 set(SD_CARD_SPI_CLK 14)
 set(SD_CARD_SPI_MISO 12)
 set(SD_CARD_SPI_MOSI 15)
+set(ALT_SPI_CSN 13)
 
 #UART GPIOs
 set(UART_ENABLE true)
